@@ -1,4 +1,4 @@
-from ecoevo.entities.items import ItemUtils
+from ecoevo.entities import items
 import argparse
 
 
@@ -11,6 +11,8 @@ def parse_args():
 
 
 if __name__ == "__main__":
-    args = parse_args()    
-    item_attrs = ItemUtils.read_csv(args.csv_path, sep=",")
-    print(item_attrs)
+    args = parse_args()
+    gold = items.Gold(reserve=10)
+    print(gold)
+
+    
