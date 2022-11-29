@@ -1,3 +1,3 @@
-# Social-Evolution
+# Economy-Evolution
 
-Social Evolution Environment for Currency Emergence Research
+Economy Evolution Environment for Currency Emergence Research
