@@ -5,7 +5,7 @@ import random
 import matplotlib.pyplot as plt
 import matplotlib.patches as pch
 
-from utils.trade import trade
+from ecoevo.trader.trader import trade
 
 
 """ generate data: random """
@@ -88,12 +88,12 @@ for y in range(map_size):
             plt.text(x=x * len_block + len_block / 2, y=y * len_block + len_block / 2, s=str(dict_offer[x, y]))
 
 # draw trades as lines
-for trade in dict_match.keys():
-    pos_1 = (list_offer[trade[0]]['position'][0] + len_block / 2, list_offer[trade[0]]['position'][1] + len_block / 2)
-    pos_2 = (list_offer[trade[1]]['position'][0] + len_block / 2, list_offer[trade[1]]['position'][1] + len_block / 2)
+for t in dict_match.keys():
+    pos_1 = (list_offer[t[0]]['position'][0] + len_block / 2, list_offer[t[0]]['position'][1] + len_block / 2)
+    pos_2 = (list_offer[t[1]]['position'][0] + len_block / 2, list_offer[t[1]]['position'][1] + len_block / 2)
     plt.arrow(x=pos_1[0], y=pos_1[1], dx=pos_2[0] - pos_1[0], dy=pos_2[1] - pos_1[1], linestyle='-')
 
-    plt.text(x=(pos_2[0] + pos_1[0]) / 2, y=(pos_2[1] + pos_1[1]) / 2, s=str(dict_match[trade]), color='green')
+    plt.text(x=(pos_2[0] + pos_1[0]) / 2, y=(pos_2[1] + pos_1[1]) / 2, s=str(dict_match[t]), color='green')
 
 # let the length of an x axis unit be equal with y axis
 ax.set_aspect(1)
