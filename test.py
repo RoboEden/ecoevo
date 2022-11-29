@@ -80,7 +80,7 @@ len_block = 1
 dict_offer = {offer['position']: offer['amount'] for offer in list_offer}
 for y in range(map_size):
     for x in range(map_size):
-        colour = 'orange' if (x, y) in dict_offer.keys() else 'white'
+        colour = 'red' if (x, y) in dict_offer.keys() else 'white'
         rectangle = pch.Rectangle(xy=(x * len_block, y * len_block), width=len_block, height=len_block, color=colour)
         ax.add_patch(rectangle)
 
@@ -93,7 +93,7 @@ for trade in dict_match.keys():
     pos_2 = (list_offer[trade[1]]['position'][0] + len_block / 2, list_offer[trade[1]]['position'][1] + len_block / 2)
     plt.arrow(x=pos_1[0], y=pos_1[1], dx=pos_2[0] - pos_1[0], dy=pos_2[1] - pos_1[1], linestyle='-')
 
-    plt.text(x=(pos_2[0] + pos_1[0]) / 2, y=(pos_2[1] + pos_1[1]) / 2, s=str(dict_match[trade]))
+    plt.text(x=(pos_2[0] + pos_1[0]) / 2, y=(pos_2[1] + pos_1[1]) / 2, s=str(dict_match[trade]), color='green')
 
 # let the length of an x axis unit be equal with y axis
 ax.set_aspect(1)
