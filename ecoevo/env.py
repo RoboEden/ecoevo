@@ -3,7 +3,7 @@ import functools
 from gymnasium.spaces import Discrete
 
 from pettingzoo import ParallelEnv
-from .entities.agent import Action, Agent
+from ecoevo.entities.agent import Action, Agent
 
 
 
