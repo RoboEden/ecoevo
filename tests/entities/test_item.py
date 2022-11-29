@@ -1,4 +1,4 @@
-from eco_evo.entities.items import ItemUtils
+from ecoevo.entities.items import ItemUtils
 import argparse
 
 
