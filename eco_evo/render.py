@@ -1,4 +1,4 @@
-from env import EcoEvo
+from eco_evo.env import EcoEvo
 
 from pettingzoo.utils import parallel_to_aec, wrappers
 def env(render_mode=None):
