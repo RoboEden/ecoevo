@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "eco_evo"
+description = "Economy Evolution Environment for Currency Emergence Research"
+requires-python = ">=3.7, <3.11"
+readme = "README.md"
+dependencies = [
+    "numpy",
+    "pandas",
+    "scipy",
+    "gymnasium",
+    "pettingzoo"
+]
+dynamic = ["version"]
+
+[tool.setuptools.dynamic]
+    version = { attr = "eco_evo.__version__" }

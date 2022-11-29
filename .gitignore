@@ -160,7 +160,7 @@ cython_debug/
 #.idea/
 
 # Data files for eco_evo test cases
-eco_evo/tests/*.csv
-eco_evo/tests/*/*.csv
-eco_evo/tests/*.json
-eco_evo/tests/*/*.json
+tests/*.csv
+tests/*/*.csv
+tests/*.json
+tests/*/*.json
