@@ -3,6 +3,6 @@ from dataclasses import dataclass
 
 @dataclass
 class EnvConfig:
-    NUM_AGENTS: int
-    TRAJ_LEN: int
+    agent_num: int
+    total_step: int
     
