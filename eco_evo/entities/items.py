@@ -1,58 +1,115 @@
 import numpy as np
-from enum import Enum
-from dataclasses import dataclass
 
-
-class ItemName(Enum):
-    GOLD = 0
-    PEPPER = 1
-    IVORY = 2
-    SHELL = 3
-    PINEAPPLE = 4
-    APPLE = 5
-    STONE = 6
-    PUMPKIN = 7
-
-
-class Granularity(Enum):
-    SMALL = 0
-    LARGE = 1
-
-
-class ReserveType(Enum):
-    RARE = 0
-    ADEQUATE = 1
-    
-
-class ObtainGrade(Enum):
-    EASY = 0
-    HARD = 1
-
-
-class GoodsType(Enum):
-    NO_UTILITY = 0
-    NECESSITY = 1
-    LUXURY = 2
-    
-
-@dataclass
-class ItemAttrs:
-    item_name: ItemName
-    disposable: bool
-    granularity: Granularity
-    reserve_type: ReserveType
-    obtain_grade: ObtainGrade
-    renewable: bool
-    general_accept: bool
-    storage_time: int
-    is_supplement: bool
-    alpha: float
-    beta: float
-    collect_duration: int
-    total_amount: int
-    goods_type: GoodsType
-    
+INF = 999999
 
 class Item:
-    def __init__(self, amount: int, **kwargs) -> None:
-        self._amount = amount
+    name: str
+    supply: int
+    alpha: float
+    grow_rate: float
+    collect_time: int
+    capacity: float
+    collect_amount: int
+    reserve: int
+    expiry: int
+    reusable: bool
+    def __init__(self, reserve) -> None:
+        self.reserve = reserve
+
+class Gold(Item):
+    name = 'gold'
+    supply = 0
+    alpha = config.alpha.gold
+    grow_rate = 0
+    collect_time = 100
+    capacity = 0.01
+    collect_amount = 1
+    reserve = 1000
+    expiry = INF
+    reusable = True
+
+class Pepper(Item):
+    name = 'gold'
+    supply = 0
+    alpha = config.alpha.gold
+    grow_rate = 0
+    collect_time = 100
+    capacity = 0.01
+    collect_amount = 1
+    reserve = 1000
+    expiry = INF
+    reusable = True
+
+class Ivory(Item):
+    name = 'gold'
+    supply = 0
+    alpha = config.alpha.gold
+    grow_rate = 0
+    collect_time = 100
+    capacity = 0.01
+    collect_amount = 1
+    reserve = 1000
+    expiry = INF
+    reusable = True
+
+
+class Shell(Item):
+    name = 'gold'
+    supply = 0
+    alpha = config.alpha.gold
+    grow_rate = 0
+    collect_time = 100
+    capacity = 0.01
+    collect_amount = 1
+    reserve = 1000
+    expiry = INF
+    reusable = True
+
+
+class Pineapple(Item):
+    name = 'gold'
+    supply = 0
+    alpha = config.alpha.gold
+    grow_rate = 0
+    collect_time = 100
+    capacity = 0.01
+    collect_amount = 1
+    reserve = 1000
+    expiry = INF
+    reusable = True
+
+class Peanut(Item):
+    name = 'gold'
+    supply = 0
+    alpha = config.alpha.gold
+    grow_rate = 0
+    collect_time = 100
+    capacity = 0.01
+    collect_amount = 1
+    reserve = 1000
+    expiry = INF
+    reusable = True
+
+class Stone(Item):
+    name = 'gold'
+    supply = 0
+    alpha = config.alpha.gold
+    grow_rate = 0
+    collect_time = 100
+    capacity = 0.01
+    collect_amount = 1
+    reserve = 1000
+    expiry = INF
+    reusable = True
+
+class Pumpkin(Item):
+    name = 'gold'
+    supply = 0
+    alpha = config.alpha.gold
+    grow_rate = 0
+    collect_time = 100
+    capacity = 0.01
+    collect_amount = 1
+    reserve = 1000
+    expiry = INF
+    reusable = True

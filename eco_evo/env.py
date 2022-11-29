@@ -1,13 +1,10 @@
 import functools
 
-import gymnasium
 from gymnasium.spaces import Discrete
 
 from pettingzoo import ParallelEnv
+from .entities.agent import Action, Agent
 
-MOVE = 0
-COLLECT = 1
-CONSUME = 2
 
 
 class EcoEvo(ParallelEnv):
@@ -27,7 +24,7 @@ class EcoEvo(ParallelEnv):
         # )
         self.render_mode = render_mode
         self.config = config
-        self.agent_ids = list(range(config.agent_num))
+        self.agents = config.agents
 
     # this cache ensures that same space object is returned for the same agent
     # allows action space seeding to work as expected
@@ -42,13 +39,13 @@ class EcoEvo(ParallelEnv):
 
 
 
-    def close(self):
-        """
-        Close should release any graphical displays, subprocesses, network connections
-        or any other environment data which should not be kept around after the
-        user is no longer using the environment.
-        """
-        pass
+    # def close(self):
+    #     """
+    #     Close should release any graphical displays, subprocesses, network connections
+    #     or any other environment data which should not be kept around after the
+    #     user is no longer using the environment.
+    #     """
+    #     pass
 
     def reset(self, seed=None, return_info=False, options=None):
         """
@@ -58,16 +55,16 @@ class EcoEvo(ParallelEnv):
         hands that are played.
         Returns the observations for each agent
         """
-        self.agents = {id: Agent(get_cfg(id)) for id in self.agent_ids}
+        self.agent_dict = {id: Agent(get_cfg(id)) for id in self.agent_ids}
         self.map = self.init_map()
         self.step = 0
 
-        obs = {agent: self.get_obs(id) for agent in self.agents}
+        obs = {agent_id: self.get_obs(agent_id) for agent_id in self.agents}
 
         if not return_info:
             return obs
         else:
-            infos = {agent: {} for agent in self.agents}
+            infos = {agent_id: {} for agent_id in self.agents}
             return obs, infos
 
     def step(self, actions):
@@ -80,12 +77,12 @@ class EcoEvo(ParallelEnv):
         - infos
         dicts where each dict looks like {agent_1: item_1, agent_2: item_2}
         """        
-
-        for agent in self.agents:
+        for agent_id in self.agents:
+            agent = self.agent_dict[agent_id]
             action = actions[self.agents]
-            if action in [MOVE, COLLECT, CONSUME]:
-                self.map = execute(action)
-            if action is [TRADE]:
+            if action in [Action.MOVE, Action.COLLECT, Action.CONSUME]:
+                self.map = agent.execute(action)
+            if action is [Action.TRADE]:
                 own_offer = action[OFFER]
                 nearby_offers = get_nearby_offer(agent)
                 matched_offer = trader(own_offer, nearby_offers)
@@ -95,7 +92,7 @@ class EcoEvo(ParallelEnv):
 
         self.step += 1
 
-        rewards = {id: reward_parser(agent) for agent in self.agents}
+        rewards = {agent_id: reward_parser(agent_id) for agent_id in self.agents}
 
         # typically there won't be any information in the infos, but there must
         # still be an entry for each agent
