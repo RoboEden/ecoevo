@@ -159,7 +159,12 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-# Data files for eco_evo test cases
+# Data files for ecoevo test cases
+test/*.csv
+test/*/*.csv
+test/*.json
+test/*/*.json
+
 tests/*.csv
 tests/*/*.csv
 tests/*.json
