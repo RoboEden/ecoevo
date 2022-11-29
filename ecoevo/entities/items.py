@@ -2,6 +2,7 @@ import numpy as np
 
 INF = 999999
 
+
 class Item:
     name: str
     supply: int
@@ -13,8 +14,10 @@ class Item:
     reserve: int
     expiry: int
     reusable: bool
+
     def __init__(self, reserve) -> None:
         self.reserve = reserve
+
 
 class Gold(Item):
     name = 'gold'
@@ -28,6 +31,7 @@ class Gold(Item):
     expiry = INF
     reusable = True
 
+
 class Pepper(Item):
     name = 'pepper'
     supply = 0
@@ -40,8 +44,9 @@ class Pepper(Item):
     expiry = INF
     reusable = True
 
-class Ivory(Item):
-    name = 'ivory'
+
+class Coral(Item):
+    name = 'coral'
     supply = 0
     alpha = None
     grow_rate = 0
@@ -78,6 +83,7 @@ class Pineapple(Item):
     expiry = INF
     reusable = True
 
+
 class Peanut(Item):
     name = 'peanut'
     supply = 0
@@ -90,6 +96,7 @@ class Peanut(Item):
     expiry = INF
     reusable = True
 
+
 class Stone(Item):
     name = 'stone'
     supply = 0
@@ -101,6 +108,7 @@ class Stone(Item):
     reserve = 1000
     expiry = INF
     reusable = True
+
 
 class Pumpkin(Item):
     name = 'pumpkin'
