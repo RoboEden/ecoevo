@@ -39,7 +39,7 @@ for i in range(num_offer):
     for j in range(num_offer):
         if i != j:
             pos_i, pos_j = list_offer[i]['position'], list_offer[j]['position']
-            if abs(pos_i[0] - pos_j[0]) <= 4 and abs(pos_i[1] - pos_j[1]) <= 4:
+            if abs(pos_i[0] - pos_j[0]) <= distance_match and abs(pos_i[1] - pos_j[1]) <= distance_match:
                 mat_if_match[i][j] = True
                 mat_volume[i][j] = min(list_offer[i]['amount'], list_offer[j]['amount'])
 
