@@ -1,9 +1,11 @@
-import numpy as np
+import functools
 from enum import Enum
 from dataclasses import dataclass
+import numpy as np
+import pandas as pd
 
 
-class ItemName(Enum):
+class ItemType(Enum):
     GOLD = 0
     PEPPER = 1
     IVORY = 2
@@ -37,7 +39,7 @@ class GoodsType(Enum):
 
 @dataclass
 class ItemAttrs:
-    item_name: ItemName
+    item_name: ItemType
     disposable: bool
     granularity: Granularity
     reserve_type: ReserveType
@@ -53,6 +55,25 @@ class ItemAttrs:
     goods_type: GoodsType
     
 
+class ItemUtils:
+    @staticmethod
+    @functools.lru_cache(maxsize=None)
+    def read_csv(csv_path: str, sep=",") -> pd.DataFrame:
+        df = pd.read_csv(csv_path, sep=sep)
+        return df
+        
+
 class Item:
-    def __init__(self, amount: int, **kwargs) -> None:
+    def __init__(self, item_type: ItemType, amount: int) -> None:
+        self._item_type = item_type
         self._amount = amount
+        
+    @property
+    def item_type(self) -> ItemType:
+        return self._item_type
+    
+    @property
+    def amount(self) -> int:
+        return self._amount
+    
+    
