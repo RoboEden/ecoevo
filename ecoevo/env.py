@@ -4,6 +4,7 @@ from gymnasium.spaces import Discrete
 
 from pettingzoo import ParallelEnv
 from ecoevo.entities.agent import Action, Agent
+from ecoevo.maps.map import MapGenerator
 
 
 
@@ -25,6 +26,7 @@ class EcoEvo(ParallelEnv):
         self.render_mode = render_mode
         self.config = config
         self.agents = config.agents
+        self.map_generator = MapGenerator()
 
     # this cache ensures that same space object is returned for the same agent
     # allows action space seeding to work as expected
@@ -56,8 +58,8 @@ class EcoEvo(ParallelEnv):
         Returns the observations for each agent
         """
         self.agent_dict = {id: Agent(get_cfg(id)) for id in self.agent_ids}
-        self.map = self.init_map()
-        self.step = 0
+        self.map = self.map_generator.gen_map()
+        self.curr_step = 0
 
         obs = {agent_id: self.get_obs(agent_id) for agent_id in self.agents}
 
@@ -90,14 +92,14 @@ class EcoEvo(ParallelEnv):
         # current observation is just the other player's most recent action
         obs = {agent: self.get_obs(id) for agent in self.agents}
 
-        self.step += 1
+        self.curr_step += 1
 
         rewards = {agent_id: reward_parser(agent_id) for agent_id in self.agents}
 
         # typically there won't be any information in the infos, but there must
         # still be an entry for each agent
         done = True
-        if done > self.config.max_len:
+        if self.curr_step > self.config.max_len:
             done = True
         
         infos = {agent: {} for agent in self.agents}

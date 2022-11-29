@@ -19,7 +19,7 @@ class Item:
 class Gold(Item):
     name = 'gold'
     supply = 0
-    alpha = config.alpha.gold
+    alpha = None
     grow_rate = 0
     collect_time = 100
     capacity = 0.01
@@ -29,9 +29,9 @@ class Gold(Item):
     reusable = True
 
 class Pepper(Item):
-    name = 'gold'
+    name = 'pepper'
     supply = 0
-    alpha = config.alpha.gold
+    alpha = None
     grow_rate = 0
     collect_time = 100
     capacity = 0.01
@@ -41,9 +41,9 @@ class Pepper(Item):
     reusable = True
 
 class Ivory(Item):
-    name = 'gold'
+    name = 'ivory'
     supply = 0
-    alpha = config.alpha.gold
+    alpha = None
     grow_rate = 0
     collect_time = 100
     capacity = 0.01
@@ -54,9 +54,9 @@ class Ivory(Item):
 
 
 class Shell(Item):
-    name = 'gold'
+    name = 'shell'
     supply = 0
-    alpha = config.alpha.gold
+    alpha = None
     grow_rate = 0
     collect_time = 100
     capacity = 0.01
@@ -67,9 +67,9 @@ class Shell(Item):
 
 
 class Pineapple(Item):
-    name = 'gold'
+    name = 'pineapple'
     supply = 0
-    alpha = config.alpha.gold
+    alpha = None
     grow_rate = 0
     collect_time = 100
     capacity = 0.01
@@ -79,9 +79,9 @@ class Pineapple(Item):
     reusable = True
 
 class Peanut(Item):
-    name = 'gold'
+    name = 'peanut'
     supply = 0
-    alpha = config.alpha.gold
+    alpha = None
     grow_rate = 0
     collect_time = 100
     capacity = 0.01
@@ -91,9 +91,9 @@ class Peanut(Item):
     reusable = True
 
 class Stone(Item):
-    name = 'gold'
+    name = 'stone'
     supply = 0
-    alpha = config.alpha.gold
+    alpha = None
     grow_rate = 0
     collect_time = 100
     capacity = 0.01
@@ -103,9 +103,9 @@ class Stone(Item):
     reusable = True
 
 class Pumpkin(Item):
-    name = 'gold'
+    name = 'pumpkin'
     supply = 0
-    alpha = config.alpha.gold
+    alpha = None
     grow_rate = 0
     collect_time = 100
     capacity = 0.01

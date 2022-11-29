@@ -1,8 +1,7 @@
-from dataclasses import dataclass
+class GameConfig:
+    agent_num = 100
+    total_step: 10000
 
-
-@dataclass
-class EnvConfig:
-    agent_num: int
-    total_step: int
-    
+class MapSize:
+    width = 32
+    height = 32
