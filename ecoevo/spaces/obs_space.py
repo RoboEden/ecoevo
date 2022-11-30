@@ -1,9 +1,7 @@
 import random
 import numpy as np
-import gymnasium as gym
 
 from typing import Any, List
-from gymnasium.spaces import Discrete, Dict, Tuple
 from gymnasium import spaces
 from ecoevo.config import EnvConfig
 
