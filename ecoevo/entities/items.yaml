@@ -1,0 +1,72 @@
+gold:
+  supply: 0
+  grow_rate: 0
+  collect_time: 10
+  capacity: 10
+  collect_amount: 1
+  reserve: 10000
+  expiry: 0
+  disposable: False
+pepper:
+  supply: 0
+  grow_rate: 0
+  collect_time: 10
+  capacity: 10
+  collect_amount: 1
+  reserve: 10000
+  expiry: 0
+  disposable: False
+coral:
+  supply: 0
+  grow_rate: 0
+  collect_time: 10
+  capacity: 10
+  collect_amount: 1
+  reserve: 10000
+  expiry: 0
+  disposable: False
+sand:
+  supply: 0
+  grow_rate: 0
+  collect_time: 10
+  capacity: 10
+  collect_amount: 1
+  reserve: 10000
+  expiry: 0
+  disposable: False
+pineapple:
+  supply: 0
+  grow_rate: 0
+  collect_time: 10
+  capacity: 10
+  collect_amount: 1
+  reserve: 10000
+  expiry: 0
+  disposable: False
+peanut:
+  supply: 0
+  grow_rate: 0
+  collect_time: 10
+  capacity: 10
+  collect_amount: 1
+  reserve: 10000
+  expiry: 0
+  disposable: False
+stone:
+  supply: 0
+  grow_rate: 0
+  collect_time: 10
+  capacity: 10
+  collect_amount: 1
+  reserve: 10000
+  expiry: 0
+  disposable: False
+pumpkin:
+  supply: 0
+  grow_rate: 0
+  collect_time: 10
+  capacity: 10
+  collect_amount: 1
+  reserve: 10000
+  expiry: 0
+  disposable: False
