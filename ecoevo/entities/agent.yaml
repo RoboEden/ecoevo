@@ -1,0 +1,133 @@
+pepper_bro:
+  preference:
+    gold: 6
+    pepper: 4
+    coral: 8
+    sand: 4
+    pineapple: 8
+    peanut: 4
+    stone: 4
+    pumpkin: 4
+  ability:
+    gold: 6
+    pepper: 4
+    coral: 8
+    sand: 4
+    pineapple: 8
+    peanut: 4
+    stone: 4
+    pumpkin: 4  
+coral_hunter:
+  preference:
+    gold: 6
+    pepper: 4
+    coral: 8
+    sand: 4
+    pineapple: 8
+    peanut: 4
+    stone: 4
+    pumpkin: 4
+  ability:
+    gold: 6
+    pepper: 4
+    coral: 8
+    sand: 4
+    pineapple: 8
+    peanut: 4
+    stone: 4
+    pumpkin: 4 
+sand_collector:
+  preference:
+    gold: 6
+    pepper: 4
+    coral: 8
+    sand: 4
+    pineapple: 8
+    peanut: 4
+    stone: 4
+    pumpkin: 4
+  ability:
+    gold: 6
+    pepper: 4
+    coral: 8
+    sand: 4
+    pineapple: 8
+    peanut: 4
+    stone: 4
+    pumpkin: 4 
+pineapple_farmer:
+  preference:
+    gold: 6
+    pepper: 4
+    coral: 8
+    sand: 4
+    pineapple: 8
+    peanut: 4
+    stone: 4
+    pumpkin: 4
+  ability:
+    gold: 6
+    pepper: 4
+    coral: 8
+    sand: 4
+    pineapple: 8
+    peanut: 4
+    stone: 4
+    pumpkin: 4 
+peanut_collector:
+  preference:
+    gold: 6
+    pepper: 4
+    coral: 8
+    sand: 4
+    pineapple: 8
+    peanut: 4
+    stone: 4
+    pumpkin: 4
+  ability:
+    gold: 6
+    pepper: 4
+    coral: 8
+    sand: 4
+    pineapple: 8
+    peanut: 4
+    stone: 4
+    pumpkin: 4 
+stone_picker:
+  preference:
+    gold: 6
+    pepper: 4
+    coral: 8
+    sand: 4
+    pineapple: 8
+    peanut: 4
+    stone: 4
+    pumpkin: 4
+  ability:
+    gold: 6
+    pepper: 4
+    coral: 8
+    sand: 4
+    pineapple: 8
+    peanut: 4
+    stone: 4
+    pumpkin: 4 
+pumpkin_farmer:
+  preference:
+    gold: 6
+    pepper: 4
+    coral: 8
+    sand: 4
+    pineapple: 8
+    peanut: 4
+    stone: 4
+    pumpkin: 4
+  ability:
+    gold: 6
+    pepper: 4
+    coral: 8
+    sand: 4
+    pineapple: 8
+    peanut: 4
+    stone: 4
+    pumpkin: 4 
