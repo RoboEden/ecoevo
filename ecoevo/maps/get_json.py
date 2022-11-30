@@ -60,6 +60,7 @@ dict_type_colour = {
 
 fig, ax = plt.subplots()
 
+# draw blocks
 shape_height, shape_width = len(mat_type_block), len(mat_type_block[0])
 len_block = 1
 for y in range(shape_height):
@@ -70,9 +71,12 @@ for y in range(shape_height):
         ax.add_patch(rectangle)
         # plt.text(x=x + len_block / 2, y=shape_height - y - 1 + len_block / 2, s=str(mat_type_block[y][x]))
 
+# let the length of an x axis unit be equal with y axis
 ax.set_aspect(1)
-x_major_locator = plt.MultipleLocator(8)
-y_major_locator = plt.MultipleLocator(8)
+
+# 8 blocks an area
+x_major_locator = plt.MultipleLocator(area_size)
+y_major_locator = plt.MultipleLocator(area_size)
 ax.xaxis.set_major_locator(x_major_locator)
 ax.yaxis.set_major_locator(y_major_locator)
 

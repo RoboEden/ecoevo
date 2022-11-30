@@ -108,8 +108,6 @@ plt.xlim(xmin=0, xmax=map_size * len_block)
 plt.ylim(ymin=0, ymax=map_size * len_block)
 plt.grid(linestyle='dashed', linewidth=1)
 
-# plt.show()
-
 
 """ save picture """
 
