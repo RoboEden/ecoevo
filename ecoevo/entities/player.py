@@ -26,17 +26,22 @@ class Bag:
     pumpkin = 0
 
 
-class Agent:
+class Player:
 
     def __init__(self, type: str):
-        with open('ecoevo/entities/agent.yaml') as file:
-            agent_types = yaml.load(file, Loader=SafeLoader)
-        self.preference = dict(agent_types[type]['preference'])
-        self.ability = dict(agent_types[type]['ability'])
+        with open('ecoevo/entities/player.yaml') as file:
+            player_types = yaml.load(file, Loader=SafeLoader)
+        self.preference = dict(player_types[type]['preference'])
+        self.ability = dict(player_types[type]['ability'])
         self.backpack = Bag()
         self.stomach = Bag()
         self.pos_x = 0
         self.pos_y = 0
+        self.local_obs = None
+        self.id = 0
+
+    def update_local_obs(self, obs):
+        self.local_obs = obs.getobs(self.id)
 
     def collect(self, item: Item):
         self.backpack[item.name] += item.collect_amount

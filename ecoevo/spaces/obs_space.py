@@ -76,7 +76,7 @@ class UnitIDSpace(spaces.Space):
         return type(x) == "str" and "unit" in x
 
 
-def get_obs_space(config: EnvConfig, agent_names: List[str], agent: int = 0):
+def get_obs_space(config: EnvConfig, player_names: List[str], player: int = 0):
     max_space = 2**32 - 1
     obs_space = dict()
 
@@ -92,8 +92,8 @@ def get_obs_space(config: EnvConfig, agent_names: List[str], agent: int = 0):
 
     # teams obs space
     teams_obs_space = dict()
-    for agent_name in agent_names:
-        teams_obs_space[agent_name] = spaces.Dict(
+    for player_name in player_names:
+        teams_obs_space[player_name] = spaces.Dict(
             team_id=spaces.Discrete(2),
             faction=FactionString(),
             water=spaces.Discrete(max_space),
@@ -109,8 +109,8 @@ def get_obs_space(config: EnvConfig, agent_names: List[str], agent: int = 0):
     # board obs space
     map_shape = (config.map_size - 1, config.map_size - 1)
     spawns_space = dict()
-    for agent_name in agent_names:
-        spawns_space[agent_name] = DynamicArray(
+    for player_name in player_names:
+        spawns_space[player_name] = DynamicArray(
             spaces.Box(0, config.map_size - 1, shape=(2, )),
             (config.map_size**2) // 2)
     board_obs_space = dict(ice=spaces.Box(low=0,
@@ -140,7 +140,7 @@ def get_obs_space(config: EnvConfig, agent_names: List[str], agent: int = 0):
 
     # Unit obs space
     units_obs_space = dict()
-    for agent_name in agent_names:
+    for player_name in player_names:
         # defines what each unit's info looks like since its variable
         # up to user to do any kind of padding or reshaping
         obs_dict = dict(
@@ -161,13 +161,13 @@ def get_obs_space(config: EnvConfig, agent_names: List[str], agent: int = 0):
             obs_dict["action_queue"] = ActionsQueue(
                 spaces.MultiDiscrete([6, 5, 5, config.max_transfer_amount, 2]),
                 config.UNIT_ACTION_QUEUE_SIZE)
-        units_obs_space[agent_name] = spaces.Dict(obs_dict)
+        units_obs_space[player_name] = spaces.Dict(obs_dict)
 
     obs_space["units"] = spaces.Dict(units_obs_space)
 
     # Factory obs space
     factories_obs_space = dict()
-    for agent_name in agent_names:
+    for player_name in player_names:
         # defines what each factory's info looks like since its variable
         # up to user to do any kind of padding or reshaping
         obs_dict = dict(power=spaces.Discrete(max_space),
@@ -184,7 +184,7 @@ def get_obs_space(config: EnvConfig, agent_names: List[str], agent: int = 0):
                         unit_id=FactoryIDSpace(),
                         team_id=spaces.Discrete(2),
                         strain_id=spaces.Discrete(max_space))
-        factories_obs_space[agent_name] = spaces.Dict(obs_dict)
+        factories_obs_space[player_name] = spaces.Dict(obs_dict)
     obs_space["factories"] = spaces.Dict(factories_obs_space)
 
     return spaces.Dict(obs_space)

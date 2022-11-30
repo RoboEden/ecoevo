@@ -1,5 +1,5 @@
 class EnvConfig:
-    agent_num = 100
+    player_num = 100
     total_step: 10000
 
 
