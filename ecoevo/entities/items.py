@@ -58,8 +58,8 @@ class Coral(Item):
     reusable = True
 
 
-class Shell(Item):
-    name = 'shell'
+class Sand(Item):
+    name = 'sand'
     supply = 0
     alpha = None
     grow_rate = 0
