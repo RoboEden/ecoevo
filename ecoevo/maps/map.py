@@ -7,7 +7,7 @@ from ecoevo.config import MapSize
 
 class MapGenerator:
     def __init__(self) -> None:
-        path = './base.json'
+        path = './files/base.json'
         with open(path) as fp:
             self.data = json.load(fp)
     
