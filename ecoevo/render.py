@@ -1,6 +1,8 @@
 from .env import EcoEvo
 
 from pettingzoo.utils import parallel_to_aec, wrappers
+
+
 def env(render_mode=None):
     """
     The env function often wraps the environment in wrappers by default.
@@ -29,6 +31,7 @@ def raw_env(render_mode=None):
     env = parallel_to_aec(env)
     return env
 
+
 def render(self):
     """
     Renders the environment. In human mode, it can print to terminal, open
@@ -40,10 +43,10 @@ def render(self):
         )
         return
 
-    if len(self.agents) == 2:
+    if len(self.players) == 2:
         string = "Current state: Agent1: {} , Agent2: {}".format(
-            MOVES[self.state[self.agents[0]]], MOVES[self.state[self.agents[1]]]
-        )
+            MOVES[self.state[self.players[0]]],
+            MOVES[self.state[self.players[1]]])
     else:
         string = "Game over"
     print(string)
