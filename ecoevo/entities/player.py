@@ -1,6 +1,6 @@
 import yaml
 from enum import Enum
-from items import Item
+from ecoevo.entities.items import Item
 from dataclasses import dataclass
 from yaml.loader import SafeLoader
 
@@ -44,7 +44,7 @@ class Player:
         self.local_obs = obs.getobs(self.id)
 
     def collect(self, item: Item):
-        self.backpack[item.name] += item.collect_amount
+        self.backpack[item.name] += item.harvest
 
     def consume(self, item: Item):
         self.backpack[item.name] -= 1

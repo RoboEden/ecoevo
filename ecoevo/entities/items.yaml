@@ -3,7 +3,7 @@ gold:
   grow_rate: 0
   collect_time: 10
   capacity: 10
-  collect_amount: 1
+  harvest: 1
   reserve: 10000
   expiry: 0
   disposable: False
@@ -12,7 +12,7 @@ pepper:
   grow_rate: 0
   collect_time: 10
   capacity: 10
-  collect_amount: 1
+  harvest: 1
   reserve: 10000
   expiry: 0
   disposable: False
@@ -21,7 +21,7 @@ coral:
   grow_rate: 0
   collect_time: 10
   capacity: 10
-  collect_amount: 1
+  harvest: 1
   reserve: 10000
   expiry: 0
   disposable: False
@@ -30,7 +30,7 @@ sand:
   grow_rate: 0
   collect_time: 10
   capacity: 10
-  collect_amount: 1
+  harvest: 1
   reserve: 10000
   expiry: 0
   disposable: False
@@ -39,7 +39,7 @@ pineapple:
   grow_rate: 0
   collect_time: 10
   capacity: 10
-  collect_amount: 1
+  harvest: 1
   reserve: 10000
   expiry: 0
   disposable: False
@@ -48,7 +48,7 @@ peanut:
   grow_rate: 0
   collect_time: 10
   capacity: 10
-  collect_amount: 1
+  harvest: 1
   reserve: 10000
   expiry: 0
   disposable: False
@@ -57,7 +57,7 @@ stone:
   grow_rate: 0
   collect_time: 10
   capacity: 10
-  collect_amount: 1
+  harvest: 1
   reserve: 10000
   expiry: 0
   disposable: False
@@ -66,7 +66,7 @@ pumpkin:
   grow_rate: 0
   collect_time: 10
   capacity: 10
-  collect_amount: 1
+  harvest: 1
   reserve: 10000
   expiry: 0
   disposable: False

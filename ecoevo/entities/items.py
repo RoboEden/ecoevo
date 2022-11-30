@@ -1,9 +1,6 @@
 import yaml
 from yaml.loader import SafeLoader
 
-with open('ecoevo/entities/items.yaml') as file:
-    items = yaml.load(file, Loader=SafeLoader)
-
 
 class Item:
     name: str
@@ -11,10 +8,19 @@ class Item:
     grow_rate: float
     collect_time: int
     capacity: float
-    collect_amount: int
-    reserve: int
+    harvest: int
     expiry: int
     disposable: bool
 
     def __init__(self, amount) -> None:
         self.amount = amount
+
+    def __str__(self) -> str:
+        return type(self).__name__
+
+
+def get_item(name, amount) -> Item:
+    with open('ecoevo/entities/items.yaml') as file:
+        data = dict(yaml.load(file, Loader=SafeLoader))
+    subclass = type(name, (Item, ), data[name])
+    return subclass(amount)
