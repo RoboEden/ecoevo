@@ -1,37 +1,14 @@
-import functools
 from ecoevo.entities.player import Player
 from ecoevo.maps.map import MapGenerator
 
 
 class EcoEvo:
-    metadata = {"render_modes": ["human"], "name": "ecoevo_v0"}
 
     def __init__(self, config, render_mode=None):
-        """
-        The init method takes in environment arguments and should define the following attributes:
-        - player_ids
-        - action_spaces
-        - observation_spaces
-        These attributes should not be changed after initialization.
-        """
-        # self.possible_players = ["player_" + str(r) for r in range(2)]
-        # self.player_name_mapping = dict(
-        #     zip(self.possible_players, list(range(len(self.possible_players))))
-        # )
         self.render_mode = render_mode
         self.config = config
         self.players = [Player(name) for name in config.name]
         self.map_generator = MapGenerator()
-
-    # this cache ensures that same space object is returned for the same player
-    # allows action space seeding to work as expected
-    # def close(self):
-    #     """
-    #     Close should release any graphical displays, subprocesses, network connections
-    #     or any other environment data which should not be kept around after the
-    #     user is no longer using the environment.
-    #     """
-    #     pass
 
     def reset(self, seed=None, return_info=False, options=None):
         """
