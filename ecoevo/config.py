@@ -1,6 +1,9 @@
 class EnvConfig:
     player_num = 100
     total_step: 10000
+    name = [
+        'pepper_bro',
+    ]
 
 
 class MapSize:
