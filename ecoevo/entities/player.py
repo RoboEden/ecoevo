@@ -5,27 +5,8 @@ from pydantic import BaseModel
 from enum import Enum
 from ecoevo.entities.items import Item, load_item
 
-PATH = ''
 with open('ecoevo/entities/player.yaml') as file:
-    player_types = yaml.load(file, Loader=SafeLoader)
-
-
-class Player:
-    name: str
-    supply: int
-    grow_rate: float
-    collect_time: int
-    capacity: float
-    harvest: int
-    expiry: int
-    disposable: bool
-
-    def __init__(self, amount) -> None:
-        self.amount = amount
-
-    def __str__(self) -> str:
-        return type(self).__name__
-
+    ALL_PLAYER_TYPES = yaml.load(file, Loader=SafeLoader)
 
 # def load_item(name, amount) -> Item:
 #     with open('ecoevo/entities/items.yaml') as file:
@@ -52,12 +33,23 @@ class Bag(BaseModel):
     pumpkin = load_item('pumpkin', num=0)
 
 
+class ItemRatio(BaseModel):
+    gold: float
+    pepper: float
+    coral: float
+    sand: float
+    pineapple: float
+    peanut: float
+    stone: float
+    pumpkin: float
+
+
 class Player:
 
     def __init__(self, name: str):
         self.name = name
-        self.preference = dict(player_types[name]['preference'])
-        self.ability = dict(player_types[name]['ability'])
+        self.preference = ItemRatio(**ALL_PLAYER_TYPES[name]['preference'])
+        self.ability = ItemRatio(**ALL_PLAYER_TYPES[name]['ability'])
         self.backpack = Bag()
         self.stomach = Bag()
         self.pos_x = 0

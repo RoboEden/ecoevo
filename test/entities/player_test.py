@@ -10,3 +10,5 @@ if __name__ == "__main__":
     player = Player('pepper_bro')
     print(player.stomach)
     print(player.backpack)
+    print(player.ability)
+    print(player.preference)

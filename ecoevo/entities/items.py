@@ -3,7 +3,7 @@ from yaml.loader import SafeLoader
 from pydantic import BaseModel
 
 with open('ecoevo/entities/items.yaml') as file:
-    data = dict(yaml.load(file, Loader=SafeLoader))
+    ALL_ITEM_TYPES = dict(yaml.load(file, Loader=SafeLoader))
 
 
 class Item(BaseModel):
@@ -22,5 +22,5 @@ def load_item(name, num=0) -> Item:
     return Item(**{
         'name': name,
         'num': num,
-        **data[name],
+        **ALL_ITEM_TYPES[name],
     })
