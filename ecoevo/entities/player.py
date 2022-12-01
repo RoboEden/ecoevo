@@ -1,10 +1,37 @@
 import yaml
-from enum import Enum
-from ecoevo.entities.items import Item
-from dataclasses import dataclass
 from yaml.loader import SafeLoader
+from pydantic import BaseModel
+
+from enum import Enum
+from ecoevo.entities.items import Item, load_item
 
 PATH = ''
+with open('ecoevo/entities/player.yaml') as file:
+    player_types = yaml.load(file, Loader=SafeLoader)
+
+
+class Player:
+    name: str
+    supply: int
+    grow_rate: float
+    collect_time: int
+    capacity: float
+    harvest: int
+    expiry: int
+    disposable: bool
+
+    def __init__(self, amount) -> None:
+        self.amount = amount
+
+    def __str__(self) -> str:
+        return type(self).__name__
+
+
+# def load_item(name, amount) -> Item:
+#     with open('ecoevo/entities/items.yaml') as file:
+#         data = dict(yaml.load(file, Loader=SafeLoader))
+#     subclass = type(name, (Item, ), data[name])
+#     return subclass(amount)
 
 
 class Action(Enum):
@@ -14,25 +41,23 @@ class Action(Enum):
     TRADE = 3
 
 
-@dataclass
-class Bag:
-    gold = 0
-    pepper = 0
-    coral = 0
-    sand = 0
-    pineapple = 0
-    peanut = 0
-    stone = 0
-    pumpkin = 0
+class Bag(BaseModel):
+    gold = load_item('gold', num=0)
+    pepper = load_item('pepper', num=0)
+    coral = load_item('coral', num=0)
+    sand = load_item('sand', num=0)
+    pineapple = load_item('pineapple', num=0)
+    peanut = load_item('peanut', num=0)
+    stone = load_item('stone', num=0)
+    pumpkin = load_item('pumpkin', num=0)
 
 
 class Player:
 
-    def __init__(self, type: str):
-        with open('ecoevo/entities/player.yaml') as file:
-            player_types = yaml.load(file, Loader=SafeLoader)
-        self.preference = dict(player_types[type]['preference'])
-        self.ability = dict(player_types[type]['ability'])
+    def __init__(self, name: str):
+        self.name = name
+        self.preference = dict(player_types[name]['preference'])
+        self.ability = dict(player_types[name]['ability'])
         self.backpack = Bag()
         self.stomach = Bag()
         self.pos_x = 0

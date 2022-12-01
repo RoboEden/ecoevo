@@ -1,4 +1,4 @@
-from ecoevo.entities.items import Item, get_item
+from ecoevo.entities.items import Item, load_item
 import argparse
 
 
@@ -11,10 +11,10 @@ def parse_args():
 
 if __name__ == "__main__":
     args = parse_args()
-    gold = get_item('gold', 100)
-    print(gold.amount)
-    print(gold.expiry)
-    print(gold.capacity)
-    print(gold.grow_rate)
-    print(gold.harvest)
-    print(gold.collect_time)
+    gold = load_item('gold', num=100)
+    print(id(gold))
+    print(gold)
+
+    gold1 = load_item('gold', num=100)
+    print(id(gold1))
+    print(gold1)

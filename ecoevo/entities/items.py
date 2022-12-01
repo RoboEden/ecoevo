@@ -1,9 +1,14 @@
 import yaml
 from yaml.loader import SafeLoader
+from pydantic import BaseModel
+
+with open('ecoevo/entities/items.yaml') as file:
+    data = dict(yaml.load(file, Loader=SafeLoader))
 
 
-class Item:
+class Item(BaseModel):
     name: str
+    num: int
     supply: int
     grow_rate: float
     collect_time: int
@@ -12,15 +17,10 @@ class Item:
     expiry: int
     disposable: bool
 
-    def __init__(self, amount) -> None:
-        self.amount = amount
 
-    def __str__(self) -> str:
-        return type(self).__name__
-
-
-def get_item(name, amount) -> Item:
-    with open('ecoevo/entities/items.yaml') as file:
-        data = dict(yaml.load(file, Loader=SafeLoader))
-    subclass = type(name, (Item, ), data[name])
-    return subclass(amount)
+def load_item(name, num=0) -> Item:
+    return Item(**{
+        'name': name,
+        'num': num,
+        **data[name],
+    })
