@@ -2,6 +2,8 @@ import numpy as np
 from ecoevo.entities.player import Player
 from ecoevo.maps import MapGenerator
 from ecoevo.config import EnvConfig, MapSize
+from ecoevo.config import PlayerConfig
+from ecoevo.reward import RewardParser
 
 
 class EcoEvo:
@@ -11,6 +13,7 @@ class EcoEvo:
         # self.players = [Player(name) for name in EnvConfig.name]
         self.map_generator = MapGenerator()
         self.players = []
+        self.reward_parser = RewardParser()
 
     def reset(self, seed=None):
         """
@@ -24,9 +27,7 @@ class EcoEvo:
         self.map = self.map_generator.gen_map()
 
         # Add agent
-        player_pos = np.random.choice(MapSize.width * MapSize.height,
-                                      size=EnvConfig.player_num,
-                                      replace=False)
+        player_pos = np.random.choice(MapSize.width * MapSize.height, size=EnvConfig.player_num, replace=False)
 
         for i, name in enumerate(EnvConfig.name):
             player = Player(name)
@@ -56,6 +57,7 @@ class EcoEvo:
         """
         for player in self.players:
             print(player)
+            player.expend_energy(PlayerConfig.comsumption_per_step)
             # player = self.player_dict[player]
             # action = actions[self.players]
             # if action in [Action.MOVE, Action.COLLECT, Action.CONSUME]:
@@ -69,8 +71,7 @@ class EcoEvo:
         obs = {player: self.get_obs(player) for player in self.players}
 
         self.curr_step += 1
-        reward_parser = lambda x: 1
-        rewards = {player: reward_parser(player) for player in self.players}
+        rewards = {player: RewardParser.parse(player, actions[player]) for player in self.players}
 
         # typically there won't be any information in the infos, but there must
         # still be an entry for each player

@@ -4,6 +4,8 @@ from pydantic import BaseModel
 
 from enum import Enum
 from ecoevo.entities.items import Item, load_item
+from ecoevo.entities.items import ALL_ITEM_TYPES
+from ecoevo.config import PlayerConfig
 
 with open('ecoevo/entities/player.yaml') as file:
     ALL_PLAYER_TYPES = yaml.load(file, Loader=SafeLoader)
@@ -46,7 +48,7 @@ class ItemRatio(BaseModel):
 
 class Player:
 
-    def __init__(self, name: str):
+    def __init__(self, name: str, id: int):
         self.name = name
         self.preference = ItemRatio(**ALL_PLAYER_TYPES[name]['preference'])
         self.ability = ItemRatio(**ALL_PLAYER_TYPES[name]['ability'])
@@ -55,6 +57,8 @@ class Player:
         self.pos = (None, None)
         self.local_obs = None
         self.id = 0
+        self.consume_cnts = {item_type: 0 for item_type in ALL_ITEM_TYPES.keys()}
+        self.health = PlayerConfig.max_health
 
     def update_local_obs(self, obs):
         self.local_obs = obs.getobs(self.id)
@@ -65,6 +69,8 @@ class Player:
     def consume(self, item: Item):
         self.backpack[item.name] -= 1
         self.stomach[item.name] -= 1
+        self.consume_cnts[item.name] += 1
+        self.health = min(self.health + item.supply, PlayerConfig.max_health)
 
     def move(self, direction: int):
         if direction == 1:
@@ -79,8 +85,18 @@ class Player:
             return False
         return True
 
-    def buy(item):
+    def buy(self, item):
         pass
 
-    def sell(item):
+    def sell(self, item):
         pass
+
+    def expend_energy(self, quantity: int):
+        self.health = max(0, self.health - quantity)
+
+    @property
+    def weight(self):
+        w = 0
+        for item_name, item in self.backpack.dict().items():
+            w += item.num * item.capacity
+        return w
