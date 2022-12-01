@@ -52,8 +52,7 @@ class Player:
         self.ability = ItemRatio(**ALL_PLAYER_TYPES[name]['ability'])
         self.backpack = Bag()
         self.stomach = Bag()
-        self.pos_x = 0
-        self.pos_y = 0
+        self.pos = (None, None)
         self.local_obs = None
         self.id = 0
 
@@ -66,10 +65,6 @@ class Player:
     def consume(self, item: Item):
         self.backpack[item.name] -= 1
         self.stomach[item.name] -= 1
-
-    @property
-    def pos(self):
-        return self.pos_x, self.pos_y
 
     def move(self, direction: int):
         if direction == 1:
