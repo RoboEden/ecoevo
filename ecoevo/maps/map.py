@@ -1,9 +1,7 @@
-import numpy as np
 import json
 from typing import Dict, Tuple
 from ecoevo.entities.player import Player
-from ecoevo.entities.items import Item
-from ecoevo.config import MapSize
+from ecoevo.entities.items import load_item
 
 
 class MapGenerator:
@@ -22,9 +20,9 @@ class MapGenerator:
                 item_name = self.data['tiles'][x][y]
                 if item_name == 'empty':
                     continue
-                amount = self.data['amount'][x][y]
+                num = self.data['amount'][x][y]
                 map[(x, y)] = {
-                    'item': Item(item_name, amount),
+                    'item': load_item(item_name, num=num),
                     'player': None,
                 }
         return map
