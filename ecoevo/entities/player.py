@@ -49,6 +49,10 @@ class Bag(BaseModel):
                 usage += item.num * item.capacity
         return EnvConfig.bag_volume - usage
 
+    @property
+    def used_volume(self):
+        return EnvConfig.bag_volume - self.remain_volume
+
 
 class ItemRatio(BaseModel):
     gold: float
@@ -72,10 +76,6 @@ class Player:
         self.pos = (None, None)
         self.local_obs = None
         self.id = id
-        # self.consume_cnts = {
-        #     item_type: 0
-        #     for item_type in ALL_ITEM_TYPES.keys()
-        # }
         self.health = PlayerConfig.max_health
 
     def collect(self, item: Item):
