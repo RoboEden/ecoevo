@@ -4,20 +4,20 @@ import random
 import matplotlib.pyplot as plt
 import matplotlib.patches as pch
 
-from ecoevo.trader.trader import trade
+from ecoevo.trader.trader import Trader
 
 
 """ generate data: random """
 
 map_size = 64
-num_offer = 100
+num_order = 128
 ub_amount = 10
 
-# offers
+# orders
 random.seed(42)
 mat_player = [[False for _ in range(map_size)] for _ in range(map_size)]
-list_offer = []
-for i in range(num_offer):
+list_order = []
+for i in range(num_order):
     # position
     x, y = random.randint(0, map_size - 1), random.randint(0, map_size - 1)
     while mat_player[x][y]:
@@ -27,72 +27,59 @@ for i in range(num_offer):
     # good amount
     amount = random.randint(1, ub_amount)
 
-    list_offer.append({'position': (x, y), 'amount': amount})
+    # full case
+    order = ((x, y), ('gold', -amount), ('gold', amount))
+    # couple case
+    # order = ((x, y), ('peanut', -amount), ('gold', amount)) if not i % 2 else (
+    #     (x, y), ('gold', -amount), ('peanut', amount))
 
-distance_match = 4
-
-# validation and volume
-mat_if_match = [[False for _ in range(num_offer)] for _ in range(num_offer)]
-mat_volume = [[0 for _ in range(num_offer)] for _ in range(num_offer)]
-for i in range(num_offer):
-    for j in range(num_offer):
-        if i != j:
-            pos_i, pos_j = list_offer[i]['position'], list_offer[j]['position']
-            if abs(pos_i[0] - pos_j[0]) <= distance_match and abs(pos_i[1] - pos_j[1]) <= distance_match:
-                mat_if_match[i][j] = True
-                mat_volume[i][j] = min(list_offer[i]['amount'], list_offer[j]['amount'])
+    list_order.append(order)
 
 
 """ generate data: edge case """
 
-# map_size = 4
-# num_offer = 4
+# map_size = 16
 
-# list_offer = [
-#     {'position': (0, 2), 'amount': 3},
-#     {'position': (1, 1), 'amount': 10},
-#     {'position': (2, 2), 'amount': 5},
-#     {'position': (3, 1), 'amount': 4}
+# list_order = [
+#     ((0, 0), ('peanut', -3), ('gold', 3)), 
+#     ((4, 0), ('gold', -10), ('peanut', 10)), 
+#     ((6, 4), ('peanut', -5), ('gold', 5)), 
+#     ((10, 4), ('gold', -4), ('peanut', 4))
 # ]
-
-# mat_if_match = [[True if j != i else False for j in range(num_offer)] for i in range(num_offer)]
-# mat_if_match[0][3], mat_if_match[3][0] = False, False
-
-# mat_volume = [[min(
-#     list_offer[i]['amount'], list_offer[j]['amount']) for j in range(num_offer)] for i in range(num_offer)]
-# mat_volume[0][3], mat_volume[3][0] = 0, 0
 
 
 """ model """
 
-dict_match = trade(num_offer=num_offer, mat_if_match=mat_if_match, mat_volume=mat_volume)
+trader = Trader(list_order=list_order)
+trader.trade()
 
-print("get {} trades".format(len(dict_match)))
+print("get {} trades".format(len(trader.list_match)))
 
 
 """ visualise """
 
 fig, ax = plt.subplots()
 
-# draw blocks and offers
+# draw blocks and orders
 len_block = 1
-dict_offer = {offer['position']: offer['amount'] for offer in list_offer}
+dict_order = {order[0]: min(abs(order[1][1]), order[2][1]) for order in list_order}
 for y in range(map_size):
     for x in range(map_size):
-        colour = 'red' if (x, y) in dict_offer.keys() else 'white'
+        colour = 'red' if (x, y) in dict_order.keys() else 'white'
         rectangle = pch.Rectangle(xy=(x * len_block, y * len_block), width=len_block, height=len_block, color=colour)
         ax.add_patch(rectangle)
 
-        if (x, y) in dict_offer.keys():
-            plt.text(x=x * len_block + len_block / 2, y=y * len_block + len_block / 2, s=str(dict_offer[x, y]))
+        if (x, y) in dict_order.keys():
+            plt.text(x=x * len_block + len_block / 2, y=y * len_block + len_block / 2, s=str(dict_order[x, y]))
 
 # draw trades as lines
-for t in dict_match.keys():
-    pos_1 = (list_offer[t[0]]['position'][0] + len_block / 2, list_offer[t[0]]['position'][1] + len_block / 2)
-    pos_2 = (list_offer[t[1]]['position'][0] + len_block / 2, list_offer[t[1]]['position'][1] + len_block / 2)
+list_match, mat_volume = trader.list_match, trader.mat_volume
+for t in list_match:
+    pos_1 = (list_order[t[0]][0][0] + len_block / 2, list_order[t[0]][0][1] + len_block / 2)
+    pos_2 = (list_order[t[1]][0][0] + len_block / 2, list_order[t[1]][0][1] + len_block / 2)
     plt.arrow(x=pos_1[0], y=pos_1[1], dx=pos_2[0] - pos_1[0], dy=pos_2[1] - pos_1[1], linestyle='-')
 
-    plt.text(x=(pos_2[0] + pos_1[0]) / 2, y=(pos_2[1] + pos_1[1]) / 2, s=str(dict_match[t]), color='green')
+    plt.text(x=(pos_2[0] + pos_1[0]) / 2, y=(pos_2[1] + pos_1[1]) / 2, s=str(mat_volume[t[0]][t[1]]), color='green')
 
 # let the length of an x axis unit be equal with y axis
 ax.set_aspect(1)
