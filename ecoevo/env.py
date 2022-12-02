@@ -26,10 +26,10 @@ class EcoEvo:
                                       size=EnvConfig.player_num,
                                       replace=False)
 
-        for i, name in enumerate(EnvConfig.name):
-            player = Player(name)
-            x = player_pos[i] // MapSize.width
-            y = player_pos[i] // MapSize.height
+        for idx, name in enumerate(EnvConfig.name):
+            player = Player(name, idx)
+            x = player_pos[idx] // MapSize.width
+            y = player_pos[idx] // MapSize.height
             player.pos = (x, y)
             self.players.append(player)
             if player.pos not in self.map:
@@ -42,45 +42,29 @@ class EcoEvo:
         infos = {player: {} for player in self.players}
         return obs, infos
 
-    def step(self, actions: Tuple[str, Tuple[str, float], Tuple[str, float],
-                                  Tuple[str, float]]):
-        for player in self.players:
-            print(player)
-            player.expend_energy(PlayerConfig.comsumption_per_step)
-
+    def step(
+        self,
+        actions: List[Tuple[Tuple[str, str], Tuple[str, float], Tuple[str,
+                                                                      float]]],
+    ):
+        # action = ('move_up', ('pumpkin', -1), ('sand', -5), ('gold', 10))
         player_ids = random.shuffle(list(range(len(self.players))))
         for player_id in player_ids:
             action, sell_offer, buy_offer = actions[player_id]
             player = self.players[player_id]
-            if self.is_valid(action, sell_offer, buy_offer):
-                primary_action, secondary_action = action
-                if primary_action == 'move':
-                    player.move(secondary_action)
-                elif primary_action == 'collect':
-                    player.collect()
-                elif primary_action == 'consume':
-                    player.consume(secondary_action)
+            if self.valid_action(player, action, sell_offer, buy_offer):
+                player.execute(action, sell_offer, buy_offer)
             else:
-                print(
-                    f'Invalid Action: Player {player_id}: {action} buy: {buy_offer} sell: {sell_offer}'
-                )
                 continue
+        self.curr_step += 1
 
         obs = {player: self.get_obs(player) for player in self.players}
-
-        self.curr_step += 1
         rewards = {
             player: RewardParser.parse(player)
             for player in self.players
         }
-
-        # typically there won't be any information in the infos, but there must
-        # still be an entry for each player
-        done = True
-        if self.curr_step > EnvConfig.total_step:
-            done = True
-
-        infos = {player: {} for player in self.players}
+        done = True if self.curr_step > EnvConfig.total_step else False
+        infos = {player: player.get_info for player in self.players}
         return obs, rewards, done, infos
 
     def get_obs(self, player: Player):
@@ -98,33 +82,12 @@ class EcoEvo:
 
         return local_obs
 
-    def valid_action(self, actions: Tuple[str, Tuple[str, float],
-                                          Tuple[str, float], Tuple[str,
-                                                                   float]]):
-        # action = ('move_up', ('pumpkin', -1), ('sand', -5), ('gold', 10))
+    def valid_action(self, player: Player,
+                     action: Tuple[Tuple[str, str], Tuple[str, int],
+                                   Tuple[str, int]]):
+        action, sell_offer, buy_offer = action
+        print(
+            f'Invalid Action: Player {self.id}: {action} buy: {buy_offer} sell: {sell_offer}'
+        )
 
-        all_offers = []
-        for player_id in range(len(actions)):
-            action, sell_offer, buy_offer = actions[player_id]
-            player = self.players[player_id]
-            name, num = sell_offer
-            item = player.backpack.get_item(name)
-            if num >= item.num:
-                all_offers.append((player.pos, buy_offer, sell_offer))
-            else:
-                continue
-        self.health = max(0, self.health - PlayerConfig.comsumption_per_step)
-        if self.is_valid(action, sell_offer, buy_offer):
-            primary_action, secondary_action = action
-            if primary_action == 'move':
-                self.move(secondary_action)
-            elif primary_action == 'collect':
-                self.collect()
-            elif primary_action == 'consume':
-                self.consume(secondary_action)
-        else:
-            print(
-                f'Invalid Action: Player {self.id}: {action} buy: {buy_offer} sell: {sell_offer}'
-            )
-
-        return all_offers
+        return False
