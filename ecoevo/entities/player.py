@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 from enum import Enum
 from ecoevo.entities.items import Item, load_item
-from ecoevo.config import MapSize, EnvConfig
+from ecoevo.config import MapSize, EnvConfig, PlayerConfig
 from rich import print as rprint
 
 with open('ecoevo/entities/player.yaml') as file:
@@ -40,6 +40,7 @@ class Bag(BaseModel):
         else:
             raise NotImplementedError
 
+    @property
     def remain_volume(self):
         usage = 0
         for item in self.items:
@@ -61,7 +62,7 @@ class ItemRatio(BaseModel):
 
 class Player:
 
-    def __init__(self, name: str):
+    def __init__(self, name: str, id: int):
         self.name = name
         self.preference = ItemRatio(**ALL_PLAYER_TYPES[name]['preference'])
         self.ability = ItemRatio(**ALL_PLAYER_TYPES[name]['ability'])
@@ -70,6 +71,11 @@ class Player:
         self.pos = (None, None)
         self.local_obs = None
         self.id = 0
+        self.consume_cnts = {
+            item_type: 0
+            for item_type in ALL_ITEM_TYPES.keys()
+        }
+        self.health = PlayerConfig.max_health
 
     def collect(self, item: Item):
         if isinstance(item, Item):
@@ -92,6 +98,8 @@ class Player:
             else:
                 self.stomach.get_item(item.name).num = self.backpack.get_item(
                     item.name).num
+            self.health = min(self.health + item.supply,
+                              PlayerConfig.max_health)
         else:
             rprint(
                 f'Player {self.id} cannot consume {item} since no such item left.'
@@ -127,3 +135,19 @@ class Player:
             self.backpack.get_item(sell_item).num -= sell_num
             self.backpack.get_item(buy_item).num += min(
                 buy_num, self.backpack.remain_volume)
+        return True
+
+    def execute(self, action, sell_offer, buy_offer):
+        self.health = max(0, self.health - PlayerConfig.comsumption_per_step)
+        if self.is_valid(action, sell_offer, buy_offer):
+            primary_action, secondary_action = action
+            if primary_action == 'move':
+                self.move(secondary_action)
+            elif primary_action == 'collect':
+                self.collect()
+            elif primary_action == 'consume':
+                self.consume(secondary_action)
+        else:
+            print(
+                f'Invalid Action: Player {self.id}: {action} buy: {buy_offer} sell: {sell_offer}'
+            )

@@ -4,6 +4,8 @@ from typing import List, Tuple
 from ecoevo.entities.player import Player
 from ecoevo.maps import MapGenerator
 from ecoevo.config import EnvConfig, MapSize
+from ecoevo.config import PlayerConfig
+from ecoevo.reward import RewardParser
 
 
 class EcoEvo:
@@ -12,6 +14,7 @@ class EcoEvo:
         self.render_mode = render_mode
         # self.players = [Player(name) for name in EnvConfig.name]
         self.map_generator = MapGenerator()
+        self.reward_parser = RewardParser()
         self.players: List[Player] = []
 
     def reset(self, seed=None):
@@ -26,9 +29,7 @@ class EcoEvo:
         self.map = self.map_generator.gen_map()
 
         # Add agent
-        player_pos = np.random.choice(MapSize.width * MapSize.height,
-                                      size=EnvConfig.player_num,
-                                      replace=False)
+        player_pos = np.random.choice(MapSize.width * MapSize.height, size=EnvConfig.player_num, replace=False)
 
         for i, name in enumerate(EnvConfig.name):
             player = Player(name)
@@ -57,6 +58,17 @@ class EcoEvo:
         - infos
         dicts where each dict looks like {player_1: item_1, player_2: item_2}
         """
+        for player in self.players:
+            print(player)
+            player.expend_energy(PlayerConfig.comsumption_per_step)
+            # player = self.player_dict[player]
+            # action = actions[self.players]
+            # if action in [Action.MOVE, Action.COLLECT, Action.CONSUME]:
+            #     self.map = player.execute(action)
+            # if action is [Action.TRADE]:
+            #     own_offer = action[OFFER]
+            #     nearby_offers = get_nearby_offer(player)
+            #     matched_offer = trader(own_offer, nearby_offers)
 
         # action = (('move', 'up'), ('sand', -5), ('gold', 10))
         # action = (('collect', None), ('pumpkin', -5), ('coral', 10))
@@ -88,8 +100,10 @@ class EcoEvo:
         obs = {player: self.get_obs(player) for player in self.players}
 
         self.curr_step += 1
-        reward_parser = lambda x: 1
-        rewards = {player: reward_parser(player) for player in self.players}
+        rewards = {player: RewardParser.parse(player) for player in self.players}
+
+        # typically there won't be any information in the infos, but there must
+        # still be an entry for each player
         done = True
         if self.curr_step > EnvConfig.total_step:
             done = True
