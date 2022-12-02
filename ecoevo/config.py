@@ -11,3 +11,15 @@ class EnvConfig:
 class MapSize:
     width = 32
     height = 32
+
+
+class PlayerConfig:
+    max_health = 100
+    comsumption_per_step = 1
+
+
+class RewardConfig:
+    threshold = 0
+    w = 0.1
+    penalty = 10
+    rho = 0.5
