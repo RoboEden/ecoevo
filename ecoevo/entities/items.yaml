@@ -44,14 +44,14 @@ pineapple:
   expiry: 0
   disposable: False
 peanut:
-  supply: 0
+  supply: 5
   grow_rate: 0
   collect_time: 10
   capacity: 10
   harvest: 1
   reserve: 10000
   expiry: 0
-  disposable: False
+  disposable: True
 stone:
   supply: 0
   grow_rate: 0
