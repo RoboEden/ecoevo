@@ -6,8 +6,9 @@ if __name__ == "__main__":
     print(bag.coral)
     print('=====================')
     print(bag.coral.num)
+    print(bag.remain_volume)
 
-    player = Player('pepper_bro')
+    player = Player('pepper_bro', 0)
     print(player.stomach)
     print(player.backpack)
     print(player.ability)
