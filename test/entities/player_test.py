@@ -5,27 +5,9 @@ from ecoevo.entities.items import load_item
 if __name__ == "__main__":
 
     player = Player('pepper_bro', 0)
-
-    print('========= name ===========')
-    print(player.name)
-    print('========= ability ===========')
-    print(player.ability)
-    print('========= preference ===========')
-    print(player.preference)
-    print('========= backpack ===========')
-    print(player.backpack)
-    print('========= stomach ===========')
-    print(player.stomach)
-    print('========= pos ===========')
-    print(player.pos)
-    print('========= id ===========')
-    print(player.id)
-    print('========= health ===========')
-    print(player.health)
-    print('========= collect_cast_remain ===========')
-    print(player.collect_cast_remain)
-
     player.pos = (5, 7)
+    print(player.get_info())
+
     peanut = load_item('peanut', num=100)
 
     # player.collect

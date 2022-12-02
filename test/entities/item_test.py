@@ -25,4 +25,5 @@ if __name__ == "__main__":
     print(bag.coral)
     print(bag.coral.num)
     print('=====================')
+    print(bag.used_volume)
     print(bag.remain_volume)

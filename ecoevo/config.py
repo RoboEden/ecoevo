@@ -5,6 +5,12 @@ class EnvConfig:
     visual_radius = 7
     name = [
         'pepper_bro',
+        'coral_hunter',
+        'sand_collector',
+        'pineapple_farmer',
+        'peanut_collector',
+        'stone_picker',
+        'pumpkin_farmer',
     ]
     bag_volume = 100
 
