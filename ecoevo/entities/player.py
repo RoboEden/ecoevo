@@ -35,7 +35,7 @@ class Bag(BaseModel):
     pumpkin: Item = load_item('pumpkin', num=0)
 
     def get_item(self, name: str) -> Item:
-        if name in self.__dir__:
+        if name in self.__dict__:
             return self.__getattribute__(name)
         else:
             raise NotImplementedError
@@ -43,9 +43,10 @@ class Bag(BaseModel):
     @property
     def remain_volume(self):
         usage = 0
-        for item in self.items:
-            item = self.get_item(item_name)
-            usage += item.num * item.capacity
+        for item_name in self.__dict__:
+            item = self.__getattribute__(item_name)
+            if isinstance(item, Item):
+                usage += item.num * item.capacity
         return EnvConfig.bag_volume - usage
 
 
@@ -70,11 +71,11 @@ class Player:
         self.stomach = Bag()
         self.pos = (None, None)
         self.local_obs = None
-        self.id = 0
-        self.consume_cnts = {
-            item_type: 0
-            for item_type in ALL_ITEM_TYPES.keys()
-        }
+        self.id = id
+        # self.consume_cnts = {
+        #     item_type: 0
+        #     for item_type in ALL_ITEM_TYPES.keys()
+        # }
         self.health = PlayerConfig.max_health
 
     def collect(self, item: Item):
