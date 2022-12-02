@@ -16,7 +16,8 @@ dependencies = [
     "ortools",
     "pyyaml",
     "rich",
-    "pydantic"
+    "pydantic",
+    "rich"
 ]
 dynamic = ["version"]
 
