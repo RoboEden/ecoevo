@@ -98,5 +98,5 @@ class Player:
     def weight(self):
         w = 0
         for item_name, item in self.backpack.dict().items():
-            w += item.num * item.capacity
+            w += item["num"] * item["capacity"]
         return w

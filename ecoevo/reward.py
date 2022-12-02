@@ -23,7 +23,7 @@ class RewardParser:
 
         # Calculate alphas
         self.alphas = {
-            player_type: np.zeros((1, len(self.item_names)), dtype=np.float32)
+            player_type: np.zeros(len(self.item_names), dtype=np.float32)
             for player_type in ALL_PLAYER_TYPES
         }
         for player_type in ALL_PLAYER_TYPES:
@@ -36,14 +36,14 @@ class RewardParser:
 
     def utility(self, player: Player):
         alpha = self.alphas[player.name]
-        cnts = np.zeros((1, len(self.item_names)), dtype=np.float32)
+        cnts = np.zeros(len(self.item_names), dtype=np.float32)
         for idx, item_name in enumerate(self.item_names):
             cnt_i = player.consume_cnts[item_name]
             cnts[idx] = cnt_i
         utility = cal_utility(alpha, cnts, RewardConfig.rho)
         return utility
 
-    def parse(self, player: Player, action: Action):
+    def parse(self, player: Player):
         # Utility
         u = self.utility(player)
         if player.id not in self.last_utilities:

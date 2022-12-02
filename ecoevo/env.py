@@ -71,7 +71,7 @@ class EcoEvo:
         obs = {player: self.get_obs(player) for player in self.players}
 
         self.curr_step += 1
-        rewards = {player: RewardParser.parse(player, actions[player]) for player in self.players}
+        rewards = {player: RewardParser.parse(player) for player in self.players}
 
         # typically there won't be any information in the infos, but there must
         # still be an entry for each player
