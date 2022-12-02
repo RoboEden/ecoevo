@@ -13,7 +13,10 @@ dependencies = [
     "scipy",
     "gymnasium",
     "pettingzoo", 
-    "ortools"
+    "ortools",
+    "pyyaml",
+    "rich",
+    "pydantic"
 ]
 dynamic = ["version"]
 

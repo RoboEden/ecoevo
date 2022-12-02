@@ -1,20 +1,26 @@
 import yaml
 from yaml.loader import SafeLoader
+from pydantic import BaseModel
 
 with open('ecoevo/entities/items.yaml') as file:
-    items = yaml.load(file, Loader=SafeLoader)
+    ALL_ITEM_TYPES = dict(yaml.load(file, Loader=SafeLoader))
 
 
-class Item:
+class Item(BaseModel):
     name: str
+    num: int
     supply: int
     grow_rate: float
     collect_time: int
     capacity: float
-    collect_amount: int
-    reserve: int
+    harvest: int
     expiry: int
     disposable: bool
 
-    def __init__(self, amount) -> None:
-        self.amount = amount
+
+def load_item(name, num=0) -> Item:
+    return Item(**{
+        'name': name,
+        'num': num,
+        **ALL_ITEM_TYPES[name],
+    })

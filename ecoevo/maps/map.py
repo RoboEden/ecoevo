@@ -1,32 +1,28 @@
-import numpy as np
 import json
 from typing import Dict, Tuple
-from ecoevo.entities.player import Agent
-from ecoevo.entities.items import Item
-from ecoevo.config import MapSize
+from ecoevo.entities.player import Player
+from ecoevo.entities.items import load_item
 
 
 class MapGenerator:
 
     def __init__(self) -> None:
-        path = './files/base.json'
+        path = 'ecoevo/maps/base.json'
         with open(path) as fp:
-            self.data = json.load(fp)
+            self.data = dict(json.load(fp))
 
-    @staticmethod
-    def gen_random_grid(width: int, height: int, NUM_TILE_TYPE: int):
-        data = np.random.randint(low=0,
-                                 high=NUM_TILE_TYPE,
-                                 size=(height, width))
-
-        return data
-
-    def gen_map(self) -> Dict[Tuple[int, int], Dict[str:Item, str:Agent]]:
+    def gen_map(self) -> Dict[Tuple[int, int], dict]:
+        width = self.data['width']
+        height = self.data['height']
         map = {}
-        for x, y in self.data.items:
-            map[(x, y)] = {
-                'item': Item(type),
-                'player': Agent(self.data['type'])
-            }
-
+        for x in range(width):
+            for y in range(height):
+                item_name = self.data['tiles'][x][y]
+                if item_name == 'empty':
+                    continue
+                num = self.data['amount'][x][y]
+                map[(x, y)] = {
+                    'item': load_item(item_name, num=num),
+                    'player': None,
+                }
         return map
