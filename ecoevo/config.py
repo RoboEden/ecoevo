@@ -3,7 +3,7 @@ class EnvConfig:
     total_step: 10000
     trade_radius = 4
     visual_radius = 7
-    name = [
+    personae = [
         'pepper_bro',
         'coral_hunter',
         'sand_collector',

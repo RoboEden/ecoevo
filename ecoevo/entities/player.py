@@ -7,15 +7,15 @@ from ecoevo.entities.items import Item, ItemRatio, Bag
 from ecoevo.entities.act_type import Action, Direction
 
 with open('ecoevo/entities/player.yaml') as file:
-    ALL_PLAYER_TYPES = yaml.load(file, Loader=SafeLoader)
+    ALL_PERSONAE = yaml.load(file, Loader=SafeLoader)
 
 
 class Player:
 
-    def __init__(self, name: str, id: int):
-        self.name = name
-        self.preference = ItemRatio(**ALL_PLAYER_TYPES[name]['preference'])
-        self.ability = ItemRatio(**ALL_PLAYER_TYPES[name]['ability'])
+    def __init__(self, persona: str, id: int):
+        self.persona = persona
+        self.preference = ItemRatio(**ALL_PERSONAE[persona]['preference'])
+        self.ability = ItemRatio(**ALL_PERSONAE[persona]['ability'])
         self.backpack = Bag()
         self.stomach = Bag()
         self.pos = (None, None)
@@ -25,7 +25,7 @@ class Player:
 
     def get_info(self):
         return {
-            'name': self.name,
+            'persona': self.persona,
             'preference': self.preference.dict(),
             'ability': self.ability.dict(),
             'backpack': self.backpack.dict(),
