@@ -14,7 +14,8 @@ dependencies = [
     "gymnasium",
     "pettingzoo", 
     "ortools",
-    "pyyaml"
+    "pyyaml",
+    "rich"
 ]
 dynamic = ["version"]
 

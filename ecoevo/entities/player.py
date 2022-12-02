@@ -4,6 +4,8 @@ from pydantic import BaseModel
 
 from enum import Enum
 from ecoevo.entities.items import Item, load_item
+from ecoevo.config import MapSize, EnvConfig
+from rich import print as rprint
 
 with open('ecoevo/entities/player.yaml') as file:
     ALL_PLAYER_TYPES = yaml.load(file, Loader=SafeLoader)
@@ -38,6 +40,13 @@ class Bag(BaseModel):
         else:
             raise NotImplementedError
 
+    def remain_volume(self):
+        usage = 0
+        for item in self.items:
+            item = self.get_item(item_name)
+            usage += item.num * item.capacity
+        return EnvConfig.bag_volume - usage
+
 
 class ItemRatio(BaseModel):
     gold: float
@@ -62,31 +71,59 @@ class Player:
         self.local_obs = None
         self.id = 0
 
-    def update_local_obs(self, obs):
-        self.local_obs = obs.getobs(self.id)
-
     def collect(self, item: Item):
-        self.backpack[item.name] += item.harvest
+        if isinstance(item, Item):
+            if self.cast_remain == None:
+                self.cast_remain = item.collect_time
+            elif self.cast_remain == 0:
+                self.backpack[item.name] += item.harvest
+            elif self.cast_remain > 0:
+                self.cast_remain -= 1
+            else:
+                raise NameError('hehehe???')
+        else:
+            rprint(f'Player {self.id} cannot collect {item} at pos {self.pos}')
 
     def consume(self, item: Item):
-        self.backpack[item.name] -= 1
-        self.stomach[item.name] -= 1
+        if self.backpack.get_item(item.name).num > 0:
+            if self.backpack.get_item(item.name).disposable:
+                self.backpack.get_item(item.name).num -= 1
+                self.stomach.get_item(item.name).num += 1
+            else:
+                self.stomach.get_item(item.name).num = self.backpack.get_item(
+                    item.name).num
+        else:
+            rprint(
+                f'Player {self.id} cannot consume {item} since no such item left.'
+            )
 
     def move(self, direction: int):
-        if direction == 1:
-            self.pos_y += 1
-        elif direction == 2:
-            self.pos_x += 1
-        elif direction == 3:
-            self.pos_y -= 1
-        elif direction == 4:
-            self.pos_x -= 1
+        x, y = self.pos
+        if direction == 'up':
+            y = min(y + 1, MapSize.height)
+        elif direction == 'down':
+            y = max(y - 1, 0)
+        elif direction == 'right':
+            x = min(x + 1, MapSize.width)
+        elif direction == 'left':
+            x = max(x - 1, 0)
+        else:
+            rprint(
+                f'Player {self.id}: Invalid move direction {direction} catched.'
+            )
+        self.cast_remain = None
+
+    def validate_offer(self, sell_offer):
+        item, num = sell_offer
+        if num <= self.backpack.get_item(item).num:
+            return True
         else:
             return False
-        return True
 
-    def buy(item):
-        pass
-
-    def sell(item):
-        pass
+    def accepct(self, sell_offer, buy_offer):
+        if self.validate_offer(sell_offer):
+            sell_item, sell_num = sell_offer
+            buy_item, buy_num = buy_offer
+            self.backpack.get_item(sell_item).num -= sell_num
+            self.backpack.get_item(buy_item).num += min(
+                buy_num, self.backpack.remain_volume)

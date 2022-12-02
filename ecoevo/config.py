@@ -6,6 +6,7 @@ class EnvConfig:
     name = [
         'pepper_bro',
     ]
+    bag_volume = 100
 
 
 class MapSize:
