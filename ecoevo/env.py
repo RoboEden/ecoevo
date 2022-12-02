@@ -1,4 +1,6 @@
+import random
 import numpy as np
+from typing import List, Tuple
 from ecoevo.entities.player import Player
 from ecoevo.maps import MapGenerator
 from ecoevo.config import EnvConfig, MapSize
@@ -12,8 +14,8 @@ class EcoEvo:
         self.render_mode = render_mode
         # self.players = [Player(name) for name in EnvConfig.name]
         self.map_generator = MapGenerator()
-        self.players = []
         self.reward_parser = RewardParser()
+        self.players: List[Player] = []
 
     def reset(self, seed=None):
         """
@@ -45,7 +47,8 @@ class EcoEvo:
         infos = {player: {} for player in self.players}
         return obs, infos
 
-    def step(self, actions):
+    def step(self, actions: Tuple[str, Tuple[str, float], Tuple[str, float],
+                                  Tuple[str, float]]):
         """
         step(action) takes in an action for each player and should return the
         - observations
@@ -67,7 +70,33 @@ class EcoEvo:
             #     nearby_offers = get_nearby_offer(player)
             #     matched_offer = trader(own_offer, nearby_offers)
 
-        # current observation is just the other player's most recent action
+        # action = (('move', 'up'), ('sand', -5), ('gold', 10))
+        # action = (('collect', None), ('pumpkin', -5), ('coral', 10))
+        # action = (('consume', 'peanut'), ('peanut', -5), ('gold', 1))
+
+        # all_offers = self.get_all_offer(actions)
+        # matched_offers = self.trader(all_offers)
+        # for offer in matched_offers:
+        #     self.trader.trade(dict_match)
+
+        player_ids = random.shuffle(list(range(len(self.players))))
+        for player_id in player_ids:
+            action, sell_offer, buy_offer = actions[player_id]
+            player = self.players[player_id]
+            if self.is_valid(action, sell_offer, buy_offer):
+                primary_action, secondary_action = action
+                if primary_action == 'move':
+                    player.move(secondary_action)
+                elif primary_action == 'collect':
+                    player.collect()
+                elif primary_action == 'consume':
+                    player.consume(secondary_action)
+            else:
+                print(
+                    f'Invalid Action: Player {player_id}: {action} buy: {buy_offer} sell: {sell_offer}'
+                )
+                continue
+
         obs = {player: self.get_obs(player) for player in self.players}
 
         self.curr_step += 1
@@ -80,10 +109,46 @@ class EcoEvo:
             done = True
 
         infos = {player: {} for player in self.players}
-
-        # if self.render_mode == "human":
-        #     self.render()
         return obs, rewards, done, infos
 
     def get_obs(self, player: Player):
-        return self.map[player.pos]
+        player_x, player_y = player.pos
+        x_min = max(player_x - EnvConfig.visual_radius, 0)
+        x_max = min(player_x + EnvConfig.visual_radius, MapSize.width)
+        y_min = max(player_y - EnvConfig.visual_radius, 0)
+        y_max = min(player_y + EnvConfig.visual_radius, MapSize.height)
+
+        local_obs = {}
+        for i, x in enumerate(range(x_min, x_max)):
+            for j, y in enumerate(range(y_min, y_max)):
+                if (x, y) in self.map:
+                    local_obs[(i, j)] = self.map[(x, y)]
+
+        return local_obs
+
+    def get_all_valid_offer(self, actions: Tuple[str, Tuple[str, float],
+                                                 Tuple[str, float],
+                                                 Tuple[str, float]]):
+        """
+        step(action) takes in an action for each player and should return the
+        - observations
+        - rewards
+        - terminations
+        - truncations
+        - infos
+        dicts where each dict looks like {player_1: item_1, player_2: item_2}
+        """
+
+        # action = ('move_up', ('pumpkin', -1), ('sand', -5), ('gold', 10))
+
+        all_offers = []
+        for player_id in range(len(actions)):
+            action, sell_offer, buy_offer = actions[player_id]
+            player = self.players[player_id]
+            name, num = sell_offer
+            item = player.backpack.get_item(name)
+            if num >= item.num:
+                all_offers.append((player.pos, buy_offer, sell_offer))
+            else:
+                continue
+        return all_offers
