@@ -71,7 +71,7 @@ class Player:
         self.stomach = Bag()
         self.pos = (None, None)
         self.local_obs = None
-        self.id = 0
+        self.id = id
         # self.consume_cnts = {
         #     item_type: 0
         #     for item_type in ALL_ITEM_TYPES.keys()
