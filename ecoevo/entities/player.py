@@ -23,14 +23,20 @@ class Action(Enum):
 
 
 class Bag(BaseModel):
-    gold = load_item('gold', num=0)
-    pepper = load_item('pepper', num=0)
-    coral = load_item('coral', num=0)
-    sand = load_item('sand', num=0)
-    pineapple = load_item('pineapple', num=0)
-    peanut = load_item('peanut', num=0)
-    stone = load_item('stone', num=0)
-    pumpkin = load_item('pumpkin', num=0)
+    gold: Item = load_item('gold', num=0)
+    pepper: Item = load_item('pepper', num=0)
+    coral: Item = load_item('coral', num=0)
+    sand: Item = load_item('sand', num=0)
+    pineapple: Item = load_item('pineapple', num=0)
+    peanut: Item = load_item('peanut', num=0)
+    stone: Item = load_item('stone', num=0)
+    pumpkin: Item = load_item('pumpkin', num=0)
+
+    def get_item(self, name: str) -> Item:
+        if name in self.__dir__:
+            return self.__getattribute__(name)
+        else:
+            raise NotImplementedError
 
 
 class ItemRatio(BaseModel):
