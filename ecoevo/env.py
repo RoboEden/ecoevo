@@ -1,10 +1,10 @@
 import random
 import numpy as np
 from typing import List, Tuple
+
+from ecoevo.config import EnvConfig, MapSize, PlayerConfig
 from ecoevo.entities.player import Player
 from ecoevo.maps import MapGenerator
-from ecoevo.config import EnvConfig, MapSize
-from ecoevo.config import PlayerConfig
 from ecoevo.reward import RewardParser
 
 

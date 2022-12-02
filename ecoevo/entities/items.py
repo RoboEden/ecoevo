@@ -19,7 +19,7 @@ class Item(BaseModel):
     disposable: bool
 
 
-def load_item(name, num=0) -> Item:
+def load_item(name: str, num=0) -> Item:
     return Item(**{
         'name': name,
         'num': num,
@@ -41,7 +41,7 @@ class Bag(BaseModel):
         if name in self.__dict__:
             return self.__getattribute__(name)
         else:
-            raise NotImplementedError
+            raise NotImplementedError(f'No such item "{name}" exist')
 
     @property
     def remain_volume(self):
