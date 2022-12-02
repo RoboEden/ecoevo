@@ -12,7 +12,6 @@ class EcoEvo:
 
     def __init__(self, render_mode=None):
         self.render_mode = render_mode
-        # self.players = [Player(name) for name in EnvConfig.name]
         self.map_generator = MapGenerator()
         self.reward_parser = RewardParser()
         self.players: List[Player] = []
@@ -26,10 +25,10 @@ class EcoEvo:
                                       size=EnvConfig.player_num,
                                       replace=False)
 
-        for idx, name in enumerate(EnvConfig.name):
-            player = Player(name, idx)
-            x = player_pos[idx] // MapSize.width
-            y = player_pos[idx] // MapSize.height
+        for id, persona in enumerate(EnvConfig.personae):
+            player = Player(persona, id)
+            x = player_pos[id] // MapSize.width
+            y = player_pos[id] // MapSize.height
             player.pos = (x, y)
             self.players.append(player)
             if player.pos not in self.map:
@@ -85,9 +84,10 @@ class EcoEvo:
     def valid_action(self, player: Player,
                      action: Tuple[Tuple[str, str], Tuple[str, int],
                                    Tuple[str, int]]):
-        action, sell_offer, buy_offer = action
+        # action = ('move_up', ('pumpkin', -1), ('sand', -5), ('gold', 10))
+        _action, sell_offer, buy_offer = action
         print(
-            f'Invalid Action: Player {self.id}: {action} buy: {buy_offer} sell: {sell_offer}'
+            f'Invalid Action: Player {player.id}: {_action} buy: {buy_offer} sell: {sell_offer}'
         )
 
         return False

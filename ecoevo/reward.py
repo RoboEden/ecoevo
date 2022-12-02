@@ -1,6 +1,6 @@
 import numpy as np
 from ecoevo.entities.player import Player
-from ecoevo.entities.player import ALL_PLAYER_TYPES
+from ecoevo.entities.player import ALL_PERSONAE
 from ecoevo.entities.items import ALL_ITEM_TYPES
 from ecoevo.config import RewardConfig
 
@@ -16,17 +16,17 @@ def cal_utility(alpha: np.ndarray, cnt: np.ndarray, rho: float):
 class RewardParser:
 
     def __init__(self) -> None:
-        self.player_types = list(ALL_PLAYER_TYPES.keys())
+        self.player_types = list(ALL_PERSONAE.keys())
         self.item_names = list(ALL_ITEM_TYPES.keys())
         self.last_utilities = {}
 
         # Calculate alphas
         self.alphas = {
             player_type: np.zeros(len(self.item_names), dtype=np.float32)
-            for player_type in ALL_PLAYER_TYPES
+            for player_type in ALL_PERSONAE
         }
-        for player_type in ALL_PLAYER_TYPES:
-            player_pref = ALL_PLAYER_TYPES[player_type]["preference"]
+        for player_type in ALL_PERSONAE:
+            player_pref = ALL_PERSONAE[player_type]["preference"]
             total_pref = sum(player_pref.values())
             for idx, item_name in enumerate(self.item_names):
                 item_pref = player_pref[item_name]
@@ -34,7 +34,7 @@ class RewardParser:
                 self.alphas[player_type][idx] = alpha_i
 
     def utility(self, player: Player):
-        alpha = self.alphas[player.name]
+        alpha = self.alphas[player.persona]
         cnts = np.zeros(len(self.item_names), dtype=np.float32)
         for idx, item_name in enumerate(self.item_names):
             cnts[idx] = player.stomach.get_item(item_name).num
