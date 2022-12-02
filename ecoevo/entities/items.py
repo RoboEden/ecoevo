@@ -44,13 +44,17 @@ class Bag(BaseModel):
             raise NotImplementedError(f'No such item "{name}" exist')
 
     @property
-    def remain_volume(self):
-        usage = 0
+    def used_volume(self):
+        used = 0
         for item_name in self.__dict__:
             item = self.__getattribute__(item_name)
             if isinstance(item, Item):
-                usage += item.num * item.capacity
-        return EnvConfig.bag_volume - usage
+                used += item.num * item.capacity
+        return used
+
+    @property
+    def remain_volume(self):
+        return EnvConfig.bag_volume - self.used_volume
 
 
 class ItemRatio(BaseModel):

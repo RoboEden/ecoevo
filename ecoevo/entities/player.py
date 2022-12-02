@@ -4,7 +4,7 @@ from yaml.loader import SafeLoader
 
 from ecoevo.config import MapSize, PlayerConfig
 from ecoevo.entities.items import Item, ItemRatio, Bag
-from ecoevo.entities.act_type import Action, Direction, Trade
+from ecoevo.entities.act_type import Action, Direction
 
 with open('ecoevo/entities/player.yaml') as file:
     ALL_PLAYER_TYPES = yaml.load(file, Loader=SafeLoader)
@@ -22,6 +22,19 @@ class Player:
         self.id = id
         self.health = PlayerConfig.max_health
         self.collect_cast_remain = None
+
+    def get_info(self):
+        return {
+            'name': self.name,
+            'preference': self.preference.dict(),
+            'ability': self.ability.dict(),
+            'backpack': self.backpack.dict(),
+            'stomach': self.stomach.dict(),
+            'pos': self.pos,
+            'id': self.id,
+            'health': self.health,
+            'collect_cast_remain': self.collect_cast_remain,
+        }
 
     def collect(self, item: Item):
         if isinstance(item, Item) and item.num > 0:
