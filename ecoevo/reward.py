@@ -1,6 +1,5 @@
 import numpy as np
 from ecoevo.entities.player import Player
-from ecoevo.entities.player import Action
 from ecoevo.entities.player import ALL_PLAYER_TYPES
 from ecoevo.entities.items import ALL_ITEM_TYPES
 from ecoevo.config import RewardConfig
@@ -38,8 +37,7 @@ class RewardParser:
         alpha = self.alphas[player.name]
         cnts = np.zeros(len(self.item_names), dtype=np.float32)
         for idx, item_name in enumerate(self.item_names):
-            cnt_i = player.consume_cnts[item_name]
-            cnts[idx] = cnt_i
+            cnts[idx] = player.stomach.get_item(item_name).num
         utility = cal_utility(alpha, cnts, RewardConfig.rho)
         return utility
 
@@ -55,7 +53,7 @@ class RewardParser:
 
         # Cost
         penalty_flag = player.health <= RewardConfig.threshold
-        cost = RewardConfig.w * player.weight + penalty_flag * RewardConfig.penalty
+        cost = RewardConfig.weight_coef * player.backpack.used_volume + penalty_flag * RewardConfig.penalty
 
         # Reward
         reward = du + cost
