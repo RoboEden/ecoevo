@@ -46,7 +46,10 @@ class RewardParser:
     def parse(self, player: Player, action: Action):
         # Utility
         u = self.utility(player)
-        last_u = self.last_utilities.get(player.id, 0)
+        if player.id not in self.last_utilities:
+            last_u = u
+        else:
+            last_u = self.last_utilities[player.id]
         du = u - last_u
         self.last_utilities[player.id] = u
 
