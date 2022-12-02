@@ -18,18 +18,13 @@ class EcoEvo:
         self.players: List[Player] = []
 
     def reset(self, seed=None):
-        """
-        Reset needs to initialize the `players` attribute and must set up the
-        environment so that render(), and step() can be called without issues.
-        Here it initializes the `num_moves` variable which counts the number of
-        hands that are played.
-        Returns the observations for each player
-        """
         self.curr_step = 0
         self.map = self.map_generator.gen_map()
 
         # Add agent
-        player_pos = np.random.choice(MapSize.width * MapSize.height, size=EnvConfig.player_num, replace=False)
+        player_pos = np.random.choice(MapSize.width * MapSize.height,
+                                      size=EnvConfig.player_num,
+                                      replace=False)
 
         for i, name in enumerate(EnvConfig.name):
             player = Player(name)
@@ -49,35 +44,9 @@ class EcoEvo:
 
     def step(self, actions: Tuple[str, Tuple[str, float], Tuple[str, float],
                                   Tuple[str, float]]):
-        """
-        step(action) takes in an action for each player and should return the
-        - observations
-        - rewards
-        - terminations
-        - truncations
-        - infos
-        dicts where each dict looks like {player_1: item_1, player_2: item_2}
-        """
         for player in self.players:
             print(player)
             player.expend_energy(PlayerConfig.comsumption_per_step)
-            # player = self.player_dict[player]
-            # action = actions[self.players]
-            # if action in [Action.MOVE, Action.COLLECT, Action.CONSUME]:
-            #     self.map = player.execute(action)
-            # if action is [Action.TRADE]:
-            #     own_offer = action[OFFER]
-            #     nearby_offers = get_nearby_offer(player)
-            #     matched_offer = trader(own_offer, nearby_offers)
-
-        # action = (('move', 'up'), ('sand', -5), ('gold', 10))
-        # action = (('collect', None), ('pumpkin', -5), ('coral', 10))
-        # action = (('consume', 'peanut'), ('peanut', -5), ('gold', 1))
-
-        # all_offers = self.get_all_offer(actions)
-        # matched_offers = self.trader(all_offers)
-        # for offer in matched_offers:
-        #     self.trader.trade(dict_match)
 
         player_ids = random.shuffle(list(range(len(self.players))))
         for player_id in player_ids:
@@ -100,7 +69,10 @@ class EcoEvo:
         obs = {player: self.get_obs(player) for player in self.players}
 
         self.curr_step += 1
-        rewards = {player: RewardParser.parse(player) for player in self.players}
+        rewards = {
+            player: RewardParser.parse(player)
+            for player in self.players
+        }
 
         # typically there won't be any information in the infos, but there must
         # still be an entry for each player
@@ -126,19 +98,9 @@ class EcoEvo:
 
         return local_obs
 
-    def get_all_valid_offer(self, actions: Tuple[str, Tuple[str, float],
-                                                 Tuple[str, float],
-                                                 Tuple[str, float]]):
-        """
-        step(action) takes in an action for each player and should return the
-        - observations
-        - rewards
-        - terminations
-        - truncations
-        - infos
-        dicts where each dict looks like {player_1: item_1, player_2: item_2}
-        """
-
+    def valid_action(self, actions: Tuple[str, Tuple[str, float],
+                                          Tuple[str, float], Tuple[str,
+                                                                   float]]):
         # action = ('move_up', ('pumpkin', -1), ('sand', -5), ('gold', 10))
 
         all_offers = []
@@ -151,4 +113,18 @@ class EcoEvo:
                 all_offers.append((player.pos, buy_offer, sell_offer))
             else:
                 continue
+        self.health = max(0, self.health - PlayerConfig.comsumption_per_step)
+        if self.is_valid(action, sell_offer, buy_offer):
+            primary_action, secondary_action = action
+            if primary_action == 'move':
+                self.move(secondary_action)
+            elif primary_action == 'collect':
+                self.collect()
+            elif primary_action == 'consume':
+                self.consume(secondary_action)
+        else:
+            print(
+                f'Invalid Action: Player {self.id}: {action} buy: {buy_offer} sell: {sell_offer}'
+            )
+
         return all_offers

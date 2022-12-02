@@ -1,15 +1,23 @@
-from ecoevo.entities.player import Bag, Player
+from rich import print
+from ecoevo.entities.player import Player
 
 if __name__ == "__main__":
-    bag = Bag()
-    print(bag)
-    print(bag.coral)
-    print('=====================')
-    print(bag.coral.num)
-    print(bag.remain_volume)
 
     player = Player('pepper_bro', 0)
-    print(player.stomach)
-    print(player.backpack)
+
+    print('========= name ===========')
+    print(player.name)
+    print('========= ability ===========')
     print(player.ability)
+    print('========= preference ===========')
     print(player.preference)
+    print('========= backpack ===========')
+    print(player.backpack)
+    print('========= stomach ===========')
+    print(player.stomach)
+    print('========= pos ===========')
+    print(player.pos)
+    print('========= id ===========')
+    print(player.id)
+    print('========= health ===========')
+    print(player.health)

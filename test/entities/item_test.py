@@ -1,5 +1,6 @@
-from ecoevo.entities.items import Item, load_item
 import argparse
+from rich import print
+from ecoevo.entities.items import Bag, load_item
 
 
 def parse_args():
@@ -18,3 +19,10 @@ if __name__ == "__main__":
     gold1 = load_item('gold', num=100)
     print(id(gold1))
     print(gold1)
+
+    bag = Bag()
+    print(bag)
+    print(bag.coral)
+    print(bag.coral.num)
+    print('=====================')
+    print(bag.remain_volume)
