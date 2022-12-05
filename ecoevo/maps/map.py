@@ -19,10 +19,12 @@ class MapGenerator:
             for y in range(height):
                 item_name = self.data['tiles'][x][y]
                 if item_name == 'empty':
-                    continue
-                num = self.data['amount'][x][y]
+                    item = None
+                else:
+                    num = self.data['amount'][x][y]
+                    item = load_item(item_name, num=num)
                 map[(x, y)] = {
-                    'item': load_item(item_name, num=num),
+                    'item': item,
                     'player': None,
                 }
         return map
