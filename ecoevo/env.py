@@ -15,7 +15,7 @@ class EcoEvo:
     def __init__(self, render_mode=None):
         self.render_mode = render_mode
         self.map_generator = MapGenerator()
-        # self.trader = Trader()
+        self.trader = Trader(EnvConfig.trade_radius)
         self.reward_parser = RewardParser()
         self.players: List[Player] = []
 
@@ -35,6 +35,7 @@ class EcoEvo:
         return len(self.players)
 
     def reset(self, seed=None):
+        self.players = []
         self.curr_step = 0
         self.map = self.map_generator.gen_map()
 
@@ -74,14 +75,34 @@ class EcoEvo:
         # action = (('collect', None), None, None))
 
         # TODO trader
-        player_ids = list(range(self.num_player))
-        random.shuffle(player_ids)
-        for player_id in player_ids:
-            action, sell_offer, buy_offer = actions[player_id]
-            player = self.players[player_id]
+        list_order = []
+        id_2_order = [None] * self.num_player
+        is_valid_buffer = []
+        for player in self.players:
+            action, sell_offer, buy_offer = actions[player.id]
+            player = self.players[player.id]
             if self.valid_action(player, action, sell_offer, buy_offer):
-                self.map[player.pos]['player'] = None
+                is_valid_buffer.append(True)
+                if sell_offer is None or buy_offer is None:
+                    continue
+                list_order.append((player.pos, sell_offer, buy_offer))
+                id_2_order[player.id] = len(list_order) - 1
+            else:
+                is_valid_buffer.append(False)
+        match_order_list = self.trader.parse(list_order)
 
+        # execute
+        shuffled_player_ids = list(range(self.num_player))
+        random.shuffle(shuffled_player_ids)
+        for shuffled_player_id in shuffled_player_ids:
+            player = self.players[shuffled_player_id]
+            if is_valid_buffer[player.id]:
+                self.map[player.pos]['player'] = None
+                if id_2_order[player.id] is not None:
+                    order_id = id_2_order[player.id]
+                    sell_offer, buy_offer = match_order_list[order_id]
+                else:
+                    sell_offer, buy_offer = None, None
                 player.execute(action, sell_offer, buy_offer)
 
                 self.map[player.pos]['player'] = player
@@ -123,7 +144,7 @@ class EcoEvo:
     ):
         # action = (('move', 'up'), ('sand', -5), ('gold', 10))
         # action = (('consume', 'peanut'), ('gold', -5), ('peanut', 20))
-        # TODO
+
         is_action_valid = True
         primary_action, secondary_action = action
 
@@ -170,6 +191,6 @@ class EcoEvo:
 
         if not is_action_valid:
             print(
-                f'Skip Invalid Action of Player {player.id}: {action} buy: {buy_offer} sell: {sell_offer}'
+                f'Skip Invalid Action of Player {player.id}: {action} sell: {sell_offer} buy: {buy_offer}'
             )
         return is_action_valid
