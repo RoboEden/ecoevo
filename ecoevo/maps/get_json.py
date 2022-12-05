@@ -10,78 +10,84 @@ import matplotlib.patches as pch
 """ generate block types """
 
 dict_type_idx = {
-    'empty': 0, 'gold': 1, 'pepper': 2, 'coral': 3, 'sand': 4, 'pineapple': 5, 'peanut': 6, 'stone': 7, 'pumpkin': 8
+    'empty': 0, 'gold': 1, 'hazelnut': 2, 'coral': 3, 'sand': 4, 'pineapple': 5, 'peanut': 6, 'stone': 7, 'pumpkin': 8
 }
-list_type = ['empty', 'gold', 'pepper', 'coral', 'sand', 'pineapple', 'peanut', 'stone', 'pumpkin']
+list_type = ['empty', 'gold', 'hazelnut', 'coral', 'sand', 'pineapple', 'peanut', 'stone', 'pumpkin']
 
-# mat_type_area = [
-#     [['coffee'], ['apple'], ['banana'], ['tea']], 
-#     [['banana'], ['tea', 'coral'], ['coffee', 'coral'], ['apple']], 
-#     [['coffee'], ['apple', 'coral'], ['banana', 'coral'], ['tea']], 
-#     [['banana'], ['tea'], ['coffee'], ['apple']]]
-# list_type_common = ['diamond', 'gold', 'platinum', 'wood', 'stone', 'coal', 'iron']
-
-map_size = 64
+map_size = 32
 area_size = 8
-dict_if_rare = {
-    'gold': True, 'pepper': True, 'coral': True, 'sand': False, 
-    'pineapple': True, 'peanut': False, 'stone': False, 'pumpkin': False
+dict_reserve = {
+    'gold': 5000, 'hazelnut': 100, 'coral': 5000, 'sand': 15000, 
+    'pineapple': 100, 'peanut': 100, 'stone': 15000, 'pumpkin': 100
 }
-num_block_rare, num_block_adequate = 2, 8
 
 # generate the distribution of blocks
 np.random.seed(42)
-num_area_side = round(map_size / area_size)
-mat_type_block = np.zeros(shape=(num_area_side * area_size, num_area_side * area_size))
-for i in range(num_area_side):
-    for j in range(num_area_side):
-        mat_type_ = np.zeros(shape=(area_size, area_size))
-        for t in list_type:
-            if t == 'empty':
-                continue
+mat_type_all = np.zeros(shape=(map_size, map_size))
+num_block_resource = 32
+for t in list_type:
+    if t == 'empty':
+        continue
 
-            num_block_ = num_block_rare if dict_if_rare[t] else num_block_adequate
-            for k in range(num_block_):
-                x, y = np.random.randint(low=0, high=area_size), np.random.randint(low=0, high=area_size)
-                while mat_type_[x, y]:
-                    x, y = np.random.randint(low=0, high=area_size), np.random.randint(low=0, high=area_size)
-                mat_type_[x, y] = dict_type_idx[t]
-        mat_type_block[area_size * i: area_size * (i + 1), area_size * j: area_size * (j + 1)] = mat_type_
-mat_type_block = mat_type_block.astype('int').tolist()
+    mat_type_area = np.zeros(shape=(area_size, area_size))
+    for i in range(num_block_resource):
+        x, y = np.random.randint(low=0, high=area_size), np.random.randint(low=0, high=area_size)
+        while mat_type_area[x, y]:
+            x, y = np.random.randint(low=0, high=area_size), np.random.randint(low=0, high=area_size)
+        mat_type_area[x, y] = dict_type_idx[t]
+
+    if t == 'gold':
+        mat_type_all[0: 8, 0: 8] = mat_type_area
+    elif t == 'pineapple':
+        mat_type_all[0: 8, 12: 20] = mat_type_area
+    elif t == 'sand':
+        mat_type_all[0: 8, 24: 32] = mat_type_area
+    elif t == 'pumpkin':
+        mat_type_all[12: 20, 0: 8] = mat_type_area
+    elif t == 'peanut':
+        mat_type_all[12: 20, 24: 32] = mat_type_area
+    elif t == 'stone':
+        mat_type_all[24: 32, 0: 8] = mat_type_area
+    elif t == 'hazelnut':
+        mat_type_all[24: 32, 12: 20] = mat_type_area
+    elif t == 'coral':
+        mat_type_all[24: 32, 24: 32] = mat_type_area
+
+mat_type_all = mat_type_all.astype('int').tolist()
 
 
 """ visualise """
 
 dict_type_colour = {
     'empty': 'white', 
-    'gold': 'orange', 'pepper': 'brown', 'coral': 'pink', 'sand': 'grey', 
+    'gold': 'orange', 'hazelnut': 'brown', 'coral': 'pink', 'sand': 'grey', 
     'pineapple': 'lime', 'peanut': 'chocolate', 'stone': 'black', 'pumpkin': 'green'
 }
 
 fig, ax = plt.subplots()
 
 # draw blocks
-shape_height, shape_width = len(mat_type_block), len(mat_type_block[0])
 len_block = 1
-for y in range(shape_height):
-    for x in range(shape_width):
+for y in range(map_size):
+    for x in range(map_size):
         rectangle = pch.Rectangle(
-            xy=(x * len_block, (shape_height - y - 1) * len_block), 
-            width=len_block, height=len_block, color=dict_type_colour[list_type[mat_type_block[y][x]]])
+            xy=(x * len_block, (map_size - y - 1) * len_block), 
+            width=len_block, height=len_block, color=dict_type_colour[list_type[mat_type_all[y][x]]])
         ax.add_patch(rectangle)
-        # plt.text(x=x + len_block / 2, y=shape_height - y - 1 + len_block / 2, s=str(mat_type_block[y][x]))
+        # plt.text(x=x + len_block / 2, y=map_size - y - 1 + len_block / 2, s=str(mat_type_all[y][x]))
 
 # let the length of an x axis unit be equal with y axis
 ax.set_aspect(1)
 
 # 8 blocks an area
-x_major_locator = plt.MultipleLocator(area_size)
-y_major_locator = plt.MultipleLocator(area_size)
+dash_interval = 4
+x_major_locator = plt.MultipleLocator(dash_interval)
+y_major_locator = plt.MultipleLocator(dash_interval)
 ax.xaxis.set_major_locator(x_major_locator)
 ax.yaxis.set_major_locator(y_major_locator)
 
-plt.xlim(xmin=0, xmax=shape_width * len_block)
-plt.ylim(ymin=0, ymax=shape_height * len_block)
+plt.xlim(xmin=0, xmax=map_size * len_block)
+plt.ylim(ymin=0, ymax=map_size * len_block)
 plt.grid(linestyle='dashed', linewidth=1)
 
 
@@ -97,14 +103,14 @@ plt.savefig(path_picture)
 
 """ save json """
 
-mat_type = [[list_type[mat_type_block[i][j]] for j in range(map_size)] for i in range(map_size)]
+mat_type_all_ = [[list_type[mat_type_all[i][j]] for j in range(map_size)] for i in range(map_size)]
 
-amount = 10
 dict_json = {
     "width": map_size, 
     "height": map_size, 
-    "tiles": mat_type, 
-    "amount": [[amount if mat_type_block[i][j] else 0 for j in range(map_size)] for i in range(map_size)]
+    "tiles": mat_type_all_, 
+    "amount": [[dict_reserve[
+        mat_type_all_[i][j]] if mat_type_all[i][j] else 0 for j in range(map_size)] for i in range(map_size)]
 }
 json_map = json.dumps(dict_json)
 
