@@ -1,10 +1,10 @@
 class EnvConfig:
     player_num = 100
     total_step = 10000
-    trade_radius = 4
+    trade_radius = 400
     visual_radius = 7
     personae = [
-        'pepper_bro',
+        *(['pepper_bro'] * 2),
         'coral_hunter',
         'sand_collector',
         'pineapple_farmer',
