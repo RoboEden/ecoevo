@@ -46,8 +46,8 @@ class EcoEvo:
         for id in EnvConfig.player_ids:
             persona = self.id_to_persona(id)
             player = Player(persona, id)
-            x = player_pos[id] // MapSize.width
-            y = player_pos[id] // MapSize.height
+            x = player_pos[id] % MapSize.width
+            y = player_pos[id] // MapSize.width
             player.pos = (x, y)
             self.players.append(player)
             if player.pos not in self.map:
