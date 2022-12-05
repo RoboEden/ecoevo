@@ -4,7 +4,8 @@ from ecoevo.entities.items import ALL_ITEM_TYPES, load_item
 
 if __name__ == "__main__":
     reward_parser = RewardParser()
-    player = Player("pepper_bro", id=0)
+    pos = (5, 7)
+    player = Player("pepper_bro", 0, pos)
     rw = reward_parser.parse(player)
     print(rw)
     

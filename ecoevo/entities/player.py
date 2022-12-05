@@ -1,6 +1,7 @@
 import yaml
 from rich import print as rprint
 from yaml.loader import SafeLoader
+from typing import Tuple
 
 from ecoevo.config import MapSize, PlayerConfig
 from ecoevo.entities.items import Item, ItemRatio, Bag
@@ -12,13 +13,13 @@ with open('ecoevo/entities/player.yaml') as file:
 
 class Player:
 
-    def __init__(self, persona: str, id: int):
+    def __init__(self, persona: str, id: int, pos: Tuple[int]):
         self.persona = persona
         self.preference = ItemRatio(**ALL_PERSONAE[persona]['preference'])
         self.ability = ItemRatio(**ALL_PERSONAE[persona]['ability'])
         self.backpack = Bag()
         self.stomach = Bag()
-        self.pos = (None, None)
+        self.pos = pos
         self.id = id
         self.health = PlayerConfig.max_health
         self.collect_cast_remain = None

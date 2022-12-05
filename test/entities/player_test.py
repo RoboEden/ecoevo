@@ -4,8 +4,8 @@ from ecoevo.entities.items import load_item
 
 if __name__ == "__main__":
 
-    player = Player('pepper_bro', 0)
-    player.pos = (5, 7)
+    pos = (5, 7)
+    player = Player('pepper_bro', 0, pos)
     print(player.get_info())
 
     peanut = load_item('peanut', num=100)
