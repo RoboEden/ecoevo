@@ -39,6 +39,7 @@ class EcoEvo:
         self.map = self.map_generator.gen_map()
 
         # Add player
+        self.players = []
         player_pos = np.random.choice(MapSize.width * MapSize.height,
                                       size=EnvConfig.player_num,
                                       replace=False)
