@@ -16,6 +16,17 @@ class EcoEvo:
         self.reward_parser = RewardParser()
         self.players: List[Player] = []
 
+        # allocate persona to player_id
+        self.id_to_persona = {}
+        curr_idx = 0
+        for persona in EnvConfig.personae:
+            persona_num = EnvConfig.persona_num(persona)
+            for _ in range(persona_num):
+                curr_id = EnvConfig.player_ids[curr_idx]
+                self.id_to_persona[curr_id] = persona
+                curr_idx += 1
+        assert len(self.id_to_persona) == EnvConfig.player_num
+
     def reset(self, seed=None):
         self.curr_step = 0
         self.map = self.map_generator.gen_map()
@@ -25,7 +36,8 @@ class EcoEvo:
                                       size=EnvConfig.player_num,
                                       replace=False)
 
-        for id, persona in enumerate(EnvConfig.personae):
+        for id in EnvConfig.player_ids:
+            persona = self.id_to_persona(id)
             player = Player(persona, id)
             x = player_pos[id] // MapSize.width
             y = player_pos[id] // MapSize.height
