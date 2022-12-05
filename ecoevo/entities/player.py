@@ -22,7 +22,8 @@ class Player:
         self.pos = pos
         self.id = id
         self.health = PlayerConfig.max_health
-        self.collect_cast_remain = None
+        self.item_to_collect: Item = None
+        self.collect_cast_remain: int = None
 
     def get_info(self):
         return {
@@ -34,10 +35,12 @@ class Player:
             'pos': self.pos,
             'id': self.id,
             'health': self.health,
+            'item_to_collect': self.item_to_collect,
             'collect_cast_remain': self.collect_cast_remain,
         }
 
-    def collect(self, item: Item):
+    def collect(self):
+        item = self.item_to_collect
         if isinstance(item, Item) and item.num > 0:
             if self.collect_cast_remain == None:
                 self.collect_cast_remain = item.collect_time - 1
@@ -87,7 +90,7 @@ class Player:
         self.collect_cast_remain = None
 
     def trade(self, sell_offer, buy_offer):
-        if sell_offer == ():
+        if sell_offer == None:
             return
 
         sell_item_name, sell_num = sell_offer
