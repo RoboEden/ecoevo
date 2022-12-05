@@ -36,9 +36,9 @@ class EcoEvo:
             else:
                 self.map[player.pos]['agent'] = player
 
-        obs = {player: self.get_obs(player) for player in self.players}
+        obs = {player.id: self.get_obs(player) for player in self.players}
 
-        infos = {player: {} for player in self.players}
+        infos = {player.id: player.get_info() for player in self.players}
         return obs, infos
 
     def step(
@@ -47,6 +47,9 @@ class EcoEvo:
                                                                       float]]],
     ):
         # action = ('move_up', ('pumpkin', -1), ('sand', -5), ('gold', 10))
+
+        # TODO trader
+
         player_ids = random.shuffle(list(range(len(self.players))))
         for player_id in player_ids:
             action, sell_offer, buy_offer = actions[player_id]
@@ -57,13 +60,13 @@ class EcoEvo:
                 continue
         self.curr_step += 1
 
-        obs = {player: self.get_obs(player) for player in self.players}
+        obs = {player.id: self.get_obs(player) for player in self.players}
         rewards = {
             player: RewardParser.parse(player)
             for player in self.players
         }
         done = True if self.curr_step > EnvConfig.total_step else False
-        infos = {player: player.get_info for player in self.players}
+        infos = {player.id: player.get_info() for player in self.players}
         return obs, rewards, done, infos
 
     def get_obs(self, player: Player):
@@ -85,6 +88,7 @@ class EcoEvo:
                      action: Tuple[Tuple[str, str], Tuple[str, int],
                                    Tuple[str, int]]):
         # action = ('move_up', ('pumpkin', -1), ('sand', -5), ('gold', 10))
+        # TODO
         _action, sell_offer, buy_offer = action
         print(
             f'Invalid Action: Player {player.id}: {_action} buy: {buy_offer} sell: {sell_offer}'
