@@ -27,7 +27,7 @@ class EcoEvo:
         self.curr_step = 0
         self.map = self.map_generator.gen_map()
 
-        # Add agent
+        # Add player
         player_pos = np.random.choice(MapSize.width * MapSize.height,
                                       size=EnvConfig.player_num,
                                       replace=False)
@@ -38,10 +38,13 @@ class EcoEvo:
             y = player_pos[id] // MapSize.height
             player.pos = (x, y)
             self.players.append(player)
+
+            # Allocate player
             if player.pos not in self.map:
-                self.map[player.pos] = {'agent': player}
+                self.map[player.pos] = {'player': player}
             else:
-                self.map[player.pos]['agent'] = player
+                self.map[player.pos]['player'] = player
+                player.item_to_collect = self.map[player.pos]['item']
 
         obs = {player.id: self.get_obs(player) for player in self.players}
 
@@ -55,6 +58,7 @@ class EcoEvo:
     ):
         # action = (('move', 'up'), ('sand', -5), ('gold', 10))
         # action = (('consume', 'peanut'), ('gold', -5), ('peanut', 20))
+        # action = (('collect', None), None, None))
 
         # TODO trader
         player_ids = list(range(self.num_player))
@@ -63,7 +67,12 @@ class EcoEvo:
             action, sell_offer, buy_offer = actions[player_id]
             player = self.players[player_id]
             if self.valid_action(player, action, sell_offer, buy_offer):
+                self.map[player.pos]['player'] = None
+
                 player.execute(action, sell_offer, buy_offer)
+
+                self.map[player.pos]['player'] = player
+                player.item_to_collect = self.map[player.pos]['item']
             else:
                 continue
         self.curr_step += 1
@@ -104,29 +113,38 @@ class EcoEvo:
         # TODO
         is_action_valid = True
         primary_action, secondary_action = action
-        item_to_sell, sell_amount = sell_offer
-        if player.backpack.get_item(item_to_sell).num < sell_amount:
-            is_action_valid = False
 
+        # check offer
+        if sell_offer != None and buy_offer != None:
+            item_to_sell, sell_amount = sell_offer
+            if player.backpack.get_item(item_to_sell).num < abs(sell_amount):
+                is_action_valid = False
+        else:
+            item_to_sell = None
+
+        # check move
         if primary_action == Action.move:
             direction = secondary_action
             x, y = player.pos
             if direction == Direction.up:
-                next_y = min(y + 1, MapSize.height - 1)
+                y = min(y + 1, MapSize.height - 1)
             if direction == Direction.down:
-                next_y = max(y - 1, 0)
+                y = max(y - 1, 0)
             if direction == Direction.left:
-                next_x = min(x + 1, MapSize.height - 1)
+                x = min(x + 1, MapSize.height - 1)
             if direction == Direction.right:
-                next_x = max(x - 1, 0)
+                x = max(x - 1, 0)
 
-            if self.map[(next_x, next_y)]['agent'] != None:
-                is_action_valid = False
+            if (x, y) in self.map.keys():
+                if self.map[(x, y)]['player'] != None:
+                    is_action_valid = False
 
+        # check collect
         if primary_action == Action.collect:
             if player.backpack.remain_volume == 0:
                 is_action_valid = False
 
+        # check consume
         if primary_action == Action.consume:
             item_to_consume = secondary_action
             if item_to_consume == item_to_sell:
@@ -139,6 +157,6 @@ class EcoEvo:
 
         if not is_action_valid:
             print(
-                f'Invalid Action: Player {player.id}: {action} buy: {buy_offer} sell: {sell_offer}'
+                f'Skip Invalid Action of Player {player.id}: {action} buy: {buy_offer} sell: {sell_offer}'
             )
         return is_action_valid
