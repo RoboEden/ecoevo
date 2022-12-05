@@ -11,11 +11,13 @@ actions = [
     (('collect', None), None, None),
     (('move', 'up'), ('sand', -5), ('gold', 10)),
     (('consume', 'peanut'), ('gold', -5), ('peanut', 20)),
-    (('move', 'left'), None, None),
+    (('move', 'left'), ('gold', -10), ('sand', 5)),
     (('consume', 'peanut'), None, None),
+    (('move', 'down'), None, None),
 ]
 env.players[1].backpack.coral.num = 1
-env.players[4].backpack.gold.num = 5
+env.players[3].backpack.sand.num = 5
+env.players[5].backpack.gold.num = 10
 obs, reward, done, infos = env.step(actions)
 if input('show info? y/n\n') == 'y':
     print(infos)
