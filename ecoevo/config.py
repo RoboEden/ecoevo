@@ -1,19 +1,19 @@
 class EnvConfig:
-    player_num = 100
-    player_ids = list(range(player_num))
-    total_step = 10000
-    trade_radius = 400
+    player_num = 128
+    total_step = 1000
+    trade_radius = 4
     visual_radius = 7
     personae = [
-        *(['pepper_bro'] * 14),
-        *(['coral_hunter'] * 14),
-        *(['sand_collector'] * 14),
-        *(['pineapple_farmer'] * 14),
-        *(['peanut_collector'] * 14),
-        *(['stone_picker'] * 14),
-        *(['pumpkin_farmer'] * 16),
+        'gold_digger',
+        'hazelnut_farmer',
+        'coral_collector',
+        'sand_picker',
+        'pineapple_farmer',
+        'peanut_farmer',
+        'stone_picker',
+        'pumpkin_farmer',
     ]
-    bag_volume = 100
+    bag_volume = 1000
 
 
 class MapSize:
@@ -23,7 +23,7 @@ class MapSize:
 
 class PlayerConfig:
     max_health = 100
-    comsumption_per_step = 1
+    comsumption_per_step = 10
 
 
 class RewardConfig:
