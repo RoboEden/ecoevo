@@ -14,19 +14,6 @@ class EnvConfig:
         'pumpkin_farmer',
     ]
     bag_volume = 100
-    
-    @classmethod
-    def persona_num(cls, persona: str):
-        return EnvConfig.persona_avg_num(persona)
-    
-    @classmethod
-    def persona_avg_num(cls, persona: str):
-        avg_num = EnvConfig.player_num // len(EnvConfig.personae)
-        remainder = EnvConfig.player_num % len(EnvConfig.personae)
-        if persona == EnvConfig.personae[-1]:
-            return avg_num + remainder
-        else:
-            return avg_num
 
 
 class MapSize:
