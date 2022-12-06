@@ -1,133 +1,152 @@
-pepper_bro:
+gold_digger:
   preference:
-    gold: 6
-    pepper: 4
-    coral: 8
-    sand: 4
-    pineapple: 8
-    peanut: 4
-    stone: 4
-    pumpkin: 4
-  ability:
-    gold: 6
-    pepper: 4
-    coral: 8
-    sand: 4
-    pineapple: 8
-    peanut: 4
-    stone: 4
-    pumpkin: 4  
-coral_hunter:
+    gold: 1
+    hazelnut: 1
+    coral: 1
+    sand: 1
+    pineapple: 1
+    peanut: 1
+    stone: 1
+    pumpkin: 1
+  collect_time:
+    gold: 3
+    hazelnut: 9
+    coral: 9
+    sand: 3
+    pineapple: 9
+    peanut: 3
+    stone: 3
+    pumpkin: 3
+hazelnut_bro:
   preference:
-    gold: 6
-    pepper: 4
-    coral: 8
-    sand: 4
-    pineapple: 8
-    peanut: 4
-    stone: 4
-    pumpkin: 4
-  ability:
-    gold: 6
-    pepper: 4
-    coral: 8
-    sand: 4
-    pineapple: 8
-    peanut: 4
-    stone: 4
-    pumpkin: 4 
-sand_collector:
+    gold: 1
+    hazelnut: 1
+    coral: 1
+    sand: 1
+    pineapple: 1
+    peanut: 1
+    stone: 1
+    pumpkin: 1
+  collect_time:
+    gold: 9
+    hazelnut: 3
+    coral: 9
+    sand: 3
+    pineapple: 9
+    peanut: 3
+    stone: 3
+    pumpkin: 3
+coral_collector:
   preference:
-    gold: 6
-    pepper: 4
-    coral: 8
-    sand: 4
-    pineapple: 8
-    peanut: 4
-    stone: 4
-    pumpkin: 4
-  ability:
-    gold: 6
-    pepper: 4
-    coral: 8
-    sand: 4
-    pineapple: 8
-    peanut: 4
-    stone: 4
-    pumpkin: 4 
+    gold: 1
+    hazelnut: 1
+    coral: 1
+    sand: 1
+    pineapple: 1
+    peanut: 1
+    stone: 1
+    pumpkin: 1
+  collect_time:
+    gold: 9
+    hazelnut: 9
+    coral: 3
+    sand: 3
+    pineapple: 9
+    peanut: 3
+    stone: 3
+    pumpkin: 3
+sand_picker:
+  preference:
+    gold: 1
+    hazelnut: 1
+    coral: 1
+    sand: 1
+    pineapple: 1
+    peanut: 1
+    stone: 1
+    pumpkin: 1
+  collect_time:
+    gold: 9
+    hazelnut: 9
+    coral: 9
+    sand: 1
+    pineapple: 9
+    peanut: 3
+    stone: 3
+    pumpkin: 3
 pineapple_farmer:
   preference:
-    gold: 6
-    pepper: 4
-    coral: 8
-    sand: 4
-    pineapple: 8
-    peanut: 4
-    stone: 4
-    pumpkin: 4
-  ability:
-    gold: 6
-    pepper: 4
-    coral: 8
-    sand: 4
-    pineapple: 8
-    peanut: 4
-    stone: 4
-    pumpkin: 4 
-peanut_collector:
+    gold: 1
+    hazelnut: 1
+    coral: 1
+    sand: 1
+    pineapple: 1
+    peanut: 1
+    stone: 1
+    pumpkin: 1
+  collect_time:
+    gold: 9
+    hazelnut: 9
+    coral: 9
+    sand: 3
+    pineapple: 3
+    peanut: 3
+    stone: 3
+    pumpkin: 3 
+peanut_farmer:
   preference:
-    gold: 6
-    pepper: 4
-    coral: 8
-    sand: 4
-    pineapple: 8
-    peanut: 4
-    stone: 4
-    pumpkin: 4
-  ability:
-    gold: 6
-    pepper: 4
-    coral: 8
-    sand: 4
-    pineapple: 8
-    peanut: 4
-    stone: 4
-    pumpkin: 4 
+    gold: 1
+    hazelnut: 1
+    coral: 1
+    sand: 1
+    pineapple: 1
+    peanut: 1
+    stone: 1
+    pumpkin: 1
+  collect_time:
+    gold: 9
+    hazelnut: 9
+    coral: 9
+    sand: 3
+    pineapple: 9
+    peanut: 1
+    stone: 3
+    pumpkin: 3
 stone_picker:
   preference:
-    gold: 6
-    pepper: 4
-    coral: 8
-    sand: 4
-    pineapple: 8
-    peanut: 4
-    stone: 4
-    pumpkin: 4
-  ability:
-    gold: 6
-    pepper: 4
-    coral: 8
-    sand: 4
-    pineapple: 8
-    peanut: 4
-    stone: 4
-    pumpkin: 4 
+    gold: 1
+    hazelnut: 1
+    coral: 1
+    sand: 1
+    pineapple: 1
+    peanut: 1
+    stone: 1
+    pumpkin: 1
+  collect_time:
+    gold: 9
+    hazelnut: 9
+    coral: 9
+    sand: 3
+    pineapple: 9
+    peanut: 3
+    stone: 1
+    pumpkin: 3
 pumpkin_farmer:
   preference:
-    gold: 6
-    pepper: 4
-    coral: 8
-    sand: 4
-    pineapple: 8
-    peanut: 4
-    stone: 4
-    pumpkin: 4
-  ability:
-    gold: 6
-    pepper: 4
-    coral: 8
-    sand: 4
-    pineapple: 8
-    peanut: 4
-    stone: 4
-    pumpkin: 4 
+    gold: 1
+    hazelnut: 1
+    coral: 1
+    sand: 1
+    pineapple: 1
+    peanut: 1
+    stone: 1
+    pumpkin: 1
+  collect_time:
+    gold: 9
+    hazelnut: 9
+    coral: 9
+    sand: 3
+    pineapple: 9
+    peanut: 3
+    stone: 3
+    pumpkin: 1

@@ -11,7 +11,7 @@ class Item(BaseModel):
     name: str
     num: int
     supply: int
-    grow_rate: float
+    regenerate_time: float
     collect_time: int
     capacity: float
     harvest: int
@@ -29,7 +29,7 @@ def load_item(name: str, num=0) -> Item:
 
 class Bag(BaseModel):
     gold: Item = load_item('gold', num=0)
-    pepper: Item = load_item('pepper', num=0)
+    hazelnut: Item = load_item('hazelnut', num=0)
     coral: Item = load_item('coral', num=0)
     sand: Item = load_item('sand', num=0)
     pineapple: Item = load_item('pineapple', num=0)
@@ -59,7 +59,7 @@ class Bag(BaseModel):
 
 class ItemRatio(BaseModel):
     gold: float
-    pepper: float
+    hazelnut: float
     coral: float
     sand: float
     pineapple: float
