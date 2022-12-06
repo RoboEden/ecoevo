@@ -1,6 +1,7 @@
 
 import os
 import json
+import yaml
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -9,49 +10,78 @@ import matplotlib.patches as pch
 
 """ generate block types """
 
-dict_type_idx = {
-    'empty': 0, 'gold': 1, 'hazelnut': 2, 'coral': 3, 'sand': 4, 'pineapple': 5, 'peanut': 6, 'stone': 7, 'pumpkin': 8
-}
-list_type = ['empty', 'gold', 'hazelnut', 'coral', 'sand', 'pineapple', 'peanut', 'stone', 'pumpkin']
+with open('ecoevo/entities/items.yaml') as file:
+    dict_item = dict(yaml.load(file, Loader=yaml.loader.SafeLoader))
+
+dict_type_idx = {key: dict_item[key]['id'] for key in dict_item.keys()}
+dict_idx_type = {dict_type_idx[key]: key for key in dict_type_idx.keys()}
 
 map_size = 32
 area_size = 8
-dict_reserve = {
-    'gold': 5000, 'hazelnut': 100, 'coral': 5000, 'sand': 15000, 
-    'pineapple': 100, 'peanut': 100, 'stone': 15000, 'pumpkin': 100
-}
+empty_width = 4
+num_block_resource = 32
+dict_reserve = {key: dict_item[key]['reserve'] for key in dict_item.keys()}
+
+
+def get_random_distribution(mat_type_area: np.ndarray, num_block_resource: int):
+    """
+    get random resource distribution of an area
+
+    :param mat_type_area:  matrix of block types
+    :param num_block_resource:  the number of resource blocks
+    """
+
+    ub_x, ub_y = mat_type_area.shape
+    for _ in range(num_block_resource):
+        x, y = np.random.randint(low=0, high=ub_x), np.random.randint(low=0, high=ub_y)
+        while mat_type_area[x, y]:
+            x, y = np.random.randint(low=0, high=ub_x), np.random.randint(low=0, high=ub_y)
+        mat_type_area[x, y] = dict_type_idx[t]
+
 
 # generate the distribution of blocks
 np.random.seed(42)
 mat_type_all = np.zeros(shape=(map_size, map_size))
-num_block_resource = 32
-for t in list_type:
+for t in dict_type_idx.keys():
     if t == 'empty':
         continue
 
-    mat_type_area = np.zeros(shape=(area_size, area_size))
-    for i in range(num_block_resource):
-        x, y = np.random.randint(low=0, high=area_size), np.random.randint(low=0, high=area_size)
-        while mat_type_area[x, y]:
-            x, y = np.random.randint(low=0, high=area_size), np.random.randint(low=0, high=area_size)
-        mat_type_area[x, y] = dict_type_idx[t]
-
-    if t == 'gold':
-        mat_type_all[0: 8, 0: 8] = mat_type_area
+    elif t == 'gold':
+        mat_type_area = np.zeros(shape=mat_type_all[: area_size, : area_size].shape)
+        get_random_distribution(mat_type_area=mat_type_area, num_block_resource=num_block_resource)
+        mat_type_all[: area_size, : area_size] = mat_type_area
     elif t == 'pineapple':
-        mat_type_all[0: 8, 12: 20] = mat_type_area
+        mat_type_area = np.zeros(
+            shape=mat_type_all[: area_size, area_size + empty_width: -(area_size + empty_width)].shape)
+        get_random_distribution(mat_type_area=mat_type_area, num_block_resource=num_block_resource)
+        mat_type_all[: area_size, area_size + empty_width: -(area_size + empty_width)] = mat_type_area
     elif t == 'sand':
-        mat_type_all[0: 8, 24: 32] = mat_type_area
+        mat_type_area = np.zeros(shape=mat_type_all[: area_size, -area_size:].shape)
+        get_random_distribution(mat_type_area=mat_type_area, num_block_resource=num_block_resource)
+        mat_type_all[: area_size, -area_size:] = mat_type_area
     elif t == 'pumpkin':
-        mat_type_all[12: 20, 0: 8] = mat_type_area
+        mat_type_area = np.zeros(
+            shape=mat_type_all[area_size + empty_width: -(area_size + empty_width), : area_size].shape)
+        get_random_distribution(mat_type_area=mat_type_area, num_block_resource=num_block_resource)
+        mat_type_all[area_size + empty_width: -(area_size + empty_width), : area_size] = mat_type_area
     elif t == 'peanut':
-        mat_type_all[12: 20, 24: 32] = mat_type_area
+        mat_type_area = np.zeros(
+            shape=mat_type_all[area_size + empty_width: -(area_size + empty_width), -area_size:].shape)
+        get_random_distribution(mat_type_area=mat_type_area, num_block_resource=num_block_resource)
+        mat_type_all[area_size + empty_width: -(area_size + empty_width), -area_size:] = mat_type_area
     elif t == 'stone':
-        mat_type_all[24: 32, 0: 8] = mat_type_area
+        mat_type_area = np.zeros(shape=mat_type_all[-area_size:, : area_size].shape)
+        get_random_distribution(mat_type_area=mat_type_area, num_block_resource=num_block_resource)
+        mat_type_all[-area_size:, : area_size] = mat_type_area
     elif t == 'hazelnut':
-        mat_type_all[24: 32, 12: 20] = mat_type_area
+        mat_type_area = np.zeros(
+            shape=mat_type_all[-area_size:, area_size + empty_width: -(area_size + empty_width)].shape)
+        get_random_distribution(mat_type_area=mat_type_area, num_block_resource=num_block_resource)
+        mat_type_all[-area_size:, area_size + empty_width: -(area_size + empty_width)] = mat_type_area
     elif t == 'coral':
-        mat_type_all[24: 32, 24: 32] = mat_type_area
+        mat_type_area = np.zeros(shape=mat_type_all[-area_size:, -area_size:].shape)
+        get_random_distribution(mat_type_area=mat_type_area, num_block_resource=num_block_resource)
+        mat_type_all[-area_size:, -area_size:] = mat_type_area
 
 mat_type_all = mat_type_all.astype('int').tolist()
 
@@ -72,7 +102,7 @@ for y in range(map_size):
     for x in range(map_size):
         rectangle = pch.Rectangle(
             xy=(x * len_block, (map_size - y - 1) * len_block), 
-            width=len_block, height=len_block, color=dict_type_colour[list_type[mat_type_all[y][x]]])
+            width=len_block, height=len_block, color=dict_type_colour[dict_idx_type[mat_type_all[y][x]]])
         ax.add_patch(rectangle)
         # plt.text(x=x + len_block / 2, y=map_size - y - 1 + len_block / 2, s=str(mat_type_all[y][x]))
 
@@ -103,7 +133,7 @@ plt.savefig(path_picture)
 
 """ save json """
 
-mat_type_all_ = [[list_type[mat_type_all[i][j]] for j in range(map_size)] for i in range(map_size)]
+mat_type_all_ = [[dict_idx_type[mat_type_all[i][j]] for j in range(map_size)] for i in range(map_size)]
 
 dict_json = {
     "width": map_size, 
