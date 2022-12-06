@@ -94,7 +94,7 @@ plt.grid(linestyle='dashed', linewidth=1)
 """ save picture """
 
 path = os.path.dirname(__file__)
-path_files = os.path.join(path, "files/")
+path_files = os.path.join(path, "data/")
 
 # save picture
 path_picture = os.path.join(path_files, "map.png")

@@ -1,6 +1,6 @@
 gold:
   supply: 0
-  grow_rate: 0
+  refresh_rate: 0
   collect_time: 10
   capacity: 10
   harvest: 1
@@ -9,7 +9,7 @@ gold:
   disposable: False
 pepper:
   supply: 0
-  grow_rate: 0
+  refresh_rate: 0
   collect_time: 10
   capacity: 10
   harvest: 1
@@ -18,7 +18,7 @@ pepper:
   disposable: False
 coral:
   supply: 0
-  grow_rate: 0
+  refresh_rate: 0
   collect_time: 10
   capacity: 10
   harvest: 1
@@ -27,7 +27,7 @@ coral:
   disposable: False
 sand:
   supply: 0
-  grow_rate: 0
+  refresh_rate: 0
   collect_time: 10
   capacity: 10
   harvest: 1
@@ -36,7 +36,7 @@ sand:
   disposable: False
 pineapple:
   supply: 0
-  grow_rate: 0
+  refresh_rate: 0
   collect_time: 10
   capacity: 10
   harvest: 1
@@ -45,7 +45,7 @@ pineapple:
   disposable: False
 peanut:
   supply: 5
-  grow_rate: 0
+  refresh_rate: 0
   collect_time: 10
   capacity: 10
   harvest: 1
@@ -54,7 +54,7 @@ peanut:
   disposable: True
 stone:
   supply: 0
-  grow_rate: 0
+  refresh_rate: 0
   collect_time: 10
   capacity: 10
   harvest: 1
@@ -63,7 +63,7 @@ stone:
   disposable: False
 pumpkin:
   supply: 0
-  grow_rate: 0
+  refresh_rate: 0
   collect_time: 10
   capacity: 10
   harvest: 1
