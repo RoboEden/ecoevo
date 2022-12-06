@@ -16,7 +16,7 @@ class Tile:
 class MapManager:
 
     def __init__(self) -> None:
-        path = 'ecoevo/maps/base.json'
+        path = 'ecoevo/maps/data/base.json'
         with open(path) as fp:
             self.data = dict(json.load(fp))
         self.width = self.data['width']

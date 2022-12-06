@@ -21,7 +21,7 @@ gold:
 hazelnut:
   id: 2
   supply: 0
-  refresh_time: 15
+  refresh_rate: 15
   collect_time: 9
   capacity: 1
   harvest: 100
