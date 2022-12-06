@@ -11,7 +11,7 @@ class Item(BaseModel):
     name: str
     num: int
     supply: int
-    regenerate_time: float
+    refresh_time: float
     collect_time: int
     capacity: float
     harvest: int

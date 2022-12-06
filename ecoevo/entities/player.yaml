@@ -8,7 +8,7 @@ gold_digger:
     peanut: 1
     stone: 1
     pumpkin: 1
-  collect_time:
+  ability:
     gold: 3
     hazelnut: 9
     coral: 9
@@ -27,7 +27,7 @@ hazelnut_farmer:
     peanut: 1
     stone: 1
     pumpkin: 1
-  collect_time:
+  ability:
     gold: 9
     hazelnut: 3
     coral: 9
@@ -46,7 +46,7 @@ coral_collector:
     peanut: 1
     stone: 1
     pumpkin: 1
-  collect_time:
+  ability:
     gold: 9
     hazelnut: 9
     coral: 3
@@ -65,7 +65,7 @@ sand_picker:
     peanut: 1
     stone: 1
     pumpkin: 1
-  collect_time:
+  ability:
     gold: 9
     hazelnut: 9
     coral: 9
@@ -84,7 +84,7 @@ pineapple_farmer:
     peanut: 1
     stone: 1
     pumpkin: 1
-  collect_time:
+  ability:
     gold: 9
     hazelnut: 9
     coral: 9
@@ -103,7 +103,7 @@ peanut_farmer:
     peanut: 1
     stone: 1
     pumpkin: 1
-  collect_time:
+  ability:
     gold: 9
     hazelnut: 9
     coral: 9
@@ -122,7 +122,7 @@ stone_picker:
     peanut: 1
     stone: 1
     pumpkin: 1
-  collect_time:
+  ability:
     gold: 9
     hazelnut: 9
     coral: 9
@@ -141,7 +141,7 @@ pumpkin_farmer:
     peanut: 1
     stone: 1
     pumpkin: 1
-  collect_time:
+  ability:
     gold: 9
     hazelnut: 9
     coral: 9
