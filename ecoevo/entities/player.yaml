@@ -17,7 +17,7 @@ gold_digger:
     peanut: 3
     stone: 3
     pumpkin: 3
-hazelnut_bro:
+hazelnut_farmer:
   preference:
     gold: 1
     hazelnut: 1
