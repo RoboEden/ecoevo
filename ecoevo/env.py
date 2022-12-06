@@ -24,6 +24,11 @@ class EcoEvo:
         return len(self.players)
 
     def reset(self, seed=None):
+        self.seed = seed
+        if seed is not None:
+            np.random.seed(seed)
+            random.seed(seed)
+
         self.players = []
         self.curr_step = 0
         self.map = self.map_generator.gen_map()
