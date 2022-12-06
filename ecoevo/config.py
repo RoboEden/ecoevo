@@ -5,13 +5,13 @@ class EnvConfig:
     trade_radius = 400
     visual_radius = 7
     personae = [
-        *(['pepper_bro'] * 2),
-        'coral_hunter',
-        'sand_collector',
-        'pineapple_farmer',
-        'peanut_collector',
-        'stone_picker',
-        'pumpkin_farmer',
+        *(['pepper_bro'] * 14),
+        *(['coral_hunter'] * 14),
+        *(['sand_collector'] * 14),
+        *(['pineapple_farmer'] * 14),
+        *(['peanut_collector'] * 14),
+        *(['stone_picker'] * 14),
+        *(['pumpkin_farmer'] * 16),
     ]
     bag_volume = 100
 
