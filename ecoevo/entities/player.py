@@ -40,7 +40,7 @@ class Player:
     def collect(self):
         item = self.item_under_feet
         if item is not None and item.num > 0:
-            progress_per_step = self.ability[item.name]
+            progress_per_step = getattr(self.ability, item.name)
             if self.collect_remain == None:
                 self.collect_remain = item.collect_time - 1
                 self.collect_remain -= progress_per_step
