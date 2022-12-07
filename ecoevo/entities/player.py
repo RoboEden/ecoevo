@@ -24,7 +24,8 @@ class Player:
         self.item_under_feet: Item = None
         self.collect_remain: int = None
 
-    def get_info(self) -> dict:
+    @property
+    def info(self) -> dict:
         return {
             'persona': self.persona,
             'preference': self.preference.dict(),
@@ -49,7 +50,7 @@ class Player:
                                            self.collect_remain)
             elif self.collect_remain == 0:
                 self.collect_remain = None
-                self.backpack.get_item(item.name).num += item.harvest
+                self.backpack[item.name].num += item.harvest
                 item.num -= item.harvest
             else:
                 raise ValueError(
@@ -58,8 +59,8 @@ class Player:
             print(f'Player {self.id} cannot collect {item} at {self.pos}')
 
     def consume(self, item_name: str):
-        item_in_bag = self.backpack.get_item(item_name)
-        item_in_stomach = self.stomach.get_item(item_name)
+        item_in_bag = self.backpack[item_name]
+        item_in_stomach = self.stomach[item_name]
         if item_in_bag.num > 0:
             if item_in_bag.disposable:
                 item_in_bag.num -= 1
@@ -101,10 +102,10 @@ class Player:
         sell_item_name, sell_num = sell_offer
         sell_num = abs(sell_num)
         buy_item_name, buy_num = buy_offer
-        sell_item_in_bag = self.backpack.get_item(sell_item_name)
+        sell_item_in_bag = self.backpack[sell_item_name]
         if sell_item_in_bag.num >= sell_num and sell_num > 0 and buy_num > 0:
             sell_item_in_bag.num -= sell_num
-            self.backpack.get_item(buy_item_name).num += min(
+            self.backpack[buy_item_name].num += min(
                 buy_num, self.backpack.remain_volume)
         else:
             print(

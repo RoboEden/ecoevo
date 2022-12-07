@@ -28,18 +28,18 @@ if __name__ == "__main__":
 
     # Consume
     for itm_name in player.stomach.dict():
-        player.stomach.get_item(itm_name).num += 1
+        player.stomach[itm_name].num += 1
         print(f"Consume a {itm_name}:", get_info(player, reward_parser))
 
     # Consume the same item multiple times
     for _ in range(10):
         itm_name = "gold"
-        player.stomach.get_item(itm_name).num += 1
+        player.stomach[itm_name].num += 1
         print(f"Consume a {itm_name}:", get_info(player, reward_parser))
 
     # Weight
     for itm_name in player.backpack.dict():
-        player.backpack.get_item(itm_name).num += 1
+        player.backpack[itm_name].num += 1
         print(f"Add a {itm_name}:", get_info(player, reward_parser))
 
     # Health

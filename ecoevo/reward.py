@@ -36,7 +36,7 @@ class RewardParser:
         alpha = self.alphas[player.persona]
         cnts = np.zeros(len(self.item_names), dtype=np.float32)
         for idx, item_name in enumerate(self.item_names):
-            cnts[idx] = player.stomach.get_item(item_name).num
+            cnts[idx] = player.stomach[item_name].num
         return cal_utility(alpha, cnts, RewardConfig.rho)
 
     def cost(self, player: Player) -> float:

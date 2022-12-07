@@ -38,7 +38,8 @@ class EcoEvo:
         self.map_manager.allocate(self.players)
 
         obs = {player.id: self.get_obs(player) for player in self.players}
-        infos = {player.id: player.get_info() for player in self.players}
+        infos = {player.id: player.info for player in self.players}
+        self.ids = [player.id for player in self.players]
         return obs, infos
 
     def step(
@@ -50,8 +51,9 @@ class EcoEvo:
         matched_orders = self.trader.parse(legal_orders)
 
         # execute
-        random.shuffle(self.players)
-        for player in self.players:
+        random.shuffle(self.ids)
+        for id in self.ids:
+            player = self.players[id]
             action = actions[player.id]
             if player.id in matched_orders:
                 main_action, _, _ = action
@@ -72,7 +74,7 @@ class EcoEvo:
             for player in self.players
         }
         done = True if self.curr_step > EnvConfig.total_step else False
-        infos = {player.id: player.get_info() for player in self.players}
+        infos = {player.id: player.info for player in self.players}
         return obs, rewards, done, infos
 
     def get_obs(self, player: Player) -> Dict[PosType, Tile]:
@@ -112,7 +114,7 @@ class EcoEvo:
         # check offer
         if sell_offer != None and buy_offer != None:
             item_to_sell, sell_amount = sell_offer
-            if player.backpack.get_item(item_to_sell).num < abs(sell_amount):
+            if player.backpack[item_to_sell].num < abs(sell_amount):
                 is_valid = False
         else:
             item_to_sell = None
@@ -147,7 +149,7 @@ class EcoEvo:
             else:
                 least_amount = 1
 
-            if player.backpack.get_item(item_to_consume).num < least_amount:
+            if player.backpack[item_to_consume].num < least_amount:
                 is_valid = False
 
         if not is_valid:
