@@ -44,7 +44,7 @@ class Bag(BaseModel):
             raise NotImplementedError(f'No such item "{name}" exist')
 
     @property
-    def used_volume(self):
+    def used_volume(self) -> float:
         used = 0
         for item_name in self.__dict__:
             item = self.__getattribute__(item_name)
@@ -53,7 +53,7 @@ class Bag(BaseModel):
         return used
 
     @property
-    def remain_volume(self):
+    def remain_volume(self) -> float:
         return EnvConfig.bag_volume - self.used_volume
 
 

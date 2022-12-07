@@ -24,7 +24,7 @@ class Player:
         self.item_under_feet: Item = None
         self.collect_remain: int = None
 
-    def get_info(self):
+    def get_info(self) -> dict:
         return {
             'persona': self.persona,
             'preference': self.preference.dict(),
