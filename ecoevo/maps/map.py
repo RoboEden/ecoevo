@@ -11,7 +11,7 @@ from ecoevo.entities.types import *
 @dataclass
 class Tile:
     item: Optional[Item]
-    player: Optional[Item]
+    player: Optional[Player]
 
 
 class MapManager:

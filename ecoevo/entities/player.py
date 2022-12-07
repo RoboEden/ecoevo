@@ -52,7 +52,8 @@ class Player:
                                            self.collect_remain)
             elif self.collect_remain == 0:
                 self.collect_remain = None
-                self.backpack[item.name].num += item.harvest
+                self.backpack[item.name].num += min(
+                    item.harvest, self.backpack.remain_volume)
                 item.num -= item.harvest
             else:
                 raise ValueError(
