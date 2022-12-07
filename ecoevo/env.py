@@ -3,23 +3,34 @@ from rich import print
 from typing import Dict, List
 
 from ecoevo.config import EnvConfig, MapSize
-
 from ecoevo.entities.player import Player
 from ecoevo.maps import MapManager
 from ecoevo.trader import Trader
 from ecoevo.reward import RewardParser
-
 from ecoevo.entities.types import *
+
+import sys
+from loguru import logger
 
 
 class EcoEvo:
 
-    def __init__(self, render_mode=None):
+    def __init__(self,
+                 render_mode=None,
+                 logging_level="WARNING",
+                 logging_path="out.log"):
         self.render_mode = render_mode
         self.map_manager = MapManager()
         self.trader = Trader(EnvConfig.trade_radius)
         self.reward_parser = RewardParser()
         self.players: List[Player] = []
+
+        # Logging
+        self.logging_level = logging_level
+        self.logging_path = logging_path
+        logger.remove(0)
+        logger.add(sys.stderr, level=logging_level)
+        logger.add(logging_path, level=logging_level)
 
     @property
     def num_player(self):
@@ -146,7 +157,7 @@ class EcoEvo:
                 is_valid = False
 
         if not is_valid:
-            print(
+            logger.debug(
                 f'Skip Invalid Action of Player {player.id}: {action} sell: {sell_offer} buy: {buy_offer}'
             )
         return is_valid
