@@ -1,4 +1,5 @@
 from datetime import datetime
+from rich import print
 from typing import Dict, List, Tuple
 
 from ortools.linear_solver import pywraplp
