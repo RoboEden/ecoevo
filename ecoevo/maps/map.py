@@ -1,7 +1,7 @@
 import json
 import numpy as np
 
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Optional
 from dataclasses import dataclass
 from ecoevo.entities.items import load_item, Item
 from ecoevo.entities.player import Player
@@ -9,14 +9,13 @@ from ecoevo.entities.player import Player
 
 @dataclass
 class Tile:
-    item: Item or None
-    player: Item or None
+    item: Optional[Item]
+    player: Optional[Item]
 
 
 class MapManager:
 
-    def __init__(self) -> None:
-        path = 'ecoevo/maps/data/base.json'
+    def __init__(self, path: str = 'ecoevo/maps/data/base.json') -> None:
         with open(path) as fp:
             self.data = dict(json.load(fp))
         self.width = self.data['width']
