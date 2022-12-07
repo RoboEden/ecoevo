@@ -1,6 +1,5 @@
 import yaml
-from rich import print as rprint
-from typing import Tuple
+from rich import print
 from yaml.loader import SafeLoader
 from ecoevo.config import MapSize, PlayerConfig
 from ecoevo.entities.items import ScoreForEachItem, Bag, Item
@@ -56,7 +55,7 @@ class Player:
                 raise ValueError(
                     f'Player {self.id} collect_remain: {self.collect_remain}.')
         else:
-            rprint(f'Player {self.id} cannot collect {item} at {self.pos}')
+            print(f'Player {self.id} cannot collect {item} at {self.pos}')
 
     def consume(self, item_name: str):
         item_in_bag = self.backpack.get_item(item_name)
@@ -70,7 +69,7 @@ class Player:
             self.health = min(self.health + item_in_stomach.supply,
                               PlayerConfig.max_health)
         else:
-            rprint(
+            print(
                 f'Player {self.id} cannot consume "{item_name}" since no such item left.'
             )
 
@@ -88,7 +87,7 @@ class Player:
         elif direction == Move.left:
             x = max(x - 1, 0)
         else:
-            rprint(
+            print(
                 f'Player {self.id}: Invalid move direction "{direction}" catched.'
             )
 
@@ -108,7 +107,7 @@ class Player:
             self.backpack.get_item(buy_item_name).num += min(
                 buy_num, self.backpack.remain_volume)
         else:
-            rprint(
+            print(
                 f'''Player {self.id}: Invalid sell offer "{sell_offer}". Only {sell_item_in_bag.num} "{sell_item_name}"  left in bag.'''
             )
 
@@ -117,9 +116,10 @@ class Player:
         action: ActionType,
     ):
         main_action, sell_offer, buy_offer = action
+        primary_action, secondary_action = main_action
+
         self.health = max(0, self.health - PlayerConfig.comsumption_per_step)
         self.trade(sell_offer, buy_offer)
-        primary_action, secondary_action = main_action
         if primary_action == Action.move:
             self.move(secondary_action)
         elif primary_action == Action.collect:
@@ -128,5 +128,5 @@ class Player:
             self.consume(secondary_action)
         else:
             print(
-                f'Invalid Action: Player {self.id}: {action} buy: {buy_offer} sell: {sell_offer}'
+                f'Invalid Action: Player {self.id}: {main_action} buy: {buy_offer} sell: {sell_offer}'
             )

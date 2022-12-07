@@ -1,5 +1,6 @@
 from ecoevo.maps.map import MapManager
 from ecoevo.entities.player import Player
+from rich import print
 
 if __name__ == "__main__":
     map_manager = MapManager()

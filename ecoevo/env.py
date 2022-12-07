@@ -1,6 +1,6 @@
 import random
 from rich import print
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 from ecoevo.config import EnvConfig, MapSize
 
@@ -42,10 +42,6 @@ class EcoEvo:
         return obs, infos
 
     def step(self, actions: List[ActionType]):
-        # action = (('move', 'up'), ('sand', -5), ('gold', 10))
-        # action = (('consume', 'peanut'), ('gold', -5), ('peanut', 20))
-        # action = (('collect', None), None, None))
-
         self.curr_step += 1
         legal_orders = self.get_legal_orders(actions)
         matched_orders = self.trader.parse(legal_orders)
@@ -53,19 +49,19 @@ class EcoEvo:
         # execute
         random.shuffle(self.players)
         for player in self.players:
+            action = actions[player.id]
+            if player.id in matched_orders:
+                main_action, _, _ = action
+                _, sell_offer, buy_offer = matched_orders[player.id]
+                action = (main_action, sell_offer, buy_offer)
+
             if self.validate(player, actions[player.id]):
-                main_action, sell_offer, buy_offer = actions[player.id]
-                if player.id in matched_orders:
-                    _, sell_offer, buy_offer = matched_orders[player.id]
-                    action = (main_action, sell_offer, buy_offer)
-                else:
-                    action = actions[player.id]
                 player.execute(action)
-            else:
-                continue
 
         self.map_manager.allocate(self.players)
-        # if self.curr_step // REFRESH_INTERVAL: self.map_manager.refresh()
+
+        # if self.curr_step // EnvConfig.refresh_interval:
+        #     self.map_manager.refresh()
 
         obs = {player.id: self.get_obs(player) for player in self.players}
         rewards = {
@@ -104,12 +100,9 @@ class EcoEvo:
         return legal_orders
 
     def validate(self, player: Player, action: ActionType):
-        # action = (('move', 'up'), ('sand', -5), ('gold', 10))
-        # action = (('consume', 'peanut'), ('gold', -5), ('peanut', 20))
-
         is_valid = True
-        action, sell_offer, buy_offer = action
-        primary_action, secondary_action = action
+        main_action, sell_offer, buy_offer = action
+        primary_action, secondary_action = main_action
 
         # check offer
         if sell_offer != None and buy_offer != None:
