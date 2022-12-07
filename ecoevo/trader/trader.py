@@ -1,7 +1,9 @@
 from datetime import datetime
-from typing import List, Dict, Tuple
+from typing import Dict, List, Tuple
 
 from ortools.linear_solver import pywraplp
+
+from ecoevo.entities.types import OrderType
 
 
 class Trader(object):
@@ -20,34 +22,38 @@ class Trader(object):
         self.trade_radius = trade_radius
         # model result
 
-    def parse(self, list_order: List[Tuple[Tuple[int, int], Tuple[str, int],
-                                           Tuple[str, int]]]):
-        # order: ((x, y), ('sand', -5), ('gold', 10))
-        self.list_order = list_order
+    def parse(self, legal_orders: Dict[int,
+                                       OrderType]) -> Dict[int, OrderType]:
+        self.list_order = list(legal_orders.values())
         self.mat_if_match, self.mat_volume = self._process()
         list_match = self._trade()
 
-        match_order_list = [None] * len(list_order)
+        idx2key = {idx: key for idx, key in enumerate(legal_orders.keys())}
+        match_orders = {}
         for match in list_match:
             idx_A, idx_B = match
-            order_A = list_order[idx_A][1:]
-            order_B = list_order[idx_B][1:]
-            min_order_A, min_order_B = self.mini_close(order_A, order_B)
-            match_order_list[idx_A] = min_order_A
-            match_order_list[idx_B] = min_order_B
+            key_A = idx2key[idx_A]
+            key_B = idx2key[idx_B]
+            order_A = legal_orders[key_A]
+            order_B = legal_orders[key_B]
 
-        return match_order_list
+            min_order_A, min_order_B = self.mini_close(order_A, order_B)
+
+            match_orders[key_A] = min_order_A
+            match_orders[key_B] = min_order_B
+
+        return match_orders
 
     def mini_close(
         self,
-        order_A: Tuple[Tuple[int, int], Tuple[str, int]],
-        order_B: Tuple[Tuple[int, int], Tuple[str, int]],
+        order_A: OrderType,
+        order_B: OrderType,
     ):
-        sell_offer_A, buy_offer_A = order_A
+        pos_A, sell_offer_A, buy_offer_A = order_A
         sell_A_name, sell_A_num = sell_offer_A
         buy_A_name, buy_A_num = buy_offer_A
 
-        sell_offer_B, buy_offer_B = order_B
+        pos_B, sell_offer_B, buy_offer_B = order_B
         sell_B_name, sell_B_num = sell_offer_B
         buy_B_name, buy_B_num = buy_offer_B
 
@@ -57,10 +63,10 @@ class Trader(object):
         sell_B_num = -buy_A_num
         buy_B_num = abs(sell_A_num)
 
-        order_A = sell_offer_A, buy_offer_A
-        order_B = sell_offer_B, buy_offer_B
+        min_order_A = pos_A, (sell_A_name, sell_A_num), (buy_A_name, buy_A_num)
+        min_order_B = pos_B, (sell_B_name, sell_B_num), (buy_B_name, buy_B_num)
 
-        return order_A, order_B
+        return min_order_A, min_order_B
 
     def _process(self) -> Tuple[List[List[bool]], List[List[int]]]:
         """
@@ -105,7 +111,7 @@ class Trader(object):
 
         return mat_if_match, mat_volume
 
-    def _trade(self):
+    def _trade(self) -> List[Tuple[int, int]]:
         """
         IP Model for automated trade matching
 

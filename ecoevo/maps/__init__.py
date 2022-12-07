@@ -1,1 +1,1 @@
-from ecoevo.maps.map import MapGenerator
+from ecoevo.maps.map import MapManager

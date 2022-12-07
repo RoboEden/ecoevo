@@ -1,11 +1,10 @@
 import yaml
 from rich import print as rprint
-from yaml.loader import SafeLoader
 from typing import Tuple
-
+from yaml.loader import SafeLoader
 from ecoevo.config import MapSize, PlayerConfig
-from ecoevo.entities.items import Item, ItemRatio, Bag
-from ecoevo.entities.act_type import Action, Direction
+from ecoevo.entities.items import ScoreForEachItem, Bag, Item
+from ecoevo.entities.types import *
 
 with open('ecoevo/entities/player.yaml') as file:
     ALL_PERSONAE = yaml.load(file, Loader=SafeLoader)
@@ -13,17 +12,18 @@ with open('ecoevo/entities/player.yaml') as file:
 
 class Player:
 
-    def __init__(self, persona: str, id: int, pos: Tuple[int]):
+    def __init__(self, persona: str, id: int, pos: PosType):
         self.persona = persona
-        self.preference = ItemRatio(**ALL_PERSONAE[persona]['preference'])
-        self.ability = ItemRatio(**ALL_PERSONAE[persona]['ability'])
+        self.id = id
+        self.pos = pos
+        self.preference = ScoreForEachItem(
+            **ALL_PERSONAE[persona]['preference'])
+        self.ability = ScoreForEachItem(**ALL_PERSONAE[persona]['ability'])
         self.backpack = Bag()
         self.stomach = Bag()
-        self.pos = pos
-        self.id = id
         self.health = PlayerConfig.max_health
-        self.item_to_collect: Item = None
-        self.collect_cast_remain: int = None
+        self.item_under_feet: Item = None
+        self.collect_remain: int = None
 
     def get_info(self):
         return {
@@ -35,24 +35,26 @@ class Player:
             'pos': self.pos,
             'id': self.id,
             'health': self.health,
-            'item_to_collect': self.item_to_collect,
-            'collect_cast_remain': self.collect_cast_remain,
+            'collect_remain': self.collect_remain,
         }
 
     def collect(self):
-        item = self.item_to_collect
-        if isinstance(item, Item) and item.num > 0:
-            if self.collect_cast_remain == None:
-                self.collect_cast_remain = item.collect_time - 1
-                self.collect_cast_remain -= 1
-            elif self.collect_cast_remain > 0:
-                self.collect_cast_remain -= 1
-            elif self.collect_cast_remain == 0:
-                self.collect_cast_remain = None
+        item = self.item_under_feet
+        if item is not None and item.num > 0:
+            progress_per_step = self.ability[item.name]
+            if self.collect_remain == None:
+                self.collect_remain = item.collect_time - 1
+                self.collect_remain -= progress_per_step
+            elif self.collect_remain > 0:
+                self.collect_remain -= min(progress_per_step,
+                                           self.collect_remain)
+            elif self.collect_remain == 0:
+                self.collect_remain = None
                 self.backpack.get_item(item.name).num += item.harvest
                 item.num -= item.harvest
             else:
-                raise NameError('hehehe???')
+                raise ValueError(
+                    f'Player {self.id} collect_remain: {self.collect_remain}.')
         else:
             rprint(f'Player {self.id} cannot collect {item} at {self.pos}')
 
@@ -72,29 +74,33 @@ class Player:
                 f'Player {self.id} cannot consume "{item_name}" since no such item left.'
             )
 
-    def move(self, direction: int):
+    def move(
+        self,
+        direction: str,
+    ):
         x, y = self.pos
-        if direction == Direction.up:
+        if direction == Move.up:
             y = min(y + 1, MapSize.height)
-        elif direction == Direction.down:
+        elif direction == Move.down:
             y = max(y - 1, 0)
-        elif direction == Direction.right:
+        elif direction == Move.right:
             x = min(x + 1, MapSize.width)
-        elif direction == Direction.left:
+        elif direction == Move.left:
             x = max(x - 1, 0)
         else:
             rprint(
                 f'Player {self.id}: Invalid move direction "{direction}" catched.'
             )
-        self.pos = (x, y)
-        self.collect_cast_remain = None
 
-    def trade(self, sell_offer, buy_offer):
+        self.pos = (x, y)
+        self.collect_remain = None
+
+    def trade(self, sell_offer: OfferType, buy_offer: OfferType):
         if sell_offer == None:
             return
 
         sell_item_name, sell_num = sell_offer
-        sell_num = -sell_num
+        sell_num = abs(sell_num)
         buy_item_name, buy_num = buy_offer
         sell_item_in_bag = self.backpack.get_item(sell_item_name)
         if sell_item_in_bag.num >= sell_num and sell_num > 0 and buy_num > 0:
@@ -106,10 +112,14 @@ class Player:
                 f'''Player {self.id}: Invalid sell offer "{sell_offer}". Only {sell_item_in_bag.num} "{sell_item_name}"  left in bag.'''
             )
 
-    def execute(self, action, sell_offer, buy_offer):
+    def execute(
+        self,
+        action: ActionType,
+    ):
+        main_action, sell_offer, buy_offer = action
         self.health = max(0, self.health - PlayerConfig.comsumption_per_step)
         self.trade(sell_offer, buy_offer)
-        primary_action, secondary_action = action
+        primary_action, secondary_action = main_action
         if primary_action == Action.move:
             self.move(secondary_action)
         elif primary_action == Action.collect:

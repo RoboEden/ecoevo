@@ -1,7 +1,6 @@
 import numpy as np
-from ecoevo.entities.player import Player
-from ecoevo.entities.player import ALL_PERSONAE
-from ecoevo.entities.items import ALL_ITEM_TYPES
+from ecoevo.entities.player import Player, ALL_PERSONAE
+from ecoevo.entities.items import ALL_ITEM_DATA
 from ecoevo.config import RewardConfig
 
 
@@ -17,7 +16,7 @@ class RewardParser:
 
     def __init__(self) -> None:
         self.player_types = list(ALL_PERSONAE.keys())
-        self.item_names = list(ALL_ITEM_TYPES.keys())
+        self.item_names = list(ALL_ITEM_DATA.keys())
         self.last_utilities = {}
 
         # Calculate alphas

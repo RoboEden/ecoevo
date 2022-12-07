@@ -1,6 +1,7 @@
 from ecoevo.reward import RewardParser
 from ecoevo.entities.player import Player
 from rich import print as rprint
+from ecoevo.entities.items import ALL_ITEM_DATA, load_item
 
 
 def get_info(player: Player, rw_parser: RewardParser, ndigits=4):

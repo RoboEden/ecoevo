@@ -4,14 +4,14 @@ from pydantic import BaseModel
 from ecoevo.config import EnvConfig
 
 with open('ecoevo/entities/items.yaml') as file:
-    ALL_ITEM_TYPES = dict(yaml.load(file, Loader=SafeLoader))
+    ALL_ITEM_DATA = dict(yaml.load(file, Loader=SafeLoader))
 
 
 class Item(BaseModel):
     name: str
     num: int
     supply: int
-    refresh_time: float
+    refresh_rate: float
     collect_time: int
     capacity: float
     harvest: int
@@ -23,7 +23,7 @@ def load_item(name: str, num=0) -> Item:
     return Item(**{
         'name': name,
         'num': num,
-        **ALL_ITEM_TYPES[name],
+        **ALL_ITEM_DATA[name],
     })
 
 
@@ -57,7 +57,7 @@ class Bag(BaseModel):
         return EnvConfig.bag_volume - self.used_volume
 
 
-class ItemRatio(BaseModel):
+class ScoreForEachItem(BaseModel):
     gold: float
     hazelnut: float
     coral: float

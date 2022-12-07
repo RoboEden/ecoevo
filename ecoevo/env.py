@@ -1,20 +1,22 @@
 import random
-import numpy as np
-from typing import List, Tuple
 from rich import print
+from typing import Dict, List, Tuple
 
 from ecoevo.config import EnvConfig, MapSize
-from ecoevo.entities.player import Player, Action, Direction
-from ecoevo.maps import MapGenerator
+
+from ecoevo.entities.player import Player
+from ecoevo.maps import MapManager
 from ecoevo.trader import Trader
 from ecoevo.reward import RewardParser
+
+from ecoevo.entities.types import *
 
 
 class EcoEvo:
 
     def __init__(self, render_mode=None):
         self.render_mode = render_mode
-        self.map_generator = MapGenerator()
+        self.map_manager = MapManager()
         self.trader = Trader(EnvConfig.trade_radius)
         self.reward_parser = RewardParser()
         self.players: List[Player] = []
@@ -23,85 +25,47 @@ class EcoEvo:
     def num_player(self):
         return len(self.players)
 
-    def reset(self, seed=None):
-        self.seed = seed
-        if seed is not None:
-            np.random.seed(seed)
-            random.seed(seed)
-
+    def reset(self):
         self.players = []
         self.curr_step = 0
-        self.map = self.map_generator.gen_map()
+        self.map = self.map_manager.reset_map()
 
-        # Add player
-        player_pos = np.random.choice(MapSize.width * MapSize.height,
-                                      size=EnvConfig.player_num,
-                                      replace=False)
-
+        # Init players
+        points = self.map_manager.sample(len(EnvConfig.personae))
         for id, persona in enumerate(EnvConfig.personae):
-            x = player_pos[id] % MapSize.width
-            y = player_pos[id] // MapSize.width
-            pos = (x, y)
-            player = Player(persona, id, pos)
+            player = Player(persona, id, points[id])
             self.players.append(player)
-
-            # Allocate player
-            if player.pos not in self.map:
-                self.map[player.pos] = {'player': player}
-            else:
-                self.map[player.pos]['player'] = player
-                player.item_to_collect = self.map[player.pos]['item']
+        self.map_manager.allocate(self.players)
 
         obs = {player.id: self.get_obs(player) for player in self.players}
-
         infos = {player.id: player.get_info() for player in self.players}
         return obs, infos
 
-    def step(
-        self,
-        actions: List[Tuple[Tuple[str, str], Tuple[str, float], Tuple[str,
-                                                                      float]]],
-    ):
+    def step(self, actions: List[ActionType]):
         # action = (('move', 'up'), ('sand', -5), ('gold', 10))
         # action = (('consume', 'peanut'), ('gold', -5), ('peanut', 20))
         # action = (('collect', None), None, None))
 
-        # TODO trader
-        list_order = []
-        id_2_order = [None] * self.num_player
-        is_valid_buffer = []
-        for player in self.players:
-            action, sell_offer, buy_offer = actions[player.id]
-            player = self.players[player.id]
-            if self.valid_action(player, action, sell_offer, buy_offer):
-                is_valid_buffer.append(True)
-                if sell_offer is None or buy_offer is None:
-                    continue
-                list_order.append((player.pos, sell_offer, buy_offer))
-                id_2_order[player.id] = len(list_order) - 1
-            else:
-                is_valid_buffer.append(False)
-        match_order_list = self.trader.parse(list_order)
+        self.curr_step += 1
+        legal_orders = self.get_legal_orders(actions)
+        matched_orders = self.trader.parse(legal_orders)
 
         # execute
-        shuffled_player_ids = list(range(self.num_player))
-        random.shuffle(shuffled_player_ids)
-        for shuffled_player_id in shuffled_player_ids:
-            player = self.players[shuffled_player_id]
-            if is_valid_buffer[player.id]:
-                self.map[player.pos]['player'] = None
-                if id_2_order[player.id] is not None:
-                    order_id = id_2_order[player.id]
-                    sell_offer, buy_offer = match_order_list[order_id]
+        random.shuffle(self.players)
+        for player in self.players:
+            if self.validate(player, actions[player.id]):
+                main_action, sell_offer, buy_offer = actions[player.id]
+                if player.id in matched_orders:
+                    _, sell_offer, buy_offer = matched_orders[player.id]
+                    action = (main_action, sell_offer, buy_offer)
                 else:
-                    sell_offer, buy_offer = None, None
-                player.execute(action, sell_offer, buy_offer)
-
-                self.map[player.pos]['player'] = player
-                player.item_to_collect = self.map[player.pos]['item']
+                    action = actions[player.id]
+                player.execute(action)
             else:
                 continue
-        self.curr_step += 1
+
+        self.map_manager.allocate(self.players)
+        # if self.curr_step // REFRESH_INTERVAL: self.map_manager.refresh()
 
         obs = {player.id: self.get_obs(player) for player in self.players}
         rewards = {
@@ -127,24 +91,31 @@ class EcoEvo:
 
         return local_obs
 
-    def valid_action(
-        self,
-        player: Player,
-        action: Tuple[str, str],
-        sell_offer: Tuple[str, int],
-        buy_offer: Tuple[str, int],
-    ):
+    def get_legal_orders(self,
+                         actions: List[ActionType]) -> Dict[int, OrderType]:
+        legal_orders = {}
+        for player in self.players:
+            if self.validate(player, actions[player.id]):
+                _, sell_offer, buy_offer = actions[player.id]
+                if sell_offer is None or buy_offer is None:
+                    continue
+                legal_orders[player.id] = (player.pos, sell_offer, buy_offer)
+
+        return legal_orders
+
+    def validate(self, player: Player, action: ActionType):
         # action = (('move', 'up'), ('sand', -5), ('gold', 10))
         # action = (('consume', 'peanut'), ('gold', -5), ('peanut', 20))
 
-        is_action_valid = True
+        is_valid = True
+        action, sell_offer, buy_offer = action
         primary_action, secondary_action = action
 
         # check offer
         if sell_offer != None and buy_offer != None:
             item_to_sell, sell_amount = sell_offer
             if player.backpack.get_item(item_to_sell).num < abs(sell_amount):
-                is_action_valid = False
+                is_valid = False
         else:
             item_to_sell = None
 
@@ -152,23 +123,23 @@ class EcoEvo:
         if primary_action == Action.move:
             direction = secondary_action
             x, y = player.pos
-            if direction == Direction.up:
+            if direction == Move.up:
                 y = min(y + 1, MapSize.height - 1)
-            if direction == Direction.down:
+            if direction == Move.down:
                 y = max(y - 1, 0)
-            if direction == Direction.left:
+            if direction == Move.right:
                 x = min(x + 1, MapSize.height - 1)
-            if direction == Direction.right:
+            if direction == Move.left:
                 x = max(x - 1, 0)
 
             if (x, y) in self.map.keys():
-                if self.map[(x, y)]['player'] != None:
-                    is_action_valid = False
+                if self.map[(x, y)].player != None:
+                    is_valid = False
 
         # check collect
         if primary_action == Action.collect:
             if player.backpack.remain_volume == 0:
-                is_action_valid = False
+                is_valid = False
 
         # check consume
         if primary_action == Action.consume:
@@ -179,10 +150,10 @@ class EcoEvo:
                 least_amount = 1
 
             if player.backpack.get_item(item_to_consume).num < least_amount:
-                is_action_valid = False
+                is_valid = False
 
-        if not is_action_valid:
+        if not is_valid:
             print(
                 f'Skip Invalid Action of Player {player.id}: {action} sell: {sell_offer} buy: {buy_offer}'
             )
-        return is_action_valid
+        return is_valid

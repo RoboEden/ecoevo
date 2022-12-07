@@ -15,8 +15,8 @@ if __name__ == "__main__":
     for i in range(10):
         print(f'######### {i} #########')
         player.collect(peanut)
-        print('========= collect_cast_remain ===========')
-        print(player.collect_cast_remain)
+        print('========= collect_remain ===========')
+        print(player.collect_remain)
         print('========= backpack peanut ===========')
         print(player.backpack.peanut)
 
