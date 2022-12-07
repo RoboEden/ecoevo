@@ -5,6 +5,8 @@ from ecoevo.config import MapSize, PlayerConfig
 from ecoevo.entities.items import ScoreForEachItem, Bag, Item
 from ecoevo.entities.types import *
 
+from loguru import logger
+
 with open('ecoevo/entities/player.yaml') as file:
     ALL_PERSONAE = yaml.load(file, Loader=SafeLoader)
 
@@ -57,7 +59,8 @@ class Player:
                 raise ValueError(
                     f'Player {self.id} collect_remain: {self.collect_remain}.')
         else:
-            print(f'Player {self.id} failed to collect {item} at {self.pos}')
+            logger.debug(
+                f'Player {self.id} cannot collect {item} at {self.pos}')
 
     def consume(self, item_name: str):
         item_in_bag = self.backpack[item_name]
@@ -71,7 +74,7 @@ class Player:
             self.health = min(self.health + item_in_stomach.supply,
                               PlayerConfig.max_health)
         else:
-            print(
+            logger.debug(
                 f'Player {self.id} cannot consume "{item_name}" since no such item left.'
             )
 
@@ -89,7 +92,7 @@ class Player:
         elif direction == Move.left:
             x = max(x - 1, 0)
         else:
-            print(
+            logger.debug(
                 f'Player {self.id}: Invalid move direction "{direction}" catched.'
             )
 
@@ -109,7 +112,7 @@ class Player:
             self.backpack[buy_item_name].num += min(
                 buy_num, self.backpack.remain_volume)
         else:
-            print(
+            logger.debug(
                 f'''Player {self.id}: Invalid sell offer "{sell_offer}". Only {sell_item_in_bag.num} "{sell_item_name}"  left in bag.'''
             )
 
@@ -129,6 +132,6 @@ class Player:
         elif primary_action == Action.consume:
             self.consume(secondary_action)
         else:
-            print(
+            logger.debug(
                 f'Invalid Action: Player {self.id}: {main_action} buy: {buy_offer} sell: {sell_offer}'
             )
