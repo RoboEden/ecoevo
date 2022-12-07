@@ -50,13 +50,14 @@ class Player:
                                            self.collect_remain)
             elif self.collect_remain == 0:
                 self.collect_remain = None
-                self.backpack[item.name].num += item.harvest
+                self.backpack[item.name].num += min(
+                    item.harvest, self.backpack.remain_volume)
                 item.num -= item.harvest
             else:
                 raise ValueError(
                     f'Player {self.id} collect_remain: {self.collect_remain}.')
         else:
-            print(f'Player {self.id} cannot collect {item} at {self.pos}')
+            print(f'Player {self.id} failed to collect {item} at {self.pos}')
 
     def consume(self, item_name: str):
         item_in_bag = self.backpack[item_name]
