@@ -7,8 +7,8 @@ from ecoevo.config import RewardConfig
 def cal_utility(alpha: np.ndarray, cnt: np.ndarray, rho: float):
     u = np.power(cnt, rho)
     u = alpha * u
-    u = np.power(u, 1 / rho)
     u = np.sum(u)
+    u = np.power(u, 1 / rho)
     return u
 
 
@@ -40,6 +40,11 @@ class RewardParser:
         utility = cal_utility(alpha, cnts, RewardConfig.rho)
         return utility
 
+    def cost(self, player: Player):
+        penalty_flag = player.health <= RewardConfig.threshold
+        cost = RewardConfig.weight_coef * player.backpack.used_volume + penalty_flag * RewardConfig.penalty
+        return cost
+
     def parse(self, player: Player):
         # Utility
         u = self.utility(player)
@@ -51,10 +56,9 @@ class RewardParser:
         self.last_utilities[player.id] = u
 
         # Cost
-        penalty_flag = player.health <= RewardConfig.threshold
-        cost = RewardConfig.weight_coef * player.backpack.used_volume + penalty_flag * RewardConfig.penalty
+        cost = self.cost(player)
 
         # Reward
-        reward = du + cost
+        reward = du - cost
 
         return reward

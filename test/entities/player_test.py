@@ -4,8 +4,8 @@ from ecoevo.entities.items import load_item
 
 if __name__ == "__main__":
 
-    player = Player('pepper_bro', 0)
-    player.pos = (5, 7)
+    pos = (5, 7)
+    player = Player('hazelnut_farmer', 0, pos)
     print(player.get_info())
 
     peanut = load_item('peanut', num=100)
@@ -14,7 +14,7 @@ if __name__ == "__main__":
     print(f'######### collect start #########')
     for i in range(10):
         print(f'######### {i} #########')
-        player.collect(peanut)
+        player.collect()
         print('========= collect_remain ===========')
         print(player.collect_remain)
         print('========= backpack peanut ===========')
@@ -67,7 +67,7 @@ if __name__ == "__main__":
     print(player.backpack.peanut)
     print('========= before backpack gold ===========')
     print(player.backpack.gold)
-    player.execute(('move', 'up'), ('peanut', -1), ('gold', 2))
+    player.execute((('move', 'up'), ('peanut', -1), ('gold', 2)))
     print('========= after pos ===========')
     print(player.pos)
     print('========= after backpack peanut ===========')

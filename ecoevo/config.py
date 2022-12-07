@@ -4,7 +4,7 @@ class EnvConfig:
     trade_radius = 4
     visual_radius = 7
     personae = [
-        'gold_digger', 
+        'gold_digger',
         'hazelnut_farmer',
         'coral_collector',
         'sand_picker',
