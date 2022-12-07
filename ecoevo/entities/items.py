@@ -22,23 +22,23 @@ class Item(BaseModel):
 
     @property
     def collect_time(self) -> int:
-        return int(ALL_ITEM_DATA[self.name]['supply'])
+        return int(ALL_ITEM_DATA[self.name]['collect_time'])
 
     @property
     def capacity(self) -> float:
-        return int(ALL_ITEM_DATA[self.name]['supply'])
+        return int(ALL_ITEM_DATA[self.name]['capacity'])
 
     @property
     def harvest(self) -> int:
-        return int(ALL_ITEM_DATA[self.name]['supply'])
+        return int(ALL_ITEM_DATA[self.name]['harvest'])
 
     @property
     def expiry(self) -> int:
-        return int(ALL_ITEM_DATA[self.name]['supply'])
+        return int(ALL_ITEM_DATA[self.name]['expiry'])
 
     @property
     def disposable(self) -> bool:
-        return bool(ALL_ITEM_DATA[self.name]['supply'])
+        return bool(ALL_ITEM_DATA[self.name]['disposable'])
 
 
 def load_item(name: str, num=0) -> Item:

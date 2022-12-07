@@ -3,8 +3,9 @@ from rich import print
 from typing import Dict, List, Tuple
 
 from ortools.linear_solver import pywraplp
-
 from ecoevo.entities.types import OrderType
+
+from loguru import logger
 
 
 class Trader(object):
@@ -158,14 +159,13 @@ class Trader(object):
         status = solver.Solve()
         dte = datetime.now()
         tm = round((dte - dts).seconds + (dte - dts).microseconds / (10**6), 3)
-        print("trading model solving time:  {} s".format(tm), '\n')
+        logger.debug(f"trading model solving time:{tm}s")
 
         # case 1: optimal
         list_match = []
         if status == pywraplp.Solver.OPTIMAL:
-            print("solution:")
             obj_ = solver.Objective().Value()
-            print("objective value:  {}".format(round(obj_)))
+            logger.debug(f"objective value:{round(obj_)}")
             x_ = [[x[i][j].solution_value() for j in range(num_order)]
                   for i in range(num_order)]
 
@@ -174,9 +174,9 @@ class Trader(object):
                 for j in range(num_order):
                     if j > i and x_[i][j] > 0.9:
                         list_match.append((i, j))
-                        print("order {} matches {} with trading volume {}".
-                              format(i, j, mat_volume[i][j]))
-            print()
+                        logger.debug(
+                            f"Order {i} matches {j} with trading volume {mat_volume[i][j]}"
+                        )
 
         # case 2: infeasible
         elif status == pywraplp.Solver.INFEASIBLE:
