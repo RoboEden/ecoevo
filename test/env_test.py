@@ -20,9 +20,8 @@ if __name__ == "__main__":
     ] * 20
     for _ in range(EnvConfig.total_step):
         obs, reward, done, infos = env.step(actions)
-
-    # Show info
-    if input('show info? y/n\n') == 'y':
-        print(infos)
-    if input('show obs? y/n\n') == 'y':
-        print(obs)
+        # Show info
+        if input('show info? y/n\n') == 'y':
+            print(infos)
+        if input('show obs? y/n\n') == 'y':
+            print(obs)

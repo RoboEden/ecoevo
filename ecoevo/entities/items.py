@@ -1,6 +1,7 @@
 import yaml
 from yaml.loader import SafeLoader
 from pydantic import BaseModel
+from typing import Dict
 from ecoevo.config import EnvConfig
 
 with open('ecoevo/entities/items.yaml') as file:
@@ -10,20 +11,40 @@ with open('ecoevo/entities/items.yaml') as file:
 class Item(BaseModel):
     name: str
     num: int
-    supply: int
-    refresh_rate: float
-    collect_time: int
-    capacity: float
-    harvest: int
-    expiry: int
-    disposable: bool
+
+    @property
+    def supply(self) -> int:
+        return int(ALL_ITEM_DATA[self.name]['supply'])
+
+    @property
+    def refresh_rate(self) -> float:
+        return float(ALL_ITEM_DATA[self.name]['refresh_rate'])
+
+    @property
+    def collect_time(self) -> int:
+        return int(ALL_ITEM_DATA[self.name]['supply'])
+
+    @property
+    def capacity(self) -> float:
+        return int(ALL_ITEM_DATA[self.name]['supply'])
+
+    @property
+    def harvest(self) -> int:
+        return int(ALL_ITEM_DATA[self.name]['supply'])
+
+    @property
+    def expiry(self) -> int:
+        return int(ALL_ITEM_DATA[self.name]['supply'])
+
+    @property
+    def disposable(self) -> bool:
+        return bool(ALL_ITEM_DATA[self.name]['supply'])
 
 
 def load_item(name: str, num=0) -> Item:
     return Item(**{
         'name': name,
         'num': num,
-        **ALL_ITEM_DATA[name],
     })
 
 
@@ -37,23 +58,33 @@ class Bag(BaseModel):
     stone: Item = load_item('stone', num=0)
     pumpkin: Item = load_item('pumpkin', num=0)
 
-    def get_item(self, name: str) -> Item:
+    def __getitem__(self, name: str) -> Item:
         if name in self.__dict__:
-            return self.__getattribute__(name)
+            item = self.__getattribute__(name)
+            if isinstance(item, Item):
+                return self.__getattribute__(name)
+            else:
+                raise TypeError(f'Get {item} by {name}')
         else:
             raise NotImplementedError(f'No such item "{name}" exist')
 
-    @property
-    def used_volume(self):
-        used = 0
+    def dict(self, **kwargs) -> Dict[str, Item]:
+        _dict = {}
         for item_name in self.__dict__:
             item = self.__getattribute__(item_name)
             if isinstance(item, Item):
-                used += item.num * item.capacity
+                _dict[item.name] = item
+        return _dict
+
+    @property
+    def used_volume(self) -> float:
+        used = 0
+        for item in self.dict().values():
+            used += item.num * item.capacity
         return used
 
     @property
-    def remain_volume(self):
+    def remain_volume(self) -> float:
         return EnvConfig.bag_volume - self.used_volume
 
 

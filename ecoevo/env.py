@@ -5,7 +5,7 @@ from typing import Dict, List
 from ecoevo.config import EnvConfig, MapSize
 
 from ecoevo.entities.player import Player
-from ecoevo.maps import MapManager
+from ecoevo.maps import MapManager, Tile
 from ecoevo.trader import Trader
 from ecoevo.reward import RewardParser
 
@@ -25,7 +25,7 @@ class EcoEvo:
     def num_player(self):
         return len(self.players)
 
-    def reset(self):
+    def reset(self) -> Tuple[Dict[int, Dict[PosType, Tile]], Dict[int, dict]]:
         self.players = []
         self.curr_step = 0
         self.map = self.map_manager.reset_map()
@@ -38,17 +38,22 @@ class EcoEvo:
         self.map_manager.allocate(self.players)
 
         obs = {player.id: self.get_obs(player) for player in self.players}
-        infos = {player.id: player.get_info() for player in self.players}
+        infos = {player.id: player.info for player in self.players}
+        self.ids = [player.id for player in self.players]
         return obs, infos
 
-    def step(self, actions: List[ActionType]):
+    def step(
+        self, actions: List[ActionType]
+    ) -> Tuple[Dict[int, Dict[PosType, Tile]], Dict[int, float], bool, Dict[
+            int, dict]]:
         self.curr_step += 1
         legal_orders = self.get_legal_orders(actions)
         matched_orders = self.trader.parse(legal_orders)
 
         # execute
-        random.shuffle(self.players)
-        for player in self.players:
+        random.shuffle(self.ids)
+        for id in self.ids:
+            player = self.players[id]
             action = actions[player.id]
             if player.id in matched_orders:
                 main_action, _, _ = action
@@ -69,10 +74,10 @@ class EcoEvo:
             for player in self.players
         }
         done = True if self.curr_step > EnvConfig.total_step else False
-        infos = {player.id: player.get_info() for player in self.players}
+        infos = {player.id: player.info for player in self.players}
         return obs, rewards, done, infos
 
-    def get_obs(self, player: Player):
+    def get_obs(self, player: Player) -> Dict[PosType, Tile]:
         player_x, player_y = player.pos
         x_min = max(player_x - EnvConfig.visual_radius, 0)
         x_max = min(player_x + EnvConfig.visual_radius, MapSize.width)
@@ -87,8 +92,10 @@ class EcoEvo:
 
         return local_obs
 
-    def get_legal_orders(self,
-                         actions: List[ActionType]) -> Dict[int, OrderType]:
+    def get_legal_orders(
+        self,
+        actions: List[ActionType],
+    ) -> Dict[int, OrderType]:
         legal_orders = {}
         for player in self.players:
             if self.validate(player, actions[player.id]):
@@ -99,7 +106,7 @@ class EcoEvo:
 
         return legal_orders
 
-    def validate(self, player: Player, action: ActionType):
+    def validate(self, player: Player, action: ActionType) -> bool:
         is_valid = True
         main_action, sell_offer, buy_offer = action
         primary_action, secondary_action = main_action
@@ -107,7 +114,7 @@ class EcoEvo:
         # check offer
         if sell_offer != None and buy_offer != None:
             item_to_sell, sell_amount = sell_offer
-            if player.backpack.get_item(item_to_sell).num < abs(sell_amount):
+            if player.backpack[item_to_sell].num < abs(sell_amount):
                 is_valid = False
         else:
             item_to_sell = None
@@ -142,7 +149,7 @@ class EcoEvo:
             else:
                 least_amount = 1
 
-            if player.backpack.get_item(item_to_consume).num < least_amount:
+            if player.backpack[item_to_consume].num < least_amount:
                 is_valid = False
 
         if not is_valid:

@@ -1,1 +1,1 @@
-from ecoevo.maps.map import MapManager
+from ecoevo.maps.map import MapManager, Tile

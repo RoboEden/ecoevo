@@ -4,7 +4,7 @@ from ecoevo.entities.items import ALL_ITEM_DATA
 from ecoevo.config import RewardConfig
 
 
-def cal_utility(alpha: np.ndarray, cnt: np.ndarray, rho: float):
+def cal_utility(alpha: np.ndarray, cnt: np.ndarray, rho: float) -> float:
     u = np.power(cnt, rho)
     u = alpha * u
     u = np.sum(u)
@@ -32,20 +32,19 @@ class RewardParser:
                 alpha_i = item_pref / total_pref
                 self.alphas[player_type][idx] = alpha_i
 
-    def utility(self, player: Player):
+    def utility(self, player: Player) -> float:
         alpha = self.alphas[player.persona]
         cnts = np.zeros(len(self.item_names), dtype=np.float32)
         for idx, item_name in enumerate(self.item_names):
-            cnts[idx] = player.stomach.get_item(item_name).num
-        utility = cal_utility(alpha, cnts, RewardConfig.rho)
-        return utility
+            cnts[idx] = player.stomach[item_name].num
+        return cal_utility(alpha, cnts, RewardConfig.rho)
 
-    def cost(self, player: Player):
+    def cost(self, player: Player) -> float:
         penalty_flag = player.health <= RewardConfig.threshold
         cost = RewardConfig.weight_coef * player.backpack.used_volume + penalty_flag * RewardConfig.penalty
         return cost
 
-    def parse(self, player: Player):
+    def parse(self, player: Player) -> float:
         # Utility
         u = self.utility(player)
         if player.id not in self.last_utilities:

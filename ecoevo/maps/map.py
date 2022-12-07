@@ -1,10 +1,11 @@
 import json
 import numpy as np
 
-from typing import List, Tuple, Dict
+from typing import List, Dict
 from dataclasses import dataclass
 from ecoevo.entities.items import load_item, Item
 from ecoevo.entities.player import Player
+from ecoevo.entities.types import *
 
 
 @dataclass
@@ -21,9 +22,9 @@ class MapManager:
             self.data = dict(json.load(fp))
         self.width = self.data['width']
         self.height = self.data['height']
-        self.map: Dict[Tuple[int, int], Tile] = {}
+        self.map: Dict[PosType, Tile] = {}
 
-    def reset_map(self) -> Dict[Tuple[int, int], Tile]:
+    def reset_map(self) -> Dict[PosType, Tile]:
         item_array = {}
         for x in range(self.width):
             for y in range(self.height):
@@ -40,12 +41,12 @@ class MapManager:
 
         return self.map
 
-    def sample(self, num: int) -> List[Tuple[int, int]]:
+    def sample(self, num: int) -> List[PosType]:
         points = []
         idxs = np.random.choice(self.width * self.height, num, replace=False)
         for idx in idxs:
-            x = idx // self.width
-            y = idx // self.height
+            x = idx % self.width
+            y = idx % self.height
             points.append((x, y))
         return points
 
