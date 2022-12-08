@@ -3,7 +3,7 @@ from rich import print
 from typing import Dict, List, Tuple
 
 from ortools.linear_solver import pywraplp
-from ecoevo.entities.types import OrderType
+from ecoevo.entities.types import OrderType, IdType
 
 from loguru import logger
 
@@ -24,13 +24,13 @@ class Trader(object):
         self.trade_radius = trade_radius
         # model result
 
-    def parse(self, legal_orders: Dict[int,
-                                       OrderType]) -> Dict[int, OrderType]:
+    def parse(self, legal_orders: Dict[IdType,
+                                       OrderType]) -> Dict[IdType, OrderType]:
         self.list_order = list(legal_orders.values())
         self.mat_if_match, self.mat_volume = self._process()
         list_match = self._trade()
 
-        idx2key = {idx: key for idx, key in enumerate(legal_orders.keys())}
+        idx2key = list(legal_orders.keys())
         match_orders = {}
         for match in list_match:
             idx_A, idx_B = match

@@ -1,12 +1,12 @@
 from ecoevo.config import EnvConfig, MapSize
 from ecoevo import EcoEvo
-from ecoevo.render import Render
+from ecoevo.render import TerminalRender
 from rich import print
 
 if __name__ == "__main__":
     # Init test
     env = EcoEvo()
-    render = Render(MapSize.width, MapSize.height)
+    render = TerminalRender(MapSize.width, MapSize.height)
 
     # Reset test
     obs, infos = env.reset()

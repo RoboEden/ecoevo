@@ -36,7 +36,7 @@ class EcoEvo:
     def num_player(self):
         return len(self.players)
 
-    def reset(self) -> Tuple[Dict[int, Dict[PosType, Tile]], Dict[int, dict]]:
+    def reset(self) -> Tuple[Dict[IdType, Dict[PosType, Tile]], Dict[IdType, dict]]:
         self.players = []
         self.curr_step = 0
         self.map = self.map_manager.reset_map()
@@ -55,8 +55,8 @@ class EcoEvo:
 
     def step(
         self, actions: List[ActionType]
-    ) -> Tuple[Dict[int, Dict[PosType, Tile]], Dict[int, float], bool, Dict[
-            int, dict]]:
+    ) -> Tuple[Dict[IdType, Dict[PosType, Tile]], Dict[IdType, float], bool, Dict[
+            IdType, dict]]:
         self.curr_step += 1
         legal_orders = self.get_legal_orders(actions)
         matched_orders = self.trader.parse(legal_orders)
@@ -106,7 +106,7 @@ class EcoEvo:
     def get_legal_orders(
         self,
         actions: List[ActionType],
-    ) -> Dict[int, OrderType]:
+    ) -> Dict[IdType, OrderType]:
         legal_orders = {}
         for player in self.players:
             if self.validate(player, actions[player.id]):

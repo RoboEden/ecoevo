@@ -18,6 +18,7 @@ class Action:
     consume = 'consume'
 
 
+IdType = int
 PosType = Tuple[int, int]
 OfferType = Tuple[str, int]
 MainActionType = Tuple[str, str]

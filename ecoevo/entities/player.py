@@ -13,7 +13,7 @@ with open('ecoevo/entities/player.yaml') as file:
 
 class Player:
 
-    def __init__(self, persona: str, id: int, pos: PosType):
+    def __init__(self, persona: str, id: IdType, pos: PosType):
         self.persona = persona
         self.id = id
         self.pos = pos
