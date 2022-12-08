@@ -27,7 +27,6 @@ class EcoEvo:
         # Logging
         self.logging_level = logging_level
         self.logging_path = logging_path
-        logger.remove(0)
         logger.add(sys.stderr, level=logging_level)
         logger.add(logging_path, level=logging_level)
 
