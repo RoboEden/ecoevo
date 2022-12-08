@@ -1,5 +1,4 @@
 import random
-from rich import print
 from typing import Dict, List
 
 from ecoevo.config import EnvConfig, MapSize
