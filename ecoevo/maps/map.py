@@ -45,7 +45,7 @@ class MapManager:
         idxs = np.random.choice(self.width * self.height, num, replace=False)
         for idx in idxs:
             x = idx % self.width
-            y = idx % self.height
+            y = idx // self.width
             points.append((x, y))
         return points
 
