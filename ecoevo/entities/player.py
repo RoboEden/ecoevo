@@ -58,9 +58,6 @@ class Player:
                 collect_num = min(capable_num, item.harvest)
                 item.num -= collect_num
                 self.backpack[item.name].num += collect_num
-            else:
-                raise ValueError(
-                    f'Player {self.id} collect_remain: {self.collect_remain}.')
         else:
             logger.debug(
                 f'Player {self.id} cannot collect {item} at {self.pos}')
