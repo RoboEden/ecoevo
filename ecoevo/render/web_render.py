@@ -40,13 +40,13 @@ class WebRender:
             width=800,
             height=800,
             margin=dict(l=10, r=10, b=10, t=10, pad=4),
-            paper_bgcolor="#B68E55",
+            paper_bgcolor="#fdfcce",
         )
 
-        self.colorscale = [[0.0, 'rgb(12,12,12)']]
+        self.gridcolor = 'rgb(28,28,28)'
 
     def render(self, map: Dict[PosType, Tile]):
-        color = [[.0] * self.width for _ in range(self.height)]
+        color = [[1.0] * self.width for _ in range(self.height)]
         emoji = [[''] * self.width for _ in range(self.height)]
         name = [[''] * self.width for _ in range(self.height)]
         num = [[''] * self.width for _ in range(self.height)]
@@ -57,13 +57,15 @@ class WebRender:
                 name[x][y] = tile.item.name
                 num[x][y] = tile.item.num
 
-        self.fig.add_trace(go.Heatmap(z=color, ))
+        self.fig.add_trace(go.Heatmap(z=color, zmax=1))
         #  title='Periodic Table')
         self.fig.update_traces(
             xgap=2,
             ygap=2,
             showscale=False,
-            colorscale=self.colorscale,
+            reversescale=True,
+            colorscale=[[0.0, self.gridcolor], [1.0, self.gridcolor]],
+            colorbar=dict(tick0=0, dtick=6),
             text=emoji,
             texttemplate="%{text}",
             textfont_size=20,
