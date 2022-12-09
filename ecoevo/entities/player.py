@@ -1,10 +1,8 @@
 import yaml
-from rich import print
 from yaml.loader import SafeLoader
 from ecoevo.config import MapSize, PlayerConfig
 from ecoevo.entities.items import ScoreForEachItem, Bag, Item
 from ecoevo.entities.types import *
-
 from loguru import logger
 
 with open('ecoevo/entities/player.yaml') as file:
@@ -43,21 +41,21 @@ class Player:
     def collect(self):
         item = self.item_under_feet
         if item is not None and item.num > 0:
-            progress_per_step = getattr(self.ability, item.name)
+            collect_time = getattr(self.ability, item.name)
+            # Init
             if self.collect_remain == None:
-                self.collect_remain = item.collect_time - 1
-                self.collect_remain -= progress_per_step
-            elif self.collect_remain > 0:
-                self.collect_remain -= min(progress_per_step,
-                                           self.collect_remain)
-            elif self.collect_remain == 0:
+                self.collect_remain = collect_time
+
+            # Collect
+            self.collect_remain -= 1
+
+            # Settlement
+            if self.collect_remain == 0:
                 self.collect_remain = None
-                self.backpack[item.name].num += min(
-                    item.harvest, self.backpack.remain_volume)
-                item.num -= item.harvest
-            else:
-                raise ValueError(
-                    f'Player {self.id} collect_remain: {self.collect_remain}.')
+                capable_num = self.backpack.remain_volume // item.capacity
+                collect_num = min(capable_num, item.harvest)
+                item.num -= collect_num
+                self.backpack[item.name].num += collect_num
         else:
             logger.debug(
                 f'Player {self.id} cannot collect {item} at {self.pos}')
@@ -100,21 +98,11 @@ class Player:
         self.collect_remain = None
 
     def trade(self, sell_offer: OfferType, buy_offer: OfferType):
-        if sell_offer == None:
-            return
-
         sell_item_name, sell_num = sell_offer
-        sell_num = abs(sell_num)
         buy_item_name, buy_num = buy_offer
-        sell_item_in_bag = self.backpack[sell_item_name]
-        if sell_item_in_bag.num >= sell_num and sell_num > 0 and buy_num > 0:
-            sell_item_in_bag.num -= sell_num
-            self.backpack[buy_item_name].num += min(
-                buy_num, self.backpack.remain_volume)
-        else:
-            logger.debug(
-                f'''Player {self.id}: Invalid sell offer "{sell_offer}". Only {sell_item_in_bag.num} "{sell_item_name}"  left in bag.'''
-            )
+        sell_num, buy_num = abs(sell_num), abs(buy_num)
+        self.backpack[sell_item_name].num -= sell_num
+        self.backpack[buy_item_name].num += buy_num
 
     def execute(
         self,

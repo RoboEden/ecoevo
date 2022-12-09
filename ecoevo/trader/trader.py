@@ -2,10 +2,11 @@ from datetime import datetime
 from rich import print
 from typing import Dict, List, Tuple
 
+from loguru import logger
 from ortools.linear_solver import pywraplp
 from ecoevo.entities.types import OrderType, IdType
 
-from loguru import logger
+from ecoevo.entities.types import OrderType
 
 
 class Trader(object):
@@ -20,19 +21,25 @@ class Trader(object):
         :param list_order:  list of orders
         """
 
-        # data process for model
+        # param
         self.trade_radius = trade_radius
-        # model result
+
+        # order info
+        self.list_order = []
+        self.mat_if_match, self.mat_volume = [[]], [[]]
+        self.list_match = []
 
     def parse(self, legal_orders: Dict[IdType,
                                        OrderType]) -> Dict[IdType, OrderType]:
         self.list_order = list(legal_orders.values())
+
+        # process data and run model
         self.mat_if_match, self.mat_volume = self._process()
-        list_match = self._trade()
+        self.list_match = self._trade()
 
         idx2key = list(legal_orders.keys())
         match_orders = {}
-        for match in list_match:
+        for match in self.list_match:
             idx_A, idx_B = match
             key_A = idx2key[idx_A]
             key_B = idx2key[idx_B]
@@ -78,38 +85,31 @@ class Trader(object):
         :return: mat_volume:  trading volume matrix
         """
 
-        mat_if_match = [[False for _ in self.list_order]
-                        for _ in self.list_order]
+        mat_if_match = [[False for _ in self.list_order] for _ in self.list_order]
         mat_volume = [[0 for _ in self.list_order] for _ in self.list_order]
         for i in range(len(self.list_order)):
             for j in range(len(self.list_order)):
+                ((pos_x_i, pos_y_i), (item_sell_i, num_sell_i), (item_buy_i, num_buy_i)) = self.list_order[i]
+                ((pos_x_j, pos_y_j), (item_sell_j, num_sell_j), (item_buy_j, num_buy_j)) = self.list_order[j]
+
                 # jump over same orders
                 if i == j:
                     continue
 
                 # too far to trade
-                pos_i, pos_j = self.list_order[i][0], self.list_order[j][0]
-                if abs(pos_i[0] - pos_j[0]) > self.trade_radius or abs(
-                        pos_i[1] - pos_j[1]) > self.trade_radius:
+                if abs(pos_x_i - pos_x_j) > self.trade_radius or abs(pos_y_i - pos_y_j) > self.trade_radius:
                     continue
 
                 # items cannot match
-                if self.list_order[j][2][0] != self.list_order[i][1][
-                        0] or self.list_order[j][1][0] != self.list_order[i][
-                            2][0]:
+                if item_sell_i != item_buy_j or item_buy_i != item_sell_j:
                     continue
 
                 # item ratio cannot match
-                if self.list_order[i][1][1] * self.list_order[j][1][
-                        1] != self.list_order[i][2][1] * self.list_order[j][2][
-                            1]:
+                if num_sell_i * num_sell_j != num_buy_i * num_buy_j:
                     continue
 
                 mat_if_match[i][j] = True
-                mat_volume[i][j] = min(abs(self.list_order[i][1][1]),
-                                       self.list_order[i][2][1],
-                                       abs(self.list_order[j][1][1]),
-                                       self.list_order[j][2][1])
+                mat_volume[i][j] = min(abs(num_sell_i), num_buy_i, abs(num_sell_j), num_buy_j)
 
         return mat_if_match, mat_volume
 
@@ -117,7 +117,7 @@ class Trader(object):
         """
         IP Model for automated trade matching
 
-        :return: dict_match:  matching list, (order index, order index)
+        :return: list_match:  matching list, (order index, order index)
         """
 
         # parameters
@@ -185,4 +185,5 @@ class Trader(object):
         # case 3: others
         else:
             raise Exception("Unexpected status: {}!".format(status))
+
         return list_match
