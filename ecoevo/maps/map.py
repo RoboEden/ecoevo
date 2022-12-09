@@ -45,11 +45,16 @@ class MapManager:
         idxs = np.random.choice(self.width * self.height, num, replace=False)
         for idx in idxs:
             x = idx % self.width
-            y = idx % self.height
+            y = idx // self.width
             points.append((x, y))
         return points
 
+    def clear_players(self):
+        for _, tile in self.map.items():
+            tile.player = None
+
     def allocate(self, players: List[Player]):
+        self.clear_players()
         for player in players:
             # Allocate player
             if player.pos not in self.map:

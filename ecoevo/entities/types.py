@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, Optional
 
 # action = (('move', 'up'), ('sand', -5), ('gold', 10))
 # action = (('consume', 'peanut'), ('gold', -5), ('peanut', 20))
@@ -20,7 +20,7 @@ class Action:
 
 PosType = Tuple[int, int]
 OfferType = Tuple[str, int]
-MainActionType = Tuple[str, str]
+MainActionType = Tuple[str, Optional[str]]
 
 OrderType = Tuple[PosType, OfferType, OfferType]
 

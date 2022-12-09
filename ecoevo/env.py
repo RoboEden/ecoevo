@@ -7,6 +7,7 @@ from ecoevo.maps import MapManager, Tile
 from ecoevo.trader import Trader
 from ecoevo.reward import RewardParser
 from ecoevo.entities.types import *
+from ecoevo.entities.items import ALL_ITEM_DATA
 
 import sys
 from loguru import logger
@@ -27,7 +28,6 @@ class EcoEvo:
         # Logging
         self.logging_level = logging_level
         self.logging_path = logging_path
-        logger.remove(0)
         logger.add(sys.stderr, level=logging_level)
         logger.add(logging_path, level=logging_level)
 
@@ -116,16 +116,39 @@ class EcoEvo:
 
         return legal_orders
 
+    def _is_valid_trade(self, player: Player, sell_offer: OfferType,
+                        buy_offer: OfferType) -> bool:
+        if sell_offer is None or buy_offer is None:
+            return False
+
+        sell_item_name, sell_num = sell_offer
+        buy_item_name, buy_num = buy_offer
+        sell_num, buy_num = abs(sell_num), abs(buy_num)
+
+        # Validate num
+        if sell_num <= 0 or buy_num <= 0:
+            return False
+
+        # Validate sell
+        if player.backpack[sell_item_name].num < sell_num:
+            return False
+
+        # Validate buy
+        buy_item_volumne = ALL_ITEM_DATA[buy_item_name].capacity * buy_num
+        if player.backpack.remain_volume < buy_item_volumne:
+            return False
+
+        return True
+
     def validate(self, player: Player, action: ActionType) -> bool:
         is_valid = True
         main_action, sell_offer, buy_offer = action
         primary_action, secondary_action = main_action
 
         # check offer
+        is_valid = self._is_valid_trade(player, sell_offer, buy_offer)
         if sell_offer != None and buy_offer != None:
             item_to_sell, sell_amount = sell_offer
-            if player.backpack[item_to_sell].num < abs(sell_amount):
-                is_valid = False
         else:
             item_to_sell = None
 

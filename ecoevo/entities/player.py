@@ -1,10 +1,8 @@
 import yaml
-from rich import print
 from yaml.loader import SafeLoader
 from ecoevo.config import MapSize, PlayerConfig
 from ecoevo.entities.items import ScoreForEachItem, Bag, Item
 from ecoevo.entities.types import *
-
 from loguru import logger
 
 with open('ecoevo/entities/player.yaml') as file:
@@ -100,21 +98,11 @@ class Player:
         self.collect_remain = None
 
     def trade(self, sell_offer: OfferType, buy_offer: OfferType):
-        if sell_offer == None:
-            return
-
         sell_item_name, sell_num = sell_offer
-        sell_num = abs(sell_num)
         buy_item_name, buy_num = buy_offer
-        sell_item_in_bag = self.backpack[sell_item_name]
-        if sell_item_in_bag.num >= sell_num and sell_num > 0 and buy_num > 0:
-            sell_item_in_bag.num -= sell_num
-            self.backpack[buy_item_name].num += min(
-                buy_num, self.backpack.remain_volume)
-        else:
-            logger.debug(
-                f'''Player {self.id}: Invalid sell offer "{sell_offer}". Only {sell_item_in_bag.num} "{sell_item_name}"  left in bag.'''
-            )
+        sell_num, buy_num = abs(sell_num), abs(buy_num)
+        self.backpack[sell_item_name].num -= sell_num
+        self.backpack[buy_item_name].num += buy_num
 
     def execute(
         self,
