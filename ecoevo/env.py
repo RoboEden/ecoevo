@@ -164,14 +164,14 @@ class EcoEvo:
 
         # check collect
         if primary_action == Action.collect:
-            item = player.item_under_feet
+            item = self.map[player.pos].item
 
             # no item to collect or the amount of item not enough
             if item is None or item.num < item.harvest:
                 is_valid = False
 
             # bagpack volume not enough
-            if player.backpack.remain_volume < item.harvest:
+            if player.backpack.remain_volume < item.harvest * item.capacity:
                 is_valid = False
 
         # check consume
