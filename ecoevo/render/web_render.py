@@ -62,7 +62,7 @@ class WebRender:
         self.fig.add_trace(
             go.Scatter(
                 x=[pos[0] for pos in poses],
-                y=[pos[1] for pos in poses],
+                y=[pos[1] - 0.1 for pos in poses],
                 showlegend=False,
                 mode='text',
                 text=item_emoji,
@@ -95,11 +95,11 @@ Pos: %{customdata[3]}<br>
 <extra></extra>"""
         self.fig.add_trace(
             go.Scatter(x=[pos[0] for pos in poses],
-                       y=[pos[1] for pos in poses],
+                       y=[pos[1] + 0.1 for pos in poses],
                        showlegend=False,
                        mode='text',
                        text=player_emoji,
-                       textfont_size=16,
+                       textfont_size=18,
                        textposition="middle center",
                        customdata=info,
                        hovertemplate=hovertemplate))
