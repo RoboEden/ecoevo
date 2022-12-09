@@ -4,9 +4,9 @@ gold:
   refresh_rate: 0
   collect_time: 9
   capacity: 1
-  harvest: 100
+  harvest_num: 100
   reserve: 5000
-  consume: 0
+  consume_num: 0
   expiry: 0
   disposable: False
 hazelnut:
@@ -15,9 +15,9 @@ hazelnut:
   refresh_rate: 15
   collect_time: 9
   capacity: 1
-  harvest: 100
+  harvest_num: 100
   reserve: 100
-  consume: 100
+  consume_num: 100
   expiry: 0
   disposable: True
 coral:
@@ -26,9 +26,9 @@ coral:
   refresh_rate: 0
   collect_time: 9
   capacity: 100
-  harvest: 100
+  harvest_num: 100
   reserve: 5000
-  consume: 0
+  consume_num: 0
   expiry: 0
   disposable: False
 sand:
@@ -37,9 +37,9 @@ sand:
   refresh_rate: 0
   collect_time: 3
   capacity: 1
-  harvest: 100
+  harvest_num: 100
   reserve: 15000
-  consume: 0
+  consume_num: 0
   expiry: 0
   disposable: False
 pineapple:
@@ -48,9 +48,9 @@ pineapple:
   refresh_rate: 15
   collect_time: 9
   capacity: 100
-  harvest: 100
+  harvest_num: 100
   reserve: 100
-  consume: 1
+  consume_num: 1
   expiry: 0
   disposable: True
 peanut:
@@ -59,9 +59,9 @@ peanut:
   refresh_rate: 5
   collect_time: 3
   capacity: 1
-  harvest: 100
+  harvest_num: 100
   reserve: 100
-  consume: 100
+  consume_num: 100
   expiry: 0
   disposable: True
 stone:
@@ -70,9 +70,9 @@ stone:
   refresh_rate: 0
   collect_time: 3
   capacity: 100
-  harvest: 100
+  harvest_num: 100
   reserve: 15000
-  consume: 0
+  consume_num: 0
   expiry: 0
   disposable: False
 pumpkin:
@@ -81,8 +81,8 @@ pumpkin:
   refresh_rate: 5
   collect_time: 3
   capacity: 100
-  harvest: 100
+  harvest_num: 100
   reserve: 100
-  consume: 1
+  consume_num: 1
   expiry: 0
   disposable: True

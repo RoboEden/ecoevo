@@ -39,6 +39,7 @@ class EcoEvo:
         self.players = []
         self.curr_step = 0
         self.map = self.map_manager.reset_map()
+        self.reward_parser.reset()
 
         # Init players
         points = self.map_manager.sample(len(EnvConfig.personae))
@@ -110,8 +111,6 @@ class EcoEvo:
         for player in self.players:
             if self.validate(player, actions[player.id]):
                 _, sell_offer, buy_offer = actions[player.id]
-                if sell_offer is None or buy_offer is None:
-                    continue
                 legal_orders[player.id] = (player.pos, sell_offer, buy_offer)
 
         return legal_orders
@@ -154,37 +153,31 @@ class EcoEvo:
 
         # check move
         if primary_action == Action.move:
-            direction = secondary_action
             x, y = player.pos
-            if direction == Move.up:
-                y = min(y + 1, MapSize.height - 1)
-            if direction == Move.down:
-                y = max(y - 1, 0)
-            if direction == Move.right:
-                x = min(x + 1, MapSize.height - 1)
-            if direction == Move.left:
-                x = max(x - 1, 0)
-
+            if x >= MapSize.width or x < 0:
+                is_valid = False
+            if y >= MapSize.height or y < 0:
+                is_valid = False
             if (x, y) in self.map.keys():
                 if self.map[(x, y)].player != None:
                     is_valid = False
 
         # check collect
         if primary_action == Action.collect:
-            item = player.item_under_feet
+            item = self.map[player.pos].item
 
             # no item to collect or the amount of item not enough
-            if item is None or item.num < item.harvest:
+            if item is None or item.num < item.harvest_num:
                 is_valid = False
 
             # bagpack volume not enough
-            if player.backpack.remain_volume < item.harvest:
+            if player.backpack.remain_volume < item.harvest_num * item.capacity:
                 is_valid = False
 
         # check consume
         if primary_action == Action.consume:
             item_to_consume = secondary_action
-            consume_num = player.backpack[item_to_consume].consume
+            consume_num = player.backpack[item_to_consume].consume_num
             if item_to_consume == item_to_sell:
                 least_amount = sell_amount + consume_num
             else:

@@ -23,6 +23,7 @@ class Player:
         self.health = PlayerConfig.max_health
         self.item_under_feet: Item = None
         self.collect_remain: int = None
+        self.last_action: str = None
 
     @property
     def info(self) -> dict:
@@ -39,6 +40,10 @@ class Player:
         }
 
     def collect(self):
+        # Collect needs Continuous execution
+        if self.last_action != Action.collect:
+            self.collect_remain = None
+
         item = self.item_under_feet
         if item is not None and item.num > 0:
             collect_time = getattr(self.ability, item.name)
@@ -52,8 +57,8 @@ class Player:
             # Settlement
             if self.collect_remain == 0:
                 self.collect_remain = None
-                item.num -= item.harvest
-                self.backpack[item.name].num += item.harvest
+                item.num -= item.harvest_num
+                self.backpack[item.name].num += item.harvest_num
         else:
             logger.debug(
                 f'Player {self.id} cannot collect {item} at {self.pos}')
@@ -63,8 +68,8 @@ class Player:
         item_in_stomach = self.stomach[item_name]
         if item_in_bag.num > 0:
             if item_in_bag.disposable:
-                item_in_bag.num -= item_in_bag.consume
-                item_in_stomach.num += item_in_bag.consume
+                item_in_bag.num -= item_in_bag.consume_num
+                item_in_stomach.num += item_in_bag.consume_num
             else:
                 item_in_stomach.num = item_in_bag.num
             self.health = min(self.health + item_in_stomach.supply,
@@ -121,3 +126,5 @@ class Player:
             logger.debug(
                 f'Invalid Action: Player {self.id}: {main_action} buy: {buy_offer} sell: {sell_offer}'
             )
+
+        self.last_action = primary_action
