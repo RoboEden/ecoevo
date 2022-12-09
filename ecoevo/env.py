@@ -153,24 +153,23 @@ class EcoEvo:
 
         # check move
         if primary_action == Action.move:
-            direction = secondary_action
             x, y = player.pos
-            if direction == Move.up:
-                y = min(y + 1, MapSize.height - 1)
-            if direction == Move.down:
-                y = max(y - 1, 0)
-            if direction == Move.right:
-                x = min(x + 1, MapSize.height - 1)
-            if direction == Move.left:
-                x = max(x - 1, 0)
-
+            if x >= MapSize.width or x < 0:
+                is_valid = False
+            if y >= MapSize.height or y < 0:
+                is_valid = False
             if (x, y) in self.map.keys():
                 if self.map[(x, y)].player != None:
                     is_valid = False
 
         # check collect
         if primary_action == Action.collect:
-            if player.backpack.remain_volume == 0:
+            item_name = secondary_action
+            if item_name not in ALL_ITEM_DATA:
+                is_valid = False
+            collect_volumne = ALL_ITEM_DATA[
+                item_name].capacity * ALL_ITEM_DATA[item_name].harvest
+            if player.backpack.remain_volume < collect_volumne:
                 is_valid = False
 
         # check consume
