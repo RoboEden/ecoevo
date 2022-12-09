@@ -111,8 +111,6 @@ class EcoEvo:
         for player in self.players:
             if self.validate(player, actions[player.id]):
                 _, sell_offer, buy_offer = actions[player.id]
-                if sell_offer is None or buy_offer is None:
-                    continue
                 legal_orders[player.id] = (player.pos, sell_offer, buy_offer)
 
         return legal_orders

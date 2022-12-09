@@ -23,6 +23,7 @@ class Player:
         self.health = PlayerConfig.max_health
         self.item_under_feet: Item = None
         self.collect_remain: int = None
+        self.last_action: str = None
 
     @property
     def info(self) -> dict:
@@ -39,6 +40,10 @@ class Player:
         }
 
     def collect(self):
+        # Collect needs Continuous execution
+        if self.last_action != Action.collect:
+            self.collect_remain = None
+
         item = self.item_under_feet
         if item is not None and item.num > 0:
             collect_time = getattr(self.ability, item.name)
@@ -123,3 +128,5 @@ class Player:
             logger.debug(
                 f'Invalid Action: Player {self.id}: {main_action} buy: {buy_offer} sell: {sell_offer}'
             )
+
+        self.last_action = primary_action
