@@ -33,6 +33,10 @@ class Item(BaseModel):
         return int(ALL_ITEM_DATA[self.name]['harvest'])
 
     @property
+    def consume(self) -> int:
+        return int(ALL_ITEM_DATA[self.name]['consume'])
+
+    @property
     def expiry(self) -> int:
         return int(ALL_ITEM_DATA[self.name]['expiry'])
 
