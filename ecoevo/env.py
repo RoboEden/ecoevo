@@ -39,6 +39,7 @@ class EcoEvo:
         self.players = []
         self.curr_step = 0
         self.map = self.map_manager.reset_map()
+        self.reward_parser.reset()
 
         # Init players
         points = self.map_manager.sample(len(EnvConfig.personae))

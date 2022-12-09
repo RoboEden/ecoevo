@@ -32,6 +32,9 @@ class RewardParser:
                 alpha_i = item_pref / total_pref
                 self.alphas[player_type][idx] = alpha_i
 
+    def reset(self) -> None:
+        self.last_utilities = {}
+
     def utility(self, player: Player) -> float:
         alpha = self.alphas[player.persona]
         cnts = np.zeros(len(self.item_names), dtype=np.float32)
