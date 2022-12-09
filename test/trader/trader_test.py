@@ -1,14 +1,16 @@
 import os
 import random
+from rich import print
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as pch
 
-from rich import print
 from ecoevo.trader.trader import Trader
+
+
 """ generate data: random """
 
-map_size = 64
+map_size = 32
 num_order = 128
 ub_amount = 10
 
@@ -33,6 +35,8 @@ for i in range(num_order):
     #     (x, y), ('gold', -amount), ('peanut', amount))
 
     list_order.append(order)
+
+
 """ generate data: edge case """
 
 # map_size = 16
@@ -43,12 +47,19 @@ for i in range(num_order):
 #     ((6, 4), ('peanut', -5), ('gold', 5)),
 #     ((10, 4), ('gold', -4), ('peanut', 4))
 # ]
+
+
 """ model """
 
-trader = Trader(list_order=list_order)
-trader.trade()
+trade_radius = 4
+trader = Trader(trade_radius=trade_radius)
+
+dict_order = {i: list_order[i] for i in range(len(list_order))}
+_ = trader.parse(legal_orders=dict_order)
 
 print("get {} trades".format(len(trader.list_match)))
+
+
 """ visualise """
 
 fig, ax = plt.subplots()
