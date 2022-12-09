@@ -28,7 +28,7 @@ class EcoEvo:
         # Logging
         self.logging_level = logging_level
         self.logging_path = logging_path
-        logger.remove(0)
+        # logger.remove(0)
         logger.add(sys.stderr, level=logging_level)
         logger.add(logging_path, level=logging_level)
 
@@ -36,7 +36,9 @@ class EcoEvo:
     def num_player(self):
         return len(self.players)
 
-    def reset(self) -> Tuple[Dict[IdType, Dict[PosType, Tile]], Dict[IdType, dict]]:
+    def reset(
+            self
+    ) -> Tuple[Dict[IdType, Dict[PosType, Tile]], Dict[IdType, dict]]:
         self.players = []
         self.curr_step = 0
         self.map = self.map_manager.reset_map()
@@ -55,8 +57,8 @@ class EcoEvo:
 
     def step(
         self, actions: List[ActionType]
-    ) -> Tuple[Dict[IdType, Dict[PosType, Tile]], Dict[IdType, float], bool, Dict[
-            IdType, dict]]:
+    ) -> Tuple[Dict[IdType, Dict[PosType, Tile]], Dict[IdType, float], bool,
+               Dict[IdType, dict]]:
         self.curr_step += 1
         legal_orders = self.get_legal_orders(actions)
         matched_orders = self.trader.parse(legal_orders)
