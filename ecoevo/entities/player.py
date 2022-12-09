@@ -1,10 +1,8 @@
 import yaml
-from rich import print
 from yaml.loader import SafeLoader
 from ecoevo.config import MapSize, PlayerConfig
 from ecoevo.entities.items import ScoreForEachItem, Bag, Item
 from ecoevo.entities.types import *
-from ecoevo.entities.items import ALL_ITEM_DATA
 from loguru import logger
 
 with open('ecoevo/entities/player.yaml') as file:
@@ -99,39 +97,12 @@ class Player:
         self.pos = (x, y)
         self.collect_remain = None
 
-    def is_valid_trade(self, sell_offer: OfferType,
-                       buy_offer: OfferType) -> bool:
-        if sell_offer is None or buy_offer is None:
-            return False
-
+    def trade(self, sell_offer: OfferType, buy_offer: OfferType):
         sell_item_name, sell_num = sell_offer
         buy_item_name, buy_num = buy_offer
         sell_num, buy_num = abs(sell_num), abs(buy_num)
-
-        # Validate num
-        if sell_num <= 0 or buy_num <= 0:
-            return False
-
-        # Validate sell
-        if self.backpack[sell_item_name].num < sell_num:
-            return False
-
-        # Validate buy
-        buy_item_volumne = ALL_ITEM_DATA[buy_item_name].capacity * buy_num
-        if self.backpack.remain_volume < buy_item_volumne:
-            return False
-
-        return True
-
-    def trade(self, sell_offer: OfferType, buy_offer: OfferType):
-        if self.is_valid_trade(sell_offer, buy_offer):
-            sell_item_name, sell_num = sell_offer
-            buy_item_name, buy_num = buy_offer
-            sell_num, buy_num = abs(sell_num), abs(buy_num)
-            self.backpack[sell_item_name].num -= sell_num
-            self.backpack[buy_item_name].num += buy_num
-        else:
-            logger.debug(f'''Player {self.id}: Invalid trade.''')
+        self.backpack[sell_item_name].num -= sell_num
+        self.backpack[buy_item_name].num += buy_num
 
     def execute(
         self,
