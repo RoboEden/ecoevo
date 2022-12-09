@@ -15,6 +15,7 @@ with open('ecoevo/entities/items.yaml') as file:
 
 dict_type_idx = {key: dict_item[key]['id'] for key in dict_item.keys()}
 dict_idx_type = {dict_type_idx[key]: key for key in dict_type_idx.keys()}
+dict_idx_type[0] = 'empty'
 
 map_size = 32
 area_size = 8
@@ -23,7 +24,7 @@ num_block_resource = 32
 dict_reserve = {key: dict_item[key]['reserve'] for key in dict_item.keys()}
 
 
-def get_random_distribution(mat_type_area: np.ndarray, num_block_resource: int):
+def get_random_distribution(mat_type_area: np.ndarray, num_block_resource: int, type_item: str):
     """
     get random resource distribution of an area
 
@@ -32,11 +33,10 @@ def get_random_distribution(mat_type_area: np.ndarray, num_block_resource: int):
     """
 
     ub_x, ub_y = mat_type_area.shape
-    for _ in range(num_block_resource):
-        x, y = np.random.randint(low=0, high=ub_x), np.random.randint(low=0, high=ub_y)
-        while mat_type_area[x, y]:
-            x, y = np.random.randint(low=0, high=ub_x), np.random.randint(low=0, high=ub_y)
-        mat_type_area[x, y] = dict_type_idx[t]
+    arr_pos = np.random.choice(a=ub_x * ub_y, size=num_block_resource, replace=False)
+    for pos in arr_pos:
+        x, y = pos // ub_y, pos % ub_y
+        mat_type_area[x, y] = dict_type_idx[type_item]
 
 
 # generate the distribution of blocks
@@ -48,39 +48,39 @@ for t in dict_type_idx.keys():
 
     elif t == 'gold':
         mat_type_area = np.zeros(shape=mat_type_all[: area_size, : area_size].shape)
-        get_random_distribution(mat_type_area=mat_type_area, num_block_resource=num_block_resource)
+        get_random_distribution(mat_type_area=mat_type_area, num_block_resource=num_block_resource, type_item=t)
         mat_type_all[: area_size, : area_size] = mat_type_area
     elif t == 'pineapple':
         mat_type_area = np.zeros(
             shape=mat_type_all[: area_size, area_size + empty_width: -(area_size + empty_width)].shape)
-        get_random_distribution(mat_type_area=mat_type_area, num_block_resource=num_block_resource)
+        get_random_distribution(mat_type_area=mat_type_area, num_block_resource=num_block_resource, type_item=t)
         mat_type_all[: area_size, area_size + empty_width: -(area_size + empty_width)] = mat_type_area
     elif t == 'sand':
         mat_type_area = np.zeros(shape=mat_type_all[: area_size, -area_size:].shape)
-        get_random_distribution(mat_type_area=mat_type_area, num_block_resource=num_block_resource)
+        get_random_distribution(mat_type_area=mat_type_area, num_block_resource=num_block_resource, type_item=t)
         mat_type_all[: area_size, -area_size:] = mat_type_area
     elif t == 'pumpkin':
         mat_type_area = np.zeros(
             shape=mat_type_all[area_size + empty_width: -(area_size + empty_width), : area_size].shape)
-        get_random_distribution(mat_type_area=mat_type_area, num_block_resource=num_block_resource)
+        get_random_distribution(mat_type_area=mat_type_area, num_block_resource=num_block_resource, type_item=t)
         mat_type_all[area_size + empty_width: -(area_size + empty_width), : area_size] = mat_type_area
     elif t == 'peanut':
         mat_type_area = np.zeros(
             shape=mat_type_all[area_size + empty_width: -(area_size + empty_width), -area_size:].shape)
-        get_random_distribution(mat_type_area=mat_type_area, num_block_resource=num_block_resource)
+        get_random_distribution(mat_type_area=mat_type_area, num_block_resource=num_block_resource, type_item=t)
         mat_type_all[area_size + empty_width: -(area_size + empty_width), -area_size:] = mat_type_area
     elif t == 'stone':
         mat_type_area = np.zeros(shape=mat_type_all[-area_size:, : area_size].shape)
-        get_random_distribution(mat_type_area=mat_type_area, num_block_resource=num_block_resource)
+        get_random_distribution(mat_type_area=mat_type_area, num_block_resource=num_block_resource, type_item=t)
         mat_type_all[-area_size:, : area_size] = mat_type_area
     elif t == 'hazelnut':
         mat_type_area = np.zeros(
             shape=mat_type_all[-area_size:, area_size + empty_width: -(area_size + empty_width)].shape)
-        get_random_distribution(mat_type_area=mat_type_area, num_block_resource=num_block_resource)
+        get_random_distribution(mat_type_area=mat_type_area, num_block_resource=num_block_resource, type_item=t)
         mat_type_all[-area_size:, area_size + empty_width: -(area_size + empty_width)] = mat_type_area
     elif t == 'coral':
         mat_type_area = np.zeros(shape=mat_type_all[-area_size:, -area_size:].shape)
-        get_random_distribution(mat_type_area=mat_type_area, num_block_resource=num_block_resource)
+        get_random_distribution(mat_type_area=mat_type_area, num_block_resource=num_block_resource, type_item=t)
         mat_type_all[-area_size:, -area_size:] = mat_type_area
 
 mat_type_all = mat_type_all.astype('int').tolist()

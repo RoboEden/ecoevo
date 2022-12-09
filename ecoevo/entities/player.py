@@ -57,10 +57,8 @@ class Player:
             # Settlement
             if self.collect_remain == 0:
                 self.collect_remain = None
-                capable_num = self.backpack.remain_volume // item.capacity
-                collect_num = min(capable_num, item.harvest)
-                item.num -= collect_num
-                self.backpack[item.name].num += collect_num
+                item.num -= item.harvest
+                self.backpack[item.name].num += item.harvest
         else:
             logger.debug(
                 f'Player {self.id} cannot collect {item} at {self.pos}')
@@ -70,8 +68,8 @@ class Player:
         item_in_stomach = self.stomach[item_name]
         if item_in_bag.num > 0:
             if item_in_bag.disposable:
-                item_in_bag.num -= 1
-                item_in_stomach.num += 1
+                item_in_bag.num -= item_in_bag.consume
+                item_in_stomach.num += item_in_bag.consume
             else:
                 item_in_stomach.num = item_in_bag.num
             self.health = min(self.health + item_in_stomach.supply,
@@ -87,11 +85,11 @@ class Player:
     ):
         x, y = self.pos
         if direction == Move.up:
-            y = min(y + 1, MapSize.height)
+            y = min(y + 1, MapSize.height - 1)
         elif direction == Move.down:
             y = max(y - 1, 0)
         elif direction == Move.right:
-            x = min(x + 1, MapSize.width)
+            x = min(x + 1, MapSize.width - 1)
         elif direction == Move.left:
             x = max(x - 1, 0)
         else:
