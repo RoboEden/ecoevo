@@ -13,15 +13,16 @@ class WebRender:
     def __init__(self, width: int, height: int) -> None:
         self.width = width
         self.height = height
+        self.gridcolor = 'rgb(28,28,28)'
         self.player_to_emoji = {
-            'gold_digger': ':angry_face:',
-            'hazelnut_farmer': ':angry_face_with_horns:',
-            'coral_collector': ':anguished_face:',
-            'sand_picker': ':anxious_face_with_sweat:',
-            'pineapple_farmer': ':astonished_face:',
-            'peanut_farmer': ':beaming_face_with_smiling_eyes:',
-            'stone_picker': ':cat_face:',
-            'pumpkin_farmer': ':bear_face:',
+            'gold_digger': '🤑',
+            'hazelnut_farmer': '🥴',
+            'coral_collector': '😎',
+            'sand_picker': '🤪',
+            'pineapple_farmer': '🥳',
+            'peanut_farmer': '😋',
+            'stone_picker': '🤓',
+            'pumpkin_farmer': '🤠',
         }
 
         self.item_to_emoji = {
@@ -34,44 +35,87 @@ class WebRender:
             'stone': '🪨',
             'pumpkin': '🎃',
         }
-        self.fig = go.Figure()
+        self.fig = go.Figure(
+            go.Heatmap(
+                z=[[1.0] * self.width for _ in range(self.height)],
+                zmax=1,
+                xgap=2,
+                ygap=2,
+                showscale=False,
+                colorscale=[[0.0, self.gridcolor], [1.0, self.gridcolor]],
+                hoverinfo="skip",
+            ))
+
+    def add_item_trace(self, map: Dict[PosType, Tile]):
+        poses = []
+        item_emoji = []
+        info = []
+        for pos, tile in map.items():
+            if tile.item is not None:
+                poses.append(list(pos))
+                item_emoji.append(self.item_to_emoji[tile.item.name])
+                info.append([
+                    tile.item.name,
+                    tile.item.num,
+                ])
+
+        self.fig.add_trace(
+            go.Scatter(
+                x=[pos[0] for pos in poses],
+                y=[pos[1] for pos in poses],
+                showlegend=False,
+                mode='text',
+                text=item_emoji,
+                textfont_size=20,
+                textposition="middle center",
+                customdata=info,
+                hovertemplate=
+                "%{customdata[0]}<br>Num: %{customdata[1]}<extra></extra>"))
+
+    def add_player_trace(self, map: Dict[PosType, Tile]):
+        poses = []
+        player_emoji = []
+        info = []
+        for pos, tile in map.items():
+            if tile.player is not None:
+                poses.append(list(pos))
+                player_emoji.append(self.player_to_emoji[tile.player.persona])
+                info.append([
+                    tile.player.persona,
+                    tile.player.id,
+                    tile.player.health,
+                    tile.player.pos,
+                    tile.player.collect_remain,
+                ])
+
+        hovertemplate = """%{customdata[0]}<br>
+Id: %{customdata[1]}<br>
+Health: %{customdata[2]}<br>
+Pos: %{customdata[3]}<br>
+<extra></extra>"""
+        self.fig.add_trace(
+            go.Scatter(x=[pos[0] for pos in poses],
+                       y=[pos[1] for pos in poses],
+                       showlegend=False,
+                       mode='text',
+                       text=player_emoji,
+                       textfont_size=16,
+                       textposition="middle center",
+                       customdata=info,
+                       hovertemplate=hovertemplate))
+
+    def render(self, map: Dict[PosType, Tile]):
+        self.add_item_trace(map)
+        self.add_player_trace(map)
         self.fig.update_layout(
             autosize=False,
             width=800,
             height=800,
-            margin=dict(l=10, r=10, b=10, t=10, pad=4),
+            margin=dict(l=10, r=10, b=10, t=10, pad=0),
             paper_bgcolor="#fdfcce",
-        )
-
-        self.gridcolor = 'rgb(28,28,28)'
-
-    def render(self, map: Dict[PosType, Tile]):
-        color = [[1.0] * self.width for _ in range(self.height)]
-        emoji = [[''] * self.width for _ in range(self.height)]
-        name = [[''] * self.width for _ in range(self.height)]
-        num = [[''] * self.width for _ in range(self.height)]
-        for pos, tile in map.items():
-            x, y = pos
-            if tile.item is not None:
-                emoji[x][y] = self.item_to_emoji[tile.item.name]
-                name[x][y] = tile.item.name
-                num[x][y] = tile.item.num
-
-        self.fig.add_trace(go.Heatmap(z=color, zmax=1))
-        #  title='Periodic Table')
-        self.fig.update_traces(
-            xgap=2,
-            ygap=2,
-            showscale=False,
-            reversescale=True,
-            colorscale=[[0.0, self.gridcolor], [1.0, self.gridcolor]],
-            colorbar=dict(tick0=0, dtick=6),
-            text=emoji,
-            texttemplate="%{text}",
-            textfont_size=20,
-            customdata=np.moveaxis([name, num], 0, -1),
-            hovertemplate=
-            "%{customdata[0]}<br>Num: %{customdata[1]:.2f}<extra></extra>",
+            hoverlabel=dict(bgcolor="black",
+                            font_size=16,
+                            font_family="Rockwell"),
         )
         self.fig.update_xaxes(visible=False)
         self.fig.update_yaxes(visible=False)
