@@ -167,17 +167,17 @@ class EcoEvo:
             item = self.map[player.pos].item
 
             # no item to collect or the amount of item not enough
-            if item is None or item.num < item.harvest:
+            if item is None or item.num < item.harvest_num:
                 is_valid = False
 
             # bagpack volume not enough
-            if player.backpack.remain_volume < item.harvest * item.capacity:
+            if player.backpack.remain_volume < item.harvest_num * item.capacity:
                 is_valid = False
 
         # check consume
         if primary_action == Action.consume:
             item_to_consume = secondary_action
-            consume_num = player.backpack[item_to_consume].consume
+            consume_num = player.backpack[item_to_consume].consume_num
             if item_to_consume == item_to_sell:
                 least_amount = sell_amount + consume_num
             else:
