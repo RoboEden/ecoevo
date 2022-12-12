@@ -61,17 +61,18 @@ class EcoEvo:
         random.shuffle(self.ids)
         for id in self.ids:
             player = self.players[id]
-            action = actions[player.id]
+            main_action, sell_offer, buy_offer = actions[player.id]
             if player.id in matched_deals:
-                main_action, _, _ = action
+                player.trade_result = 'Success'
                 _, sell_offer, buy_offer = matched_deals[player.id]
                 action = (main_action, sell_offer, buy_offer)
             else:
-                player.last_action = 'iligel deal'
+                if player.id in legal_deals:
+                    player.trade_result = 'Failed'
+                action = (main_action, None, None)
 
             if self.is_action_valid(player, actions[player.id]):
-                player.execute(action)
-                self.map_manager.allocate(player)
+                self.map_manager.execute(player, action)
 
         # if self.curr_step // EnvConfig.refresh_interval:
         #     self.map_manager.refresh()
@@ -107,22 +108,7 @@ class EcoEvo:
 
         # check move
         if primary_action == Action.move:
-            x, y = player.pos
-            direction = secondary_action
-            if direction == Move.up:
-                y = min(y + 1, MapSize.height - 1)
-            elif direction == Move.down:
-                y = max(y - 1, 0)
-            elif direction == Move.right:
-                x = min(x + 1, MapSize.width - 1)
-            elif direction == Move.left:
-                x = max(x - 1, 0)
-            else:
-                is_valid = False
-                logger.warning(
-                    f'Player {player.id}: Cannot parse move direction "{direction}".'
-                )
-
+            x, y = player.next_pos(secondary_action)
             if (x, y) in self.map:
                 if self.map[(x, y)].player != None:
                     hitted_player = self.map[(x, y)].player
@@ -134,7 +120,6 @@ class EcoEvo:
         # check collect
         if primary_action == Action.collect:
             item = self.map[player.pos].item
-
             # no item to collect or the amount of item not enough
             if item is None or item.num < item.harvest_num:
                 is_valid = False
