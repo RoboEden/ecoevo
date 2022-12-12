@@ -23,6 +23,7 @@ class Player:
         self.health = PlayerConfig.max_health
         self.item_under_feet: Item = None
         self.collect_remain: int = None
+        self.last_action: str = None
 
     @property
     def info(self) -> dict:
@@ -39,6 +40,10 @@ class Player:
         }
 
     def collect(self):
+        # Collect needs Continuous execution
+        if self.last_action != Action.collect:
+            self.collect_remain = None
+
         item = self.item_under_feet
         if item is not None and item.num > 0:
             collect_time = getattr(self.ability, item.name)
@@ -52,10 +57,8 @@ class Player:
             # Settlement
             if self.collect_remain == 0:
                 self.collect_remain = None
-                capable_num = self.backpack.remain_volume // item.capacity
-                collect_num = min(capable_num, item.harvest)
-                item.num -= collect_num
-                self.backpack[item.name].num += collect_num
+                item.num -= item.harvest_num
+                self.backpack[item.name].num += item.harvest_num
         else:
             logger.debug(
                 f'Player {self.id} cannot collect {item} at {self.pos}')
@@ -65,8 +68,8 @@ class Player:
         item_in_stomach = self.stomach[item_name]
         if item_in_bag.num > 0:
             if item_in_bag.disposable:
-                item_in_bag.num -= 1
-                item_in_stomach.num += 1
+                item_in_bag.num -= item_in_bag.consume_num
+                item_in_stomach.num += item_in_bag.consume_num
             else:
                 item_in_stomach.num = item_in_bag.num
             self.health = min(self.health + item_in_stomach.supply,
@@ -82,11 +85,11 @@ class Player:
     ):
         x, y = self.pos
         if direction == Move.up:
-            y = min(y + 1, MapSize.height)
+            y = min(y + 1, MapSize.height - 1)
         elif direction == Move.down:
             y = max(y - 1, 0)
         elif direction == Move.right:
-            x = min(x + 1, MapSize.width)
+            x = min(x + 1, MapSize.width - 1)
         elif direction == Move.left:
             x = max(x - 1, 0)
         else:
@@ -123,3 +126,5 @@ class Player:
             logger.debug(
                 f'Invalid Action: Player {self.id}: {main_action} buy: {buy_offer} sell: {sell_offer}'
             )
+
+        self.last_action = primary_action
