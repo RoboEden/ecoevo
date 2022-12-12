@@ -3,7 +3,6 @@ from yaml.loader import SafeLoader
 from ecoevo.config import MapSize, PlayerConfig
 from ecoevo.entities.items import ScoreForEachItem, Bag, Item
 from ecoevo.entities.types import *
-from loguru import logger
 
 with open('ecoevo/entities/player.yaml') as file:
     ALL_PERSONAE = yaml.load(file, Loader=SafeLoader)
@@ -40,44 +39,39 @@ class Player:
         }
 
     def collect(self):
-        # Collect needs Continuous execution
+        # Collect requires consecutive execution to succeed
         if self.last_action != Action.collect:
             self.collect_remain = None
 
-        item = self.item_under_feet
-        if item is not None and item.num > 0:
+        # Init
+        if self.collect_remain is None:
             collect_time = getattr(self.ability, item.name)
-            # Init
-            if self.collect_remain == None:
-                self.collect_remain = collect_time
+            self.collect_remain = collect_time - 1
 
-            # Collect
+        # Process collect
+        elif self.collect_remain > 0:
             self.collect_remain -= 1
 
-            # Settlement
-            if self.collect_remain == 0:
-                self.collect_remain = None
-                item.num -= item.harvest_num
-                self.backpack[item.name].num += item.harvest_num
+        # Succeed collect
+        elif self.collect_remain == 0:
+            item = self.item_under_feet
+            item.num -= item.harvest_num
+            self.backpack[item.name].num += item.harvest_num
+            self.collect_remain = None
+
         else:
-            logger.debug(
-                f'Player {self.id} cannot collect {item} at {self.pos}')
+            raise ValueError(f'Player {self.id}: Negative collect remain.')
 
     def consume(self, item_name: str):
         item_in_bag = self.backpack[item_name]
         item_in_stomach = self.stomach[item_name]
-        if item_in_bag.num > 0:
-            if item_in_bag.disposable:
-                item_in_bag.num -= item_in_bag.consume_num
-                item_in_stomach.num += item_in_bag.consume_num
-            else:
-                item_in_stomach.num = item_in_bag.num
-            self.health = min(self.health + item_in_stomach.supply,
-                              PlayerConfig.max_health)
+        if item_in_bag.disposable:
+            item_in_bag.num -= item_in_bag.consume_num
+            item_in_stomach.num += item_in_bag.consume_num
         else:
-            logger.debug(
-                f'Player {self.id} cannot consume "{item_name}" since no such item left.'
-            )
+            item_in_stomach.num = item_in_bag.num
+        self.health = min(self.health + item_in_stomach.supply,
+                          PlayerConfig.max_health)
 
     def move(
         self,
@@ -93,9 +87,8 @@ class Player:
         elif direction == Move.left:
             x = max(x - 1, 0)
         else:
-            logger.debug(
-                f'Player {self.id}: Invalid move direction "{direction}" catched.'
-            )
+            raise ValueError(
+                f'Failed to parse direction. Player {self.id}: {direction}')
 
         self.pos = (x, y)
         self.collect_remain = None
@@ -123,8 +116,8 @@ class Player:
         elif primary_action == Action.consume:
             self.consume(secondary_action)
         else:
-            logger.debug(
-                f'Invalid Action: Player {self.id}: {main_action} buy: {buy_offer} sell: {sell_offer}'
+            raise ValueError(
+                f'Failed to parse primary action. Player {self.id}: {primary_action} '
             )
 
         self.last_action = primary_action
