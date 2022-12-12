@@ -57,12 +57,12 @@ class MapManager:
         self.clear_players()
         for player in players:
             # Allocate player
-            if player.pos not in self.map:
-                self.map[player.pos] = Tile(item=None, player=player)
-                player.item_under_feet = None
-            else:
+            if player.pos in self.map:
                 self.map[player.pos].player = player
                 player.item_under_feet = self.map[player.pos].item
+            else:
+                self.map[player.pos] = Tile(item=None, player=player)
+                player.item_under_feet = None
 
     def refresh(self):
         raise NotImplementedError

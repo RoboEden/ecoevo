@@ -4,9 +4,9 @@ from typing import Dict, List, Tuple
 
 from loguru import logger
 from ortools.linear_solver import pywraplp
-from ecoevo.entities.types import OrderType, IdType
+from ecoevo.entities.types import DealType, IdType
 
-from ecoevo.entities.types import OrderType
+from ecoevo.entities.types import DealType
 
 
 class Trader(object):
@@ -18,51 +18,51 @@ class Trader(object):
         """
         trader, initialise
 
-        :param list_order:  list of orders
+        :param list_deal:  list of deals
         """
 
         # param
         self.trade_radius = trade_radius
 
-        # order info
-        self.list_order = []
+        # deal info
+        self.list_deal = []
         self.mat_if_match, self.mat_volume = [[]], [[]]
         self.list_match = []
 
-    def parse(self, legal_orders: Dict[IdType,
-                                       OrderType]) -> Dict[IdType, OrderType]:
-        self.list_order = list(legal_orders.values())
+    def parse(self, legal_deals: Dict[IdType,
+                                      DealType]) -> Dict[IdType, DealType]:
+        self.list_deal = list(legal_deals.values())
 
         # process data and run model
         self.mat_if_match, self.mat_volume = self._process()
         self.list_match = self._trade()
 
-        idx2key = list(legal_orders.keys())
-        match_orders = {}
+        idx2key = list(legal_deals.keys())
+        match_deals = {}
         for match in self.list_match:
             idx_A, idx_B = match
             key_A = idx2key[idx_A]
             key_B = idx2key[idx_B]
-            order_A = legal_orders[key_A]
-            order_B = legal_orders[key_B]
+            deal_A = legal_deals[key_A]
+            deal_B = legal_deals[key_B]
 
-            min_order_A, min_order_B = self.mini_close(order_A, order_B)
+            min_deal_A, min_deal_B = self.mini_close(deal_A, deal_B)
 
-            match_orders[key_A] = min_order_A
-            match_orders[key_B] = min_order_B
+            match_deals[key_A] = min_deal_A
+            match_deals[key_B] = min_deal_B
 
-        return match_orders
+        return match_deals
 
     def mini_close(
         self,
-        order_A: OrderType,
-        order_B: OrderType,
+        deal_A: DealType,
+        deal_B: DealType,
     ):
-        pos_A, sell_offer_A, buy_offer_A = order_A
+        pos_A, sell_offer_A, buy_offer_A = deal_A
         sell_A_name, sell_A_num = sell_offer_A
         buy_A_name, buy_A_num = buy_offer_A
 
-        pos_B, sell_offer_B, buy_offer_B = order_B
+        pos_B, sell_offer_B, buy_offer_B = deal_B
         sell_B_name, sell_B_num = sell_offer_B
         buy_B_name, buy_B_num = buy_offer_B
 
@@ -72,10 +72,10 @@ class Trader(object):
         sell_B_num = -buy_A_num
         buy_B_num = abs(sell_A_num)
 
-        min_order_A = pos_A, (sell_A_name, sell_A_num), (buy_A_name, buy_A_num)
-        min_order_B = pos_B, (sell_B_name, sell_B_num), (buy_B_name, buy_B_num)
+        min_deal_A = pos_A, (sell_A_name, sell_A_num), (buy_A_name, buy_A_num)
+        min_deal_B = pos_B, (sell_B_name, sell_B_num), (buy_B_name, buy_B_num)
 
-        return min_order_A, min_order_B
+        return min_deal_A, min_deal_B
 
     def _process(self) -> Tuple[List[List[bool]], List[List[int]]]:
         """
@@ -85,19 +85,23 @@ class Trader(object):
         :return: mat_volume:  trading volume matrix
         """
 
-        mat_if_match = [[False for _ in self.list_order] for _ in self.list_order]
-        mat_volume = [[0 for _ in self.list_order] for _ in self.list_order]
-        for i in range(len(self.list_order)):
-            for j in range(len(self.list_order)):
-                ((pos_x_i, pos_y_i), (item_sell_i, num_sell_i), (item_buy_i, num_buy_i)) = self.list_order[i]
-                ((pos_x_j, pos_y_j), (item_sell_j, num_sell_j), (item_buy_j, num_buy_j)) = self.list_order[j]
+        mat_if_match = [[False for _ in self.list_deal]
+                        for _ in self.list_deal]
+        mat_volume = [[0 for _ in self.list_deal] for _ in self.list_deal]
+        for i in range(len(self.list_deal)):
+            for j in range(len(self.list_deal)):
+                ((pos_x_i, pos_y_i), (item_sell_i, num_sell_i),
+                 (item_buy_i, num_buy_i)) = self.list_deal[i]
+                ((pos_x_j, pos_y_j), (item_sell_j, num_sell_j),
+                 (item_buy_j, num_buy_j)) = self.list_deal[j]
 
-                # jump over same orders
+                # jump over same deals
                 if i == j:
                     continue
 
                 # too far to trade
-                if abs(pos_x_i - pos_x_j) > self.trade_radius or abs(pos_y_i - pos_y_j) > self.trade_radius:
+                if abs(pos_x_i - pos_x_j) > self.trade_radius or abs(
+                        pos_y_i - pos_y_j) > self.trade_radius:
                     continue
 
                 # items cannot match
@@ -109,7 +113,8 @@ class Trader(object):
                     continue
 
                 mat_if_match[i][j] = True
-                mat_volume[i][j] = min(abs(num_sell_i), num_buy_i, abs(num_sell_j), num_buy_j)
+                mat_volume[i][j] = min(abs(num_sell_i), num_buy_i,
+                                       abs(num_sell_j), num_buy_j)
 
         return mat_if_match, mat_volume
 
@@ -117,11 +122,11 @@ class Trader(object):
         """
         IP Model for automated trade matching
 
-        :return: list_match:  matching list, (order index, order index)
+        :return: list_match:  matching list, (deal index, deal index)
         """
 
         # parameters
-        num_order = len(self.list_order)
+        num_deal = len(self.list_deal)
         mat_if_match = self.mat_if_match
         mat_volume = self.mat_volume
 
@@ -130,29 +135,28 @@ class Trader(object):
             problem_type=pywraplp.Solver.CBC_MIXED_INTEGER_PROGRAMMING)
 
         # variable: if choose a match
-        x = [[
-            solver.BoolVar('x_{}_{}'.format(i, j)) for j in range(num_order)
-        ] for i in range(num_order)]
+        x = [[solver.BoolVar('x_{}_{}'.format(i, j)) for j in range(num_deal)]
+             for i in range(num_deal)]
 
         # constraint: validation
-        for i in range(num_order):
-            for j in range(num_order):
+        for i in range(num_deal):
+            for j in range(num_deal):
                 solver.Add(x[i][j] <= mat_if_match[i][j])
 
         # constraint: symmetry
-        for i in range(num_order):
-            for j in range(num_order):
+        for i in range(num_deal):
+            for j in range(num_deal):
                 solver.Add(x[i][j] == x[j][i])
 
         # constraint: match only once
-        for i in range(num_order):
-            solver.Add(sum(x[i][j] for j in range(num_order)) <= 1)
+        for i in range(num_deal):
+            solver.Add(sum(x[i][j] for j in range(num_deal)) <= 1)
 
         # objective: maximise the total trading volume
         solver.Maximize(
             sum(
-                sum(mat_volume[i][j] * x[i][j] / 2 for j in range(num_order))
-                for i in range(num_order)))
+                sum(mat_volume[i][j] * x[i][j] / 2 for j in range(num_deal))
+                for i in range(num_deal)))
 
         # solve
         dts = datetime.now()
@@ -166,16 +170,16 @@ class Trader(object):
         if status == pywraplp.Solver.OPTIMAL:
             obj_ = solver.Objective().Value()
             logger.debug(f"objective value:{round(obj_)}")
-            x_ = [[x[i][j].solution_value() for j in range(num_order)]
-                  for i in range(num_order)]
+            x_ = [[x[i][j].solution_value() for j in range(num_deal)]
+                  for i in range(num_deal)]
 
             # result
-            for i in range(num_order):
-                for j in range(num_order):
+            for i in range(num_deal):
+                for j in range(num_deal):
                     if j > i and x_[i][j] > 0.9:
                         list_match.append((i, j))
                         logger.debug(
-                            f"Order {i} matches {j} with trading volume {mat_volume[i][j]}"
+                            f"Deal {i} matches {j} with trading volume {mat_volume[i][j]}"
                         )
 
         # case 2: infeasible
