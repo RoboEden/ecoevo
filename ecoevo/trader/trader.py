@@ -40,6 +40,7 @@ class Trader(object):
 
             # parse offer
             if sell_offer is None or buy_offer is None:
+                player.trade_result = 'Void'
                 continue
 
             sell_item_name, sell_num = sell_offer
@@ -47,24 +48,32 @@ class Trader(object):
             sell_num, buy_num = abs(sell_num), abs(buy_num)
 
             if sell_num == 0 or buy_num == 0:
-                logger.debug(
-                    f'Invalid sell_num {sell_num} or buy_num {buy_num}')
+                player.trade_result = 'Illegal'
+                logger.debug(f'Void sell_num {sell_num} or buy_num {buy_num}')
                 continue
 
             # check sell
+            sell_item = player.backpack[sell_item_name]
             least_amount = sell_num
             if primary_action == Action.consume:
                 consume_item_name = secondary_action
                 if sell_item_name == consume_item_name:
-                    least_amount += player.stomach[
-                        consume_item_name].consume_num
+                    least_amount += sell_item.consume_num
 
-            if player.backpack[sell_item_name].num < least_amount:
+            if sell_item.num < least_amount:
+                logger.debug(
+                    f'Insufficient {sell_item_name}:{sell_item.num} sell_num {sell_num}'
+                )
+                player.trade_result = 'Illegal'
                 continue
 
             # check buy
             buy_item_volumne = player.backpack[buy_item_name].capacity * buy_num
             if player.backpack.remain_volume < buy_item_volumne:
+                player.trade_result = 'Illegal'
+                logger.debug(
+                    f'Insufficient backpack remain volume:{player.backpack.remain_volume}'
+                )
                 continue
 
             legal_deals[player.id] = (player.pos, sell_offer, buy_offer)

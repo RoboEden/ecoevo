@@ -23,6 +23,7 @@ class Player:
         self.item_under_feet: Item = None
         self.collect_remain: int = None
         self.last_action: str = None
+        self.trade_result: str = 'Void'
 
     @property
     def info(self) -> dict:
@@ -36,6 +37,8 @@ class Player:
             'id': self.id,
             'health': self.health,
             'collect_remain': self.collect_remain,
+            'last_action': self.last_action,
+            'trade_result': self.trade_result,
         }
 
     def collect(self):
@@ -73,7 +76,7 @@ class Player:
         self.health = min(self.health + item_in_stomach.supply,
                           PlayerConfig.max_health)
 
-    def move(
+    def next_pos(
         self,
         direction: str,
     ):
@@ -89,9 +92,7 @@ class Player:
         else:
             raise ValueError(
                 f'Failed to parse direction. Player {self.id}: {direction}')
-
-        self.pos = (x, y)
-        self.collect_remain = None
+        return (x, y)
 
     def trade(self, sell_offer: OfferType, buy_offer: OfferType):
         sell_item_name, sell_num = sell_offer
@@ -99,25 +100,3 @@ class Player:
         sell_num, buy_num = abs(sell_num), abs(buy_num)
         self.backpack[sell_item_name].num -= sell_num
         self.backpack[buy_item_name].num += buy_num
-
-    def execute(
-        self,
-        action: ActionType,
-    ):
-        main_action, sell_offer, buy_offer = action
-        primary_action, secondary_action = main_action
-
-        self.health = max(0, self.health - PlayerConfig.comsumption_per_step)
-        self.trade(sell_offer, buy_offer)
-        if primary_action == Action.move:
-            self.move(secondary_action)
-        elif primary_action == Action.collect:
-            self.collect()
-        elif primary_action == Action.consume:
-            self.consume(secondary_action)
-        else:
-            raise ValueError(
-                f'Failed to parse primary action. Player {self.id}: {primary_action} '
-            )
-
-        self.last_action = primary_action
