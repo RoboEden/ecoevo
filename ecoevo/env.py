@@ -42,7 +42,7 @@ class EcoEvo:
         for id, persona in enumerate(EnvConfig.personae):
             player = Player(persona, id, points[id])
             self.players.append(player)
-        self.map_manager.allocate(self.players)
+            self.map_manager.allocate(player)
 
         obs = {player.id: self.get_obs(player) for player in self.players}
         infos = {player.id: player.info for player in self.players}
@@ -54,7 +54,7 @@ class EcoEvo:
     ) -> Tuple[Dict[IdType, Dict[PosType, Tile]], Dict[IdType, float], bool,
                Dict[IdType, dict]]:
         self.curr_step += 1
-        legal_deals = self.filter_legal_deals(actions)
+        legal_deals = self.trader.filter_legal_deals(actions)
         matched_deals = self.trader.parse(legal_deals)
 
         # execute
@@ -99,50 +99,6 @@ class EcoEvo:
                     local_obs[(i, j)] = self.map[(x, y)]
 
         return local_obs
-
-    def filter_legal_deals(
-        self,
-        players: List[Player],
-        actions: List[ActionType],
-    ) -> Dict[IdType, DealType]:
-        legal_deals = {}
-
-        for player in players:
-            main_action, sell_offer, buy_offer = actions[player.id]
-            primary_action, secondary_action = main_action
-
-            # parse offer
-            if sell_offer is None or buy_offer is None:
-                continue
-
-            sell_item_name, sell_num = sell_offer
-            buy_item_name, buy_num = buy_offer
-            sell_num, buy_num = abs(sell_num), abs(buy_num)
-
-            if sell_num == 0 or buy_num == 0:
-                logger.debug(
-                    f'Invalid sell_num {sell_num} or buy_num {buy_num}')
-                continue
-
-            # check sell
-            least_amount = sell_num
-            if primary_action == Action.consume:
-                consume_item_name = secondary_action
-                if sell_item_name == consume_item_name:
-                    least_amount += player.stomach[
-                        consume_item_name].consume_num
-
-            if player.backpack[sell_item_name].num < least_amount:
-                continue
-
-            # check buy
-            buy_item_volumne = player.backpack[buy_item_name].capacity * buy_num
-            if player.backpack.remain_volume < buy_item_volumne:
-                continue
-
-            legal_deals[player.id] = (player.pos, sell_offer, buy_offer)
-
-        return legal_deals
 
     def is_action_valid(self, player: Player, action: ActionType) -> bool:
         is_valid = True

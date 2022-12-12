@@ -1,12 +1,10 @@
 from datetime import datetime
-from rich import print
 from typing import Dict, List, Tuple
 
 from loguru import logger
 from ortools.linear_solver import pywraplp
-from ecoevo.entities.types import DealType, IdType
-
-from ecoevo.entities.types import DealType
+from ecoevo.entities.player import Player
+from ecoevo.entities.types import DealType, IdType, ActionType, Action
 
 
 class Trader(object):
@@ -28,6 +26,50 @@ class Trader(object):
         self.list_deal = []
         self.mat_if_match, self.mat_volume = [[]], [[]]
         self.list_match = []
+
+    def filter_legal_deals(
+        self,
+        players: List[Player],
+        actions: List[ActionType],
+    ) -> Dict[IdType, DealType]:
+        legal_deals = {}
+
+        for player in players:
+            main_action, sell_offer, buy_offer = actions[player.id]
+            primary_action, secondary_action = main_action
+
+            # parse offer
+            if sell_offer is None or buy_offer is None:
+                continue
+
+            sell_item_name, sell_num = sell_offer
+            buy_item_name, buy_num = buy_offer
+            sell_num, buy_num = abs(sell_num), abs(buy_num)
+
+            if sell_num == 0 or buy_num == 0:
+                logger.debug(
+                    f'Invalid sell_num {sell_num} or buy_num {buy_num}')
+                continue
+
+            # check sell
+            least_amount = sell_num
+            if primary_action == Action.consume:
+                consume_item_name = secondary_action
+                if sell_item_name == consume_item_name:
+                    least_amount += player.stomach[
+                        consume_item_name].consume_num
+
+            if player.backpack[sell_item_name].num < least_amount:
+                continue
+
+            # check buy
+            buy_item_volumne = player.backpack[buy_item_name].capacity * buy_num
+            if player.backpack.remain_volume < buy_item_volumne:
+                continue
+
+            legal_deals[player.id] = (player.pos, sell_offer, buy_offer)
+
+        return legal_deals
 
     def parse(self, legal_deals: Dict[IdType,
                                       DealType]) -> Dict[IdType, DealType]:
