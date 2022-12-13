@@ -2,9 +2,9 @@ import yaml
 from yaml.loader import SafeLoader
 from pydantic import BaseModel
 from typing import Dict
-from ecoevo.config import EnvConfig
+from ecoevo.config import EnvConfig, YamlPath
 
-with open('ecoevo/entities/items.yaml') as file:
+with open(YamlPath.item) as file:
     ALL_ITEM_DATA = dict(yaml.load(file, Loader=SafeLoader))
 
 

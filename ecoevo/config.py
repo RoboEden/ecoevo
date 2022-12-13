@@ -1,3 +1,5 @@
+import pathlib
+
 class EnvConfig:
     total_step = 1000
     trade_radius = 4
@@ -30,3 +32,7 @@ class RewardConfig:
     weight_coef = 0.0001
     penalty = 1
     rho = 0.5
+
+class YamlPath:
+    item = pathlib.Path(__file__).parent / "entities" / "items.yaml"
+    player = pathlib.Path(__file__).parent / "entities" / "player.yaml"

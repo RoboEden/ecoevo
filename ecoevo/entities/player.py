@@ -3,11 +3,11 @@ import yaml
 from pydantic import BaseModel, Field
 from yaml.loader import SafeLoader
 
-from ecoevo.config import MapSize, PlayerConfig
+from ecoevo.config import MapSize, PlayerConfig, YamlPath
 from ecoevo.entities.items import Bag, Item
 from ecoevo.entities.types import *
 
-with open('ecoevo/entities/player.yaml') as file:
+with open(YamlPath.player) as file:
     ALL_PERSONAE = yaml.load(file, Loader=SafeLoader)
 
 
