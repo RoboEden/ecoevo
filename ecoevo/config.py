@@ -1,5 +1,4 @@
 class EnvConfig:
-    player_num = 128
     total_step = 1000
     trade_radius = 4
     visual_radius = 7

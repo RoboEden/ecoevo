@@ -54,7 +54,7 @@ class EcoEvo:
     ) -> Tuple[Dict[IdType, Dict[PosType, Tile]], Dict[IdType, float], bool,
                Dict[IdType, dict]]:
         self.curr_step += 1
-        legal_deals = self.trader.filter_legal_deals(actions)
+        legal_deals = self.trader.filter_legal_deals(self.players, actions)
         matched_deals = self.trader.parse(legal_deals)
 
         # execute
@@ -89,9 +89,9 @@ class EcoEvo:
     def get_obs(self, player: Player) -> Dict[PosType, Tile]:
         player_x, player_y = player.pos
         x_min = max(player_x - EnvConfig.visual_radius, 0)
-        x_max = min(player_x + EnvConfig.visual_radius, MapSize.width)
+        x_max = min(player_x + EnvConfig.visual_radius, MapSize.width-1)
         y_min = max(player_y - EnvConfig.visual_radius, 0)
-        y_max = min(player_y + EnvConfig.visual_radius, MapSize.height)
+        y_max = min(player_y + EnvConfig.visual_radius, MapSize.height-1)
 
         local_obs = {}
         for i, x in enumerate(range(x_min, x_max)):

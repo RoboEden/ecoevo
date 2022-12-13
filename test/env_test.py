@@ -12,11 +12,14 @@ if __name__ == "__main__":
 
     # Step teset
     actions = [(('consume', 'peanut'), ('gold', -5),
-                ('peanut', 20))] * EnvConfig.player_num
+                ('peanut', 20))] * env.num_player
     for _ in range(EnvConfig.total_step):
         obs, reward, done, infos = env.step(actions)
-        # Show info
-        if input('show info? y/n\n') == 'y':
-            print(infos)
         if input('show obs? y/n\n') == 'y':
             print(obs)
+        if input('show reward? y/n\n') == 'y':
+            print(reward)
+        if input('show done? y/n\n') == 'y':
+            print(done)
+        if input('show info? y/n\n') == 'y':
+            print(infos)
