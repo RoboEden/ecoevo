@@ -54,11 +54,12 @@ class MapManager:
 
     def load_players(self, players: List[Player]):
         # Clear player
-        for _, tile in self.map.items():
-            if tile.player is not None:
-                tile.player = None
+        del_keys = []
+        for pos in self.map:
+            if self.map[pos].item is not None:
+                self.map[pos].player = None
             else:
-                self.map.__delitem__(_)
+                self.map.__delitem__(pos)
 
         # Allocate player
         for player in players:
@@ -92,7 +93,7 @@ class MapManager:
                 f'Failed to parse primary action. Player {player.id}: {primary_action} '
             )
 
-        self.last_action = primary_action
+        player.last_action = primary_action
 
     def refresh(self):
         raise NotImplementedError

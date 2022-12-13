@@ -42,7 +42,7 @@ class EcoEvo:
         for id, persona in enumerate(EnvConfig.personae):
             player = Player(persona, id, points[id])
             self.players.append(player)
-            self.map_manager.allocate(player)
+        self.map_manager.load_players(self.players)
 
         obs = {player.id: self.get_obs(player) for player in self.players}
         infos = {player.id: player.info for player in self.players}
