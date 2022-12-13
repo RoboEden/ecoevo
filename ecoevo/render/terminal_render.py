@@ -4,7 +4,7 @@ from typing import Dict, List
 from ecoevo.entities.types import *
 
 
-class Render:
+class TerminalRender:
 
     def __init__(self, width: int, height: int) -> None:
         self.width = width

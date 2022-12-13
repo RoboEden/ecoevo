@@ -6,19 +6,17 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as pch
 
 from ecoevo.trader.trader import Trader
-
-
 """ generate data: random """
 
 map_size = 32
-num_order = 128
+num_deal = 128
 ub_amount = 10
 
-# orders
+# deals
 random.seed(42)
 mat_player = [[False for _ in range(map_size)] for _ in range(map_size)]
-list_order = []
-for i in range(num_order):
+list_deal = []
+for i in range(num_deal):
     # position
     x, y = random.randint(0, map_size - 1), random.randint(0, map_size - 1)
     while mat_player[x][y]:
@@ -29,68 +27,59 @@ for i in range(num_order):
     amount = random.randint(1, ub_amount)
 
     # full case
-    order = ((x, y), ('gold', -amount), ('gold', amount))
+    deal = ((x, y), ('gold', -amount), ('gold', amount))
     # couple case
-    # order = ((x, y), ('peanut', -amount), ('gold', amount)) if not i % 2 else (
+    # deal = ((x, y), ('peanut', -amount), ('gold', amount)) if not i % 2 else (
     #     (x, y), ('gold', -amount), ('peanut', amount))
 
-    list_order.append(order)
-
-
+    list_deal.append(deal)
 """ generate data: edge case """
 
 # map_size = 16
 
-# list_order = [
+# list_deal = [
 #     ((0, 0), ('peanut', -3), ('gold', 3)),
 #     ((4, 0), ('gold', -10), ('peanut', 10)),
 #     ((6, 4), ('peanut', -5), ('gold', 5)),
 #     ((10, 4), ('gold', -4), ('peanut', 4))
 # ]
-
-
 """ model """
 
 trade_radius = 4
 trader = Trader(trade_radius=trade_radius)
 
-dict_order = {i: list_order[i] for i in range(len(list_order))}
-_ = trader.parse(legal_orders=dict_order)
+dict_deal = {i: list_deal[i] for i in range(len(list_deal))}
+_ = trader.parse(legal_deals=dict_deal)
 
 print("get {} trades".format(len(trader.list_match)))
-
-
 """ visualise """
 
 fig, ax = plt.subplots()
 
-# draw blocks and orders
+# draw blocks and deals
 len_block = 1
-dict_order = {
-    order[0]: min(abs(order[1][1]), order[2][1])
-    for order in list_order
-}
+dict_deal = {deal[0]: min(abs(deal[1][1]), deal[2][1]) for deal in list_deal}
 for y in range(map_size):
     for x in range(map_size):
-        colour = 'red' if (x, y) in dict_order.keys() else 'white'
+        colour = 'red' if (x, y) in dict_deal.keys() else 'white'
         rectangle = pch.Rectangle(xy=(x * len_block, y * len_block),
                                   width=len_block,
                                   height=len_block,
                                   color=colour)
         ax.add_patch(rectangle)
 
-        if (x, y) in dict_order.keys():
+        if (x, y) in dict_deal.keys():
             plt.text(x=x * len_block + len_block / 2,
                      y=y * len_block + len_block / 2,
-                     s=str(dict_order[x, y]))
+                     s=str(dict_deal[x, y]))
 
 # draw trades as lines
 list_match, mat_volume = trader.list_match, trader.mat_volume
 for t in list_match:
-    pos_1 = (list_order[t[0]][0][0] + len_block / 2,
-             list_order[t[0]][0][1] + len_block / 2)
-    pos_2 = (list_order[t[1]][0][0] + len_block / 2,
-             list_order[t[1]][0][1] + len_block / 2)
+    pos_1 = (list_deal[t[0]][0][0] + len_block / 2,
+             list_deal[t[0]][0][1] + len_block / 2)
+    pos_2 = (list_deal[t[1]][0][0] + len_block / 2,
+             list_deal[t[1]][0][1] + len_block / 2)
     plt.arrow(x=pos_1[0],
               y=pos_1[1],
               dx=pos_2[0] - pos_1[0],

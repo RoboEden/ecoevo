@@ -1,17 +1,21 @@
+import streamlit as st
+
 from ecoevo.config import EnvConfig, MapSize
 from ecoevo import EcoEvo
-from ecoevo.render import TerminalRender
-from rich import print
+from ecoevo.render.web_render import WebRender
 
-if __name__ == "__main__":
-    # Init test
-    env = EcoEvo()
-    render = TerminalRender(MapSize.width, MapSize.height)
+st.set_page_config(layout='wide')
+# Init test
+env = EcoEvo()
+render = WebRender(MapSize.width, MapSize.height)
 
-    # Reset test
-    obs, infos = env.reset()
-    print('num_player:', env.num_player)  # 7
+# Reset test
+wr = WebRender(MapSize.width, MapSize.height)
+obs, infos = env.reset()
 
+wr.render(env.map)
+
+if False:
     # Step teset
     actions = [
         (('move', 'right'), None, None),
