@@ -58,7 +58,7 @@ class MapManager:
             if self.map[pos].item is not None:
                 self.map[pos].player = None
             else:
-                self.map.__delitem__(pos)
+                del self.map[pos]
 
         # Allocate player
         for player in players:
@@ -73,7 +73,6 @@ class MapManager:
         if tile.item is not None:
             tile.player = None
         else:
-            # self.map.__delitem__(player.pos)
             del self.map[player.pos]
 
         # add
