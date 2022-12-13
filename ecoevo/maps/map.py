@@ -78,6 +78,8 @@ class MapManager:
         primary_action, secondary_action = main_action
         self.health = max(0, self.health - PlayerConfig.comsumption_per_step)
         player.trade(sell_offer, buy_offer)
+        if primary_action == Action.idle:
+            pass
         if primary_action == Action.move:
             self.map[player.pos] = None
             player.pos = player.next_pos(secondary_action)

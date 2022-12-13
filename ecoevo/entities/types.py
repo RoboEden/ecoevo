@@ -13,6 +13,7 @@ class Move:
 
 
 class Action:
+    idle = 'idle'
     move = 'move'
     collect = 'collect'
     consume = 'consume'
