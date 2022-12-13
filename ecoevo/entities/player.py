@@ -1,29 +1,33 @@
 import yaml
+
+from pydantic import BaseModel, Field
 from yaml.loader import SafeLoader
+
 from ecoevo.config import MapSize, PlayerConfig
-from ecoevo.entities.items import ScoreForEachItem, Bag, Item
+from ecoevo.entities.items import Bag, Item
 from ecoevo.entities.types import *
 
 with open('ecoevo/entities/player.yaml') as file:
     ALL_PERSONAE = yaml.load(file, Loader=SafeLoader)
 
 
-class Player:
+class Player(BaseModel):
+    persona:str
+    id:IdType
+    pos:PosType
+    backpack:Bag=Field(default_factory=Bag)
+    stomach:Bag=Field(default_factory=Bag)
+    health:int = Field(default=PlayerConfig.max_health)
+    collect_remain:Optional[str]
+    last_action:Optional[str]
+    trade_result:str = Field(default=TradeResult.absent)
 
-    def __init__(self, persona: str, id: IdType, pos: PosType):
-        self.persona = persona
-        self.id = id
-        self.pos = pos
-        self.preference = ScoreForEachItem(
-            **ALL_PERSONAE[persona]['preference'])
-        self.ability = ScoreForEachItem(**ALL_PERSONAE[persona]['ability'])
-        self.backpack = Bag()
-        self.stomach = Bag()
-        self.health = PlayerConfig.max_health
-        self.item_under_feet: Item = None
-        self.collect_remain: int = None
-        self.last_action: str = None
-        self.trade_result: str = 'Void'
+    @property
+    def preference(self):
+        return ALL_PERSONAE[self.persona]['preference']
+    @property
+    def ability(self):
+        return ALL_PERSONAE[self.persona]['ability']
 
     @property
     def info(self) -> dict:
@@ -41,7 +45,7 @@ class Player:
             'trade_result': self.trade_result,
         }
 
-    def collect(self):
+    def collect(self, item:Item):
         # Collect requires consecutive execution to succeed
         if self.last_action != Action.collect:
             self.collect_remain = None
@@ -57,7 +61,6 @@ class Player:
 
         # Succeed collect
         elif self.collect_remain == 0:
-            item = self.item_under_feet
             item.num -= item.harvest_num
             self.backpack[item.name].num += item.harvest_num
             self.collect_remain = None
@@ -100,3 +103,4 @@ class Player:
         sell_num, buy_num = abs(sell_num), abs(buy_num)
         self.backpack[sell_item_name].num -= sell_num
         self.backpack[buy_item_name].num += buy_num
+        self.trade_result = TradeResult.success

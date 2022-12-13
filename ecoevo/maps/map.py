@@ -54,7 +54,6 @@ class MapManager:
 
     def load_players(self, players: List[Player]):
         # Clear player
-        del_keys = []
         for pos in self.map:
             if self.map[pos].item is not None:
                 self.map[pos].player = None
@@ -85,7 +84,7 @@ class MapManager:
             self.map[player.pos] = player
             player.collect_remain = None
         elif primary_action == Action.collect:
-            player.collect()
+            player.collect(self.map[player.pos].item)
         elif primary_action == Action.consume:
             player.consume(secondary_action)
         else:
