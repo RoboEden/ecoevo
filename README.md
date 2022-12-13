@@ -6,6 +6,7 @@ Clone the repo, `cd` into the folder and run
 ```
 pip install -e .
 ```
+Make sure pip is the latest version.
 ## Usage example
 ```python
 from ecoevo import EcoEvo
