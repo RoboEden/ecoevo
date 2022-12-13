@@ -22,7 +22,7 @@ if __name__ == "__main__":
     # Init
     reward_parser = RewardParser()
     pos = (5, 7)
-    player = Player("hazelnut_farmer", 0, pos)
+    player = Player(persona="hazelnut_farmer", id=0, pos=pos)
     rw = reward_parser.parse(player)
     print(f"Initial reward: {rw}")
 

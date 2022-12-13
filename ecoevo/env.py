@@ -40,12 +40,12 @@ class EcoEvo:
         # Init players
         points = self.map_manager.sample(len(EnvConfig.personae))
         for id, persona in enumerate(EnvConfig.personae):
-            player = Player(persona, id, points[id])
+            player = Player(persona=persona, id=id, pos=points[id])
             self.players.append(player)
         self.map_manager.load_players(self.players)
 
         obs = {player.id: self.get_obs(player) for player in self.players}
-        infos = {player.id: player.info for player in self.players}
+        infos = {}
         self.ids = [player.id for player in self.players]
         return obs, infos
 
@@ -56,19 +56,18 @@ class EcoEvo:
         self.curr_step += 1
         legal_deals = self.trader.filter_legal_deals(self.players, actions)
         matched_deals = self.trader.parse(legal_deals)
-
         # execute
         random.shuffle(self.ids)
         for id in self.ids:
             player = self.players[id]
             main_action, sell_offer, buy_offer = actions[player.id]
             if player.id in matched_deals:
-                player.trade_result = 'Success'
+                player.trade_result = TradeResult.success
                 _, sell_offer, buy_offer = matched_deals[player.id]
                 action = (main_action, sell_offer, buy_offer)
             else:
                 if player.id in legal_deals:
-                    player.trade_result = 'Failed'
+                    player.trade_result = TradeResult.failed
                 action = (main_action, None, None)
 
             if self.is_action_valid(player, actions[player.id]):
@@ -83,7 +82,7 @@ class EcoEvo:
             for player in self.players
         }
         done = True if self.curr_step > EnvConfig.total_step else False
-        infos = {player.id: player.info for player in self.players}
+        infos = {}
         return obs, rewards, done, infos
 
     def get_obs(self, player: Player) -> Dict[PosType, Tile]:
@@ -106,19 +105,22 @@ class EcoEvo:
         main_action, sell_offer, buy_offer = action
         primary_action, secondary_action = main_action
 
+        if primary_action == Action.idle:
+            pass
+
         # check move
         if primary_action == Action.move:
             x, y = player.next_pos(secondary_action)
             if (x, y) in self.map:
-                if self.map[(x, y)].player != None:
+                if self.map[(x, y)].player is not None:
                     hitted_player = self.map[(x, y)].player
                     is_valid = False
                     logger.warning(
-                        f'Player {player.id} tried to hit player {hitted_player}'
+                        f'Player {player.id} at {player.pos} tried to hit player {hitted_player.id} at {hitted_player.pos}'
                     )
 
         # check collect
-        if primary_action == Action.collect:
+        elif primary_action == Action.collect:
             item = self.map[player.pos].item
             # no item to collect or the amount of item not enough
             if item is None or item.num < item.harvest_num:
@@ -135,10 +137,12 @@ class EcoEvo:
                 )
 
         # check consume
-        if primary_action == Action.consume:
+        elif primary_action == Action.consume:
             consume_item_name = secondary_action
+
+            # handle consume and sell same item
             least_amount = player.backpack[consume_item_name].consume_num
-            if sell_offer is not None:
+            if sell_offer is not None and buy_offer is not None:
                 sell_item_name, sell_num = sell_offer
                 if consume_item_name == sell_item_name:
                     least_amount += sell_num
@@ -148,5 +152,9 @@ class EcoEvo:
                 logger.debug(
                     f'Player {player.id} cannot consume "{consume_item_name}" since num no more than {least_amount}.'
                 )
+        else:
+            logger.debug(
+                f'Failed to parse primary action. Player {player.id}: {primary_action} '
+            )
 
         return is_valid

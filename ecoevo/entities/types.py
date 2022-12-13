@@ -13,9 +13,17 @@ class Move:
 
 
 class Action:
+    idle = 'idle'
     move = 'move'
     collect = 'collect'
     consume = 'consume'
+
+    
+class TradeResult:
+    absent  = 'absent'
+    illegal = 'illegal'
+    failed = 'failed'
+    success = 'success'
 
 
 IdType = int

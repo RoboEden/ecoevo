@@ -3,7 +3,7 @@ import numpy as np
 
 from typing import List, Dict, Optional
 from dataclasses import dataclass
-from ecoevo.config import MapSize, PlayerConfig
+from ecoevo.config import MapSize, PlayerConfig, DataPath
 from ecoevo.entities.items import load_item, Item
 from ecoevo.entities.player import Player
 from ecoevo.entities.types import *
@@ -17,7 +17,7 @@ class Tile:
 
 class MapManager:
 
-    def __init__(self, path: str = 'ecoevo/maps/data/base.json') -> None:
+    def __init__(self, path: str = DataPath.map_json) -> None:
         with open(path) as fp:
             self.data = dict(json.load(fp))
         self.width = self.data['width']
@@ -54,7 +54,6 @@ class MapManager:
 
     def load_players(self, players: List[Player]):
         # Clear player
-        del_keys = []
         for pos in self.map:
             if self.map[pos].item is not None:
                 self.map[pos].player = None
@@ -65,10 +64,29 @@ class MapManager:
         for player in players:
             if player.pos in self.map:
                 self.map[player.pos].player = player
-                player.item_under_feet = self.map[player.pos].item
             else:
                 self.map[player.pos] = Tile(item=None, player=player)
-                player.item_under_feet = None
+
+    def move_player(self, player:Player, secondary_action):
+        # remove
+        tile = self.map[player.pos]
+        if tile.item is not None:
+            tile.player = None
+        else:
+            # self.map.__delitem__(player.pos)
+            del self.map[player.pos]
+
+        # add
+        next_pos = player.next_pos(secondary_action)
+        if next_pos in self.map:
+            tile=self.map[next_pos]
+            tile.player = player
+        else:
+            self.map[next_pos] = Tile(item=None, player=player)
+        
+        player.pos = player.next_pos(secondary_action)
+        player.collect_remain = None
+
 
     def execute(
         self,
@@ -77,15 +95,15 @@ class MapManager:
     ):
         main_action, sell_offer, buy_offer = action
         primary_action, secondary_action = main_action
-        self.health = max(0, self.health - PlayerConfig.comsumption_per_step)
-        player.trade(sell_offer, buy_offer)
+        player.health = max(0, player.health - PlayerConfig.comsumption_per_step)
+        if sell_offer is not None and buy_offer is not None:
+            player.trade(sell_offer, buy_offer)
+        if primary_action == Action.idle:
+            pass
         if primary_action == Action.move:
-            self.map[player.pos] = None
-            player.pos = player.next_pos(secondary_action)
-            self.map[player.pos] = player
-            player.collect_remain = None
+            self.move_player(player, secondary_action)
         elif primary_action == Action.collect:
-            player.collect()
+            player.collect(self.map[player.pos].item)
         elif primary_action == Action.consume:
             player.consume(secondary_action)
         else:
