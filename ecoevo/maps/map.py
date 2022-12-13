@@ -68,9 +68,23 @@ class MapManager:
                 self.map[player.pos] = Tile(item=None, player=player)
 
     def move_player(self, player:Player, secondary_action):
-        self.map[player.pos] = None
+        # remove
+        tile = self.map[player.pos]
+        if tile.item is not None:
+            tile.player = None
+        else:
+            # self.map.__delitem__(player.pos)
+            del self.map[player.pos]
+
+        # add
+        next_pos = player.next_pos(secondary_action)
+        if next_pos in self.map:
+            tile=self.map[next_pos]
+            tile.player = player
+        else:
+            self.map[next_pos] = Tile(item=None, player=player)
+        
         player.pos = player.next_pos(secondary_action)
-        self.map[player.pos] = player
         player.collect_remain = None
 
 
@@ -81,8 +95,9 @@ class MapManager:
     ):
         main_action, sell_offer, buy_offer = action
         primary_action, secondary_action = main_action
-        self.health = max(0, self.health - PlayerConfig.comsumption_per_step)
-        player.trade(sell_offer, buy_offer)
+        player.health = max(0, player.health - PlayerConfig.comsumption_per_step)
+        if sell_offer is not None and buy_offer is not None:
+            player.trade(sell_offer, buy_offer)
         if primary_action == Action.idle:
             pass
         if primary_action == Action.move:

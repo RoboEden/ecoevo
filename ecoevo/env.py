@@ -56,14 +56,13 @@ class EcoEvo:
         self.curr_step += 1
         legal_deals = self.trader.filter_legal_deals(self.players, actions)
         matched_deals = self.trader.parse(legal_deals)
-
         # execute
         random.shuffle(self.ids)
         for id in self.ids:
             player = self.players[id]
             main_action, sell_offer, buy_offer = actions[player.id]
             if player.id in matched_deals:
-                player.trade_result = 'Success'
+                player.trade_result = TradeResult.success
                 _, sell_offer, buy_offer = matched_deals[player.id]
                 action = (main_action, sell_offer, buy_offer)
             else:
@@ -113,11 +112,11 @@ class EcoEvo:
         if primary_action == Action.move:
             x, y = player.next_pos(secondary_action)
             if (x, y) in self.map:
-                if self.map[(x, y)].player != None:
+                if self.map[(x, y)].player is not None:
                     hitted_player = self.map[(x, y)].player
                     is_valid = False
                     logger.warning(
-                        f'Player {player.id} tried to hit player {hitted_player}'
+                        f'Player {player.id} at {player.pos} tried to hit player {hitted_player.id} at {hitted_player.pos}'
                     )
 
         # check collect

@@ -13,7 +13,13 @@ render = WebRender(MapSize.width, MapSize.height)
 wr = WebRender(MapSize.width, MapSize.height)
 obs, infos = env.reset()
 
-wr.render(env.map)
+done = False
+while not done:
+    wr.render(env.map)
+    actions = [(('move', 'right'), None, None) for i in range(128)]
+    # actions = my_policy(obs, infos) # your policy goes here
+    obs, rewards, done, infos = env.step(actions)
+    input()
 
 if False:
     # Step teset
