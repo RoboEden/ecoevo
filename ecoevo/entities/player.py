@@ -29,22 +29,6 @@ class Player(BaseModel):
     def ability(self):
         return ALL_PERSONAE[self.persona]['ability']
 
-    @property
-    def info(self) -> dict:
-        return {
-            'persona': self.persona,
-            'preference': self.preference.dict(),
-            'ability': self.ability.dict(),
-            'backpack': self.backpack.dict(),
-            'stomach': self.stomach.dict(),
-            'pos': self.pos,
-            'id': self.id,
-            'health': self.health,
-            'collect_remain': self.collect_remain,
-            'last_action': self.last_action,
-            'trade_result': self.trade_result,
-        }
-
     def collect(self, item:Item):
         # Collect requires consecutive execution to succeed
         if self.last_action != Action.collect:

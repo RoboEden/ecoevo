@@ -64,10 +64,15 @@ class MapManager:
         for player in players:
             if player.pos in self.map:
                 self.map[player.pos].player = player
-                player.item_under_feet = self.map[player.pos].item
             else:
                 self.map[player.pos] = Tile(item=None, player=player)
-                player.item_under_feet = None
+
+    def move_player(self, player:Player, secondary_action):
+        self.map[player.pos] = None
+        player.pos = player.next_pos(secondary_action)
+        self.map[player.pos] = player
+        player.collect_remain = None
+
 
     def execute(
         self,
@@ -81,10 +86,7 @@ class MapManager:
         if primary_action == Action.idle:
             pass
         if primary_action == Action.move:
-            self.map[player.pos] = None
-            player.pos = player.next_pos(secondary_action)
-            self.map[player.pos] = player
-            player.collect_remain = None
+            self.move_player(player, secondary_action)
         elif primary_action == Action.collect:
             player.collect(self.map[player.pos].item)
         elif primary_action == Action.consume:

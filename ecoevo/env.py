@@ -40,12 +40,12 @@ class EcoEvo:
         # Init players
         points = self.map_manager.sample(len(EnvConfig.personae))
         for id, persona in enumerate(EnvConfig.personae):
-            player = Player(persona, id, points[id])
+            player = Player(persona=persona, id=id, pos=points[id])
             self.players.append(player)
         self.map_manager.load_players(self.players)
 
         obs = {player.id: self.get_obs(player) for player in self.players}
-        infos = {player.id: player.info for player in self.players}
+        infos = {}
         self.ids = [player.id for player in self.players]
         return obs, infos
 
@@ -83,7 +83,7 @@ class EcoEvo:
             for player in self.players
         }
         done = True if self.curr_step > EnvConfig.total_step else False
-        infos = {player.id: player.info for player in self.players}
+        infos = {}
         return obs, rewards, done, infos
 
     def get_obs(self, player: Player) -> Dict[PosType, Tile]:
@@ -106,6 +106,9 @@ class EcoEvo:
         main_action, sell_offer, buy_offer = action
         primary_action, secondary_action = main_action
 
+        if primary_action == Action.idle:
+            pass
+
         # check move
         if primary_action == Action.move:
             x, y = player.next_pos(secondary_action)
@@ -118,7 +121,7 @@ class EcoEvo:
                     )
 
         # check collect
-        if primary_action == Action.collect:
+        elif primary_action == Action.collect:
             item = self.map[player.pos].item
             # no item to collect or the amount of item not enough
             if item is None or item.num < item.harvest_num:
@@ -135,10 +138,12 @@ class EcoEvo:
                 )
 
         # check consume
-        if primary_action == Action.consume:
+        elif primary_action == Action.consume:
             consume_item_name = secondary_action
+
+            # handle consume and sell same item
             least_amount = player.backpack[consume_item_name].consume_num
-            if sell_offer is not None:
+            if sell_offer is not None and buy_offer is not None:
                 sell_item_name, sell_num = sell_offer
                 if consume_item_name == sell_item_name:
                     least_amount += sell_num
@@ -148,5 +153,9 @@ class EcoEvo:
                 logger.debug(
                     f'Player {player.id} cannot consume "{consume_item_name}" since num no more than {least_amount}.'
                 )
+        else:
+            logger.debug(
+                f'Failed to parse primary action. Player {player.id}: {primary_action} '
+            )
 
         return is_valid

@@ -57,6 +57,8 @@ class Trader(object):
 
             # check sell
             sell_item = player.backpack[sell_item_name]
+
+            # handle sell and consume same item
             least_amount = sell_num
             if primary_action == Action.consume:
                 consume_item_name = secondary_action
