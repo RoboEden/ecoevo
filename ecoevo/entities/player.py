@@ -72,7 +72,7 @@ class Player:
             item_in_bag.num -= item_in_bag.consume_num
             item_in_stomach.num += item_in_bag.consume_num
         else:
-            item_in_stomach.num = item_in_bag.num
+            item_in_stomach.num += item_in_bag.num
         self.health = min(self.health + item_in_stomach.supply,
                           PlayerConfig.max_health)
 
