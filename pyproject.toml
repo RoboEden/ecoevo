@@ -18,7 +18,9 @@ dependencies = [
     "rich",
     "pydantic",
     "rich",
-    "loguru"
+    "loguru",
+    "streamlit",
+    "plotly",
 ]
 dynamic = ["version"]
 
