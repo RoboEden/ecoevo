@@ -4,7 +4,7 @@ from typing import Dict, List, Tuple
 from loguru import logger
 from ortools.linear_solver import pywraplp
 from ecoevo.entities.player import Player
-from ecoevo.entities.types import DealType, IdType, ActionType, Action
+from ecoevo.entities.types import *
 
 
 class Trader(object):
@@ -40,17 +40,17 @@ class Trader(object):
 
             # parse offer
             if sell_offer is None or buy_offer is None:
-                player.trade_result = 'Void'
+                player.trade_result = TradeResult.absent
                 continue
 
             sell_item_name, sell_num = sell_offer
             buy_item_name, buy_num = buy_offer
             if not sell_num < 0:
-                player.trade_result = 'Illegal'
+                player.trade_result = TradeResult.illegal
                 logger.debug(f'Invalid sell_num {sell_num}, should be < 0')
                 continue
             if not buy_num > 0:
-                player.trade_result = 'Illegal'
+                player.trade_result = TradeResult.illegal
                 logger.debug(f'Invalid buy_num {buy_num}, should be > 0')
                 continue
             sell_num, buy_num = abs(sell_num), abs(buy_num)
@@ -67,13 +67,13 @@ class Trader(object):
                 logger.debug(
                     f'Insufficient {sell_item_name}:{sell_item.num} sell_num {sell_num}'
                 )
-                player.trade_result = 'Illegal'
+                player.trade_result = TradeResult.illegal
                 continue
 
             # check buy
             buy_item_volumne = player.backpack[buy_item_name].capacity * buy_num
             if player.backpack.remain_volume < buy_item_volumne:
-                player.trade_result = 'Illegal'
+                player.trade_result = TradeResult.illegal
                 logger.debug(
                     f'Insufficient backpack remain volume:{player.backpack.remain_volume}'
                 )

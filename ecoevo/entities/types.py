@@ -17,6 +17,13 @@ class Action:
     collect = 'collect'
     consume = 'consume'
 
+    
+class TradeResult:
+    absent  = 'absent'
+    illegal = 'illegal'
+    failed = 'failed'
+    success = 'success'
+
 
 IdType = int
 PosType = Tuple[int, int]

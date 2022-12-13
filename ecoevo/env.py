@@ -68,7 +68,7 @@ class EcoEvo:
                 action = (main_action, sell_offer, buy_offer)
             else:
                 if player.id in legal_deals:
-                    player.trade_result = 'Failed'
+                    player.trade_result = TradeResult.failed
                 action = (main_action, None, None)
 
             if self.is_action_valid(player, actions[player.id]):
