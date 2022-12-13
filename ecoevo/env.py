@@ -54,7 +54,7 @@ class EcoEvo:
     ) -> Tuple[Dict[IdType, Dict[PosType, Tile]], Dict[IdType, float], bool,
                Dict[IdType, dict]]:
         self.curr_step += 1
-        legal_deals = self.trader.filter_legal_deals(actions)
+        legal_deals = self.trader.filter_legal_deals(self.players, actions)
         matched_deals = self.trader.parse(legal_deals)
 
         # execute
