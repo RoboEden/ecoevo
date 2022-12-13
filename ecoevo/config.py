@@ -33,6 +33,7 @@ class RewardConfig:
     penalty = 1
     rho = 0.5
 
-class YamlPath:
-    item = pathlib.Path(__file__).parent / "entities" / "items.yaml"
-    player = pathlib.Path(__file__).parent / "entities" / "player.yaml"
+class DataPath:
+    item_yaml = pathlib.Path(__file__).parent / "entities" / "items.yaml"
+    player_yaml = pathlib.Path(__file__).parent / "entities" / "player.yaml"
+    map_json = pathlib.Path(__file__).parent / "maps" / "data"/"base.json"

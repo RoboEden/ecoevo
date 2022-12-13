@@ -3,7 +3,7 @@ import numpy as np
 
 from typing import List, Dict, Optional
 from dataclasses import dataclass
-from ecoevo.config import MapSize, PlayerConfig
+from ecoevo.config import MapSize, PlayerConfig, DataPath
 from ecoevo.entities.items import load_item, Item
 from ecoevo.entities.player import Player
 from ecoevo.entities.types import *
@@ -17,7 +17,7 @@ class Tile:
 
 class MapManager:
 
-    def __init__(self, path: str = 'ecoevo/maps/data/base.json') -> None:
+    def __init__(self, path: str = DataPath.map_json) -> None:
         with open(path) as fp:
             self.data = dict(json.load(fp))
         self.width = self.data['width']

@@ -7,10 +7,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as pch
 
+from ecoevo.config import DataPath
+
 
 """ generate block types """
 
-with open('ecoevo/entities/items.yaml') as file:
+with open(DataPath.item_yaml) as file:
     dict_item = dict(yaml.load(file, Loader=yaml.loader.SafeLoader))
 
 dict_type_idx = {key: dict_item[key]['id'] for key in dict_item.keys()}
