@@ -34,6 +34,7 @@ First of all, here is a list of all avaliable `item_name`
 | '`peanut`'    |
 | '`stone`'     |
 | '`pumpkin`'   |
+
 See [item.yaml](ecoevo/entities/items.yaml) for a complete property of each item. 
 
 ## Input
@@ -41,6 +42,9 @@ The game core takes a list of actions of `ActionType` as input after reset. See 
 
 As show below ActionType has three parts: **main action**, **sell offer** and **buy offer**.
 
+Every step one player can execute ***only one*** **main action** and a pair of **sell offer** & **buy offer**.
+
+The action for a single player is shown below
 ```python
 ActionType = Tuple[MainActionType, OfferType, OfferType]
 ```
@@ -82,7 +86,7 @@ The gamecore outputs `obs`, `rewards`, `done`, `infos` when step. See details be
 
 - `obs`: `Dict[IdType, Dict[PosType, Tile]]`
   
-  Its key is a player's id and value is the local vision of this player. 
+  Its key is a player's id and value is the local vision of this player. Vision radius is 7 and can be changed in [`config.py`](ecoevo/config.py).
   
   The local vision is also a dict with `(x, y)` coordinates as its key and   `Tile` object as its value.
   
@@ -120,17 +124,6 @@ The gamecore outputs `obs`, `rewards`, `done`, `infos` when step. See details be
             (9, 5): Tile(item=Item(name='coral', num=10000), player=None)
         },
         ...
-        127: {
-            (0, 0): Tile(
-                item=None,
-                player=<ecoevo.entities.player.Player object at 0x7fa1dc9edf50>
-            ),
-            ...
-            (13, 0): Tile(
-                item=None,
-                player=<ecoevo.entities.player.Player object at 0x7fa1dca7cbd0>
-            )
-        }
     }
     ```
 - `rewards`
@@ -184,37 +177,6 @@ The gamecore outputs `obs`, `rewards`, `done`, `infos` when step. See details be
             'trade_result': 'Illegal'
         },
         ...
-        127: {
-            'persona': 'pumpkin_farmer',
-            'preference': {'gold': 1.0, 'hazelnut': 1.0, 'coral': 1.0, 'sand': 1.0, 'pineapple': 1.0, 'peanut': 1.0, 'stone': 1.0, 'pumpkin': 1.0},
-            'ability': {'gold': 9.0, 'hazelnut': 9.0, 'coral': 9.0, 'sand': 3.0, 'pineapple': 9.0, 'peanut': 3.0, 'stone': 3.0, 'pumpkin': 1.0},
-            'backpack': {
-                'gold': Item(name='gold', num=0),
-                'hazelnut': Item(name='hazelnut', num=0),
-                'coral': Item(name='coral', num=0),
-                'sand': Item(name='sand', num=0),
-                'pineapple': Item(name='pineapple', num=0),
-                'peanut': Item(name='peanut', num=0),
-                'stone': Item(name='stone', num=0),
-                'pumpkin': Item(name='pumpkin', num=0)
-            },
-            'stomach': {
-                'gold': Item(name='gold', num=0),
-                'hazelnut': Item(name='hazelnut', num=0),
-                'coral': Item(name='coral', num=0),
-                'sand': Item(name='sand', num=0),
-                'pineapple': Item(name='pineapple', num=0),
-                'peanut': Item(name='peanut', num=0),
-                'stone': Item(name='stone', num=0),
-                'pumpkin': Item(name='pumpkin', num=0)
-            },
-            'pos': (12, 13),
-            'id': 127,
-            'health': 100,
-            'collect_remain': None,
-            'last_action': None,
-            'trade_result': 'Illegal'
-        }
     }
     ```
 ## Render
@@ -224,3 +186,9 @@ To render, run
 ```
 streamlit run ecoevo/render/app.py
 ```
+
+## FAQ
+- Can agent execute more than 1 action per step?
+- Max visual distance?
+- Max trade distance?
+- What's the maximum bag volume?
