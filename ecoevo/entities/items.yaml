@@ -26,7 +26,7 @@ coral:
   refresh_rate: 0
   collect_time: 9
   capacity: 100
-  harvest_num: 100
+  harvest_num: 1
   reserve: 5000
   consume_num: 0
   expiry: 0
@@ -48,7 +48,7 @@ pineapple:
   refresh_rate: 15
   collect_time: 9
   capacity: 100
-  harvest_num: 100
+  harvest_num: 1
   reserve: 100
   consume_num: 1
   expiry: 0
@@ -70,7 +70,7 @@ stone:
   refresh_rate: 0
   collect_time: 3
   capacity: 100
-  harvest_num: 100
+  harvest_num: 1
   reserve: 15000
   consume_num: 0
   expiry: 0
@@ -81,7 +81,7 @@ pumpkin:
   refresh_rate: 5
   collect_time: 3
   capacity: 100
-  harvest_num: 100
+  harvest_num: 1
   reserve: 100
   consume_num: 1
   expiry: 0

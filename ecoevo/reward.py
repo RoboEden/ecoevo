@@ -19,18 +19,12 @@ class RewardParser:
         self.item_names = list(ALL_ITEM_DATA.keys())
         self.last_utilities = {}
 
-        # Calculate alphas
+        # get alphas
         self.alphas = {
-            player_type: np.zeros(len(self.item_names), dtype=np.float32)
+            player_type: np.array([ALL_PERSONAE[
+                player_type]["preference"][item_name] for item_name in self.item_names], dtype=np.float32)
             for player_type in ALL_PERSONAE
         }
-        for player_type in ALL_PERSONAE:
-            player_pref = ALL_PERSONAE[player_type]["preference"]
-            total_pref = sum(player_pref.values())
-            for idx, item_name in enumerate(self.item_names):
-                item_pref = player_pref[item_name]
-                alpha_i = item_pref / total_pref
-                self.alphas[player_type][idx] = alpha_i
 
     def reset(self) -> None:
         self.last_utilities = {}
@@ -39,7 +33,7 @@ class RewardParser:
         alpha = self.alphas[player.persona]
         cnts = np.zeros(len(self.item_names), dtype=np.float32)
         for idx, item_name in enumerate(self.item_names):
-            cnts[idx] = player.stomach[item_name].num
+            cnts[idx] = player.stomach[item_name].num / ALL_ITEM_DATA[item_name].harvest_num
         return cal_utility(alpha, cnts, RewardConfig.rho)
 
     def cost(self, player: Player) -> float:
