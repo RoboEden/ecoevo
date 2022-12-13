@@ -6,8 +6,9 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as pch
 
 from ecoevo.trader.trader import Trader
-""" generate data: random """
 
+
+# parameters
 map_size = 32
 num_deal = 128
 ub_amount = 10
@@ -33,27 +34,26 @@ for i in range(num_deal):
     #     (x, y), ('gold', -amount), ('peanut', amount))
 
     list_deal.append(deal)
-""" generate data: edge case """
 
+# # an edge case
 # map_size = 16
-
 # list_deal = [
 #     ((0, 0), ('peanut', -3), ('gold', 3)),
 #     ((4, 0), ('gold', -10), ('peanut', 10)),
 #     ((6, 4), ('peanut', -5), ('gold', 5)),
 #     ((10, 4), ('gold', -4), ('peanut', 4))
 # ]
-""" model """
 
+
+# model
 trade_radius = 4
 trader = Trader(trade_radius=trade_radius)
-
 dict_deal = {i: list_deal[i] for i in range(len(list_deal))}
 _ = trader.parse(legal_deals=dict_deal)
-
 print("get {} trades".format(len(trader.list_match)))
-""" visualise """
 
+
+# visualise
 fig, ax = plt.subplots()
 
 # draw blocks and deals
@@ -103,11 +103,11 @@ ax.yaxis.set_major_locator(y_major_locator)
 plt.xlim(xmin=0, xmax=map_size * len_block)
 plt.ylim(ymin=0, ymax=map_size * len_block)
 plt.grid(linestyle='dashed', linewidth=1)
-""" save picture """
 
+
+# save picture
 path = os.path.dirname(__file__)
 path_output = os.path.join(path, "output/")
-
 path_trade = os.path.join(path_output, 'trade.png')
 # path_trade = os.path.join(path_output, 'trade_edge.png')
 plt.savefig(path_trade)

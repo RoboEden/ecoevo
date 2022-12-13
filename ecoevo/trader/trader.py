@@ -45,12 +45,15 @@ class Trader(object):
 
             sell_item_name, sell_num = sell_offer
             buy_item_name, buy_num = buy_offer
-            sell_num, buy_num = abs(sell_num), abs(buy_num)
-
-            if sell_num == 0 or buy_num == 0:
+            if not sell_num < 0:
                 player.trade_result = 'Illegal'
-                logger.debug(f'Void sell_num {sell_num} or buy_num {buy_num}')
+                logger.debug(f'Invalid sell_num {sell_num}, should be < 0')
                 continue
+            if not buy_num > 0:
+                player.trade_result = 'Illegal'
+                logger.debug(f'Invalid buy_num {buy_num}, should be > 0')
+                continue
+            sell_num, buy_num = abs(sell_num), abs(buy_num)
 
             # check sell
             sell_item = player.backpack[sell_item_name]
