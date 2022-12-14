@@ -1,1 +1,0 @@
-from ecoevo.maps.map import MapManager, Tile

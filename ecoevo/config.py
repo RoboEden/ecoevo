@@ -17,7 +17,7 @@ class EnvConfig:
     bag_volume = 1000
 
 
-class MapSize:
+class MapConfig:
     width = 32
     height = 32
 

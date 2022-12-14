@@ -20,7 +20,7 @@ while not done:
 ```
 You can change game setting such as `total_step` (the game durateion) and  `personae` (the num of players withhold each persona) in [`config.py`](ecoevo/config.py). 
 
-Note that for now change `MapSize` is not effective.
+Note that for now change `MapConfig` is not effective.
 
 ## Items
 First of all, here is a list of all avaliable `item_name`

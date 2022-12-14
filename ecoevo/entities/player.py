@@ -3,9 +3,9 @@ import yaml
 from pydantic import BaseModel, Field
 from yaml.loader import SafeLoader
 
-from ecoevo.config import MapSize, PlayerConfig, DataPath
+from ecoevo.config import MapConfig, PlayerConfig, DataPath
 from ecoevo.entities.items import Bag, Item
-from ecoevo.entities.types import *
+from ecoevo.types import *
 
 with open(DataPath.player_yaml) as file:
     ALL_PERSONAE = yaml.load(file, Loader=SafeLoader)
@@ -69,11 +69,11 @@ class Player(BaseModel):
     ):
         x, y = self.pos
         if direction == Move.up:
-            y = min(y + 1, MapSize.height - 1)
+            y = min(y + 1, MapConfig.height - 1)
         elif direction == Move.down:
             y = max(y - 1, 0)
         elif direction == Move.right:
-            x = min(x + 1, MapSize.width - 1)
+            x = min(x + 1, MapConfig.width - 1)
         elif direction == Move.left:
             x = max(x - 1, 0)
         else:
