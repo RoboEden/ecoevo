@@ -27,8 +27,12 @@ class EcoEvo:
         logger.add(logging_path, level=logging_level)
 
     @property
-    def num_player(self):
+    def num_player(self)->int:
         return len(self.players)
+
+    @property
+    def all_item_names(self)->list:
+        return list(Player.backpack.dict().keys())
 
     def reset(
             self

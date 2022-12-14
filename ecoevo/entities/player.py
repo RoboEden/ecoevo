@@ -23,11 +23,11 @@ class Player(BaseModel):
     trade_result:str = Field(default=TradeResult.absent)
 
     @property
-    def preference(self):
-        return ALL_PERSONAE[self.persona]['preference']
+    def preference(self)->dict:
+        return dict(ALL_PERSONAE[self.persona]['preference'])
     @property
-    def ability(self):
-        return ALL_PERSONAE[self.persona]['ability']
+    def ability(self)->dict:
+        return dict(ALL_PERSONAE[self.persona]['ability'])
 
     def collect(self, item:Item):
         # Collect requires consecutive execution to succeed
