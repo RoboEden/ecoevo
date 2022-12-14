@@ -21,6 +21,7 @@ dependencies = [
     "loguru",
     "streamlit",
     "plotly",
+    "matplotlib",
 ]
 dynamic = ["version"]
 

@@ -1,7 +1,7 @@
-from ecoevo.maps import Tile
+from ecoevo.entities import Tile
 from rich import print
 from typing import Dict, List
-from ecoevo.entities.types import *
+from ecoevo.types import *
 
 
 class TerminalRender:

@@ -3,12 +3,11 @@ import random
 from loguru import logger
 from typing import Dict, List
 
-from ecoevo.config import EnvConfig, MapSize
-from ecoevo.maps import MapManager, Tile
+from ecoevo.config import EnvConfig, MapConfig
 from ecoevo.trader import Trader
 from ecoevo.reward import RewardParser
-from ecoevo.entities.player import Player
-from ecoevo.entities.types import *
+from ecoevo.entities import EntityManager, Tile, Player
+from ecoevo.types import *
 
 
 class EcoEvo:
@@ -18,31 +17,42 @@ class EcoEvo:
                  logging_level="WARNING",
                  logging_path="out.log"):
         self.render_mode = render_mode
-        self.map_manager = MapManager()
+        self.entity_manager = EntityManager()
         self.trader = Trader(EnvConfig.trade_radius)
         self.reward_parser = RewardParser()
         self.players: List[Player] = []
         # Logging
+        logger.remove()
         logger.add(sys.stderr, level=logging_level)
         logger.add(logging_path, level=logging_level)
 
     @property
-    def num_player(self):
+    def num_player(self)->int:
         return len(self.players)
+
+    @property
+    def all_item_names(self)->list:
+        return list(Player.backpack.dict().keys())
+
+    def gettile(self, pos:PosType)-> Optional[Tile]:
+        map = self.entity_manager.map
+        if pos in map:
+            return self.entity_manager.map[pos]
+        else:
+            return None
 
     def reset(
             self
     ) -> Tuple[Dict[IdType, Dict[PosType, Tile]], Dict[IdType, dict]]:
         self.players = []
         self.curr_step = 0
-        self.map = self.map_manager.reset_map()
-        self.reward_parser.reset()
-        # Init players
-        points = self.map_manager.sample(len(EnvConfig.personae))
+
+        points = self.entity_manager.sample(len(EnvConfig.personae))
         for id, persona in enumerate(EnvConfig.personae):
             player = Player(persona=persona, id=id, pos=points[id])
             self.players.append(player)
-        self.map_manager.load_players(self.players)
+
+        self.entity_manager.reset_map(self.players)
 
         obs = {player.id: self.get_obs(player) for player in self.players}
         infos = {}
@@ -71,10 +81,10 @@ class EcoEvo:
                 action = (main_action, None, None)
 
             if self.is_action_valid(player, actions[player.id]):
-                self.map_manager.execute(player, action)
+                self.entity_manager.execute(player, action)
 
         # if self.curr_step // EnvConfig.refresh_interval:
-        #     self.map_manager.refresh()
+        #     self.entity_manager.refresh()
 
         obs = {player.id: self.get_obs(player) for player in self.players}
         rewards = {
@@ -88,15 +98,15 @@ class EcoEvo:
     def get_obs(self, player: Player) -> Dict[PosType, Tile]:
         player_x, player_y = player.pos
         x_min = max(player_x - EnvConfig.visual_radius, 0)
-        x_max = min(player_x + EnvConfig.visual_radius, MapSize.width-1)
+        x_max = min(player_x + EnvConfig.visual_radius, MapConfig.width-1)
         y_min = max(player_y - EnvConfig.visual_radius, 0)
-        y_max = min(player_y + EnvConfig.visual_radius, MapSize.height-1)
+        y_max = min(player_y + EnvConfig.visual_radius, MapConfig.height-1)
 
         local_obs = {}
         for i, x in enumerate(range(x_min, x_max)):
             for j, y in enumerate(range(y_min, y_max)):
-                if (x, y) in self.map:
-                    local_obs[(i, j)] = self.map[(x, y)]
+                tile = self.gettile((x,y))
+                if tile: local_obs[(i, j)] = tile
 
         return local_obs
 
@@ -111,9 +121,10 @@ class EcoEvo:
         # check move
         if primary_action == Action.move:
             x, y = player.next_pos(secondary_action)
-            if (x, y) in self.map:
-                if self.map[(x, y)].player is not None:
-                    hitted_player = self.map[(x, y)].player
+            tile = self.gettile((x,y))
+            if tile:
+                if tile.player is not None:
+                    hitted_player = tile.player
                     is_valid = False
                     logger.warning(
                         f'Player {player.id} at {player.pos} tried to hit player {hitted_player.id} at {hitted_player.pos}'
@@ -121,20 +132,26 @@ class EcoEvo:
 
         # check collect
         elif primary_action == Action.collect:
-            item = self.map[player.pos].item
+            item = self.gettile(player.pos).item
+            if item:
             # no item to collect or the amount of item not enough
-            if item is None or item.num < item.harvest_num:
-                is_valid = False
-                logger.warning(
-                    f'No resource! Player {player.id} cannot collect {item} at {player.pos}'
-                )
-            # bagpack volume not enough
-            if player.backpack.remain_volume < item.harvest_num * item.capacity:
-                is_valid = False
+                if item.num < item.harvest_num:
+                    is_valid = False
+                    logger.warning(
+                        f'No resource! Player {player.id} cannot collect {item} at {player.pos}'
+                    )
+                # bagpack volume not enough
+                if player.backpack.remain_volume < item.harvest_num * item.capacity:
+                    is_valid = False
 
+                    logger.warning(
+                        f'Bag full! Player {player.id} cannot collect {item} at {self.pos}'
+                    )
+            else:
+                is_valid = False
                 logger.warning(
-                    f'Bag full! Player {player.id} cannot collect {item} at {self.pos}'
-                )
+                        f'No item exists! Player {player.id} cannot collect {player.pos}'
+                    )
 
         # check consume
         elif primary_action == Action.consume:

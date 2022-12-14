@@ -1,12 +1,12 @@
 from rich import print
-from ecoevo.entities.player import Player
-from ecoevo.entities.items import load_item
+from ecoevo.entities import Player, load_item
 
 if __name__ == "__main__":
-
     pos = (5, 7)
-    player = Player('hazelnut_farmer', 0, pos)
-    print(player.get_info())
+    player = Player(persona='hazelnut_farmer', id=0, pos=pos)
+    print(player)
+    print('preference', player.preference)
+    print('ability', player.ability)
 
     peanut = load_item('peanut', num=100)
 
@@ -14,7 +14,7 @@ if __name__ == "__main__":
     print(f'######### collect start #########')
     for i in range(10):
         print(f'######### {i} #########')
-        player.collect()
+        player.collect(peanut)
         print('========= collect_remain ===========')
         print(player.collect_remain)
         print('========= backpack peanut ===========')
@@ -31,22 +31,13 @@ if __name__ == "__main__":
     print('========= backpack peanut ===========')
     print(player.backpack.peanut)
     player.consume('sand')
-
-    # player.move
-    print('========= before pos ===========')
-    print(player.pos)
-    player.move('up')
-    print('========= after pos ===========')
-    print(player.pos)
-    player.move('down')
-    print('========= after pos ===========')
-    print(player.pos)
-    player.move('right')
-    print('========= after pos ===========')
-    print(player.pos)
-    player.move('left')
-    print('========= after pos ===========')
-    print(player.pos)
+    
+    # player.next_pos
+    print('pos', player.pos)
+    print('up', player.next_pos('up'))
+    print('down', player.next_pos('down'))
+    print('right', player.next_pos('right'))
+    print('left', player.next_pos('left'))
 
     # player.trade
     player.trade(('sand', -1), ('peanut', 2))
@@ -59,18 +50,3 @@ if __name__ == "__main__":
     print(player.backpack.sand)
     print('========= after backpack peanut ===========')
     print(player.backpack.peanut)
-
-    # player.execute
-    print('========= before pos ===========')
-    print(player.pos)
-    print('========= before backpack peanut ===========')
-    print(player.backpack.peanut)
-    print('========= before backpack gold ===========')
-    print(player.backpack.gold)
-    player.execute((('move', 'up'), ('peanut', -1), ('gold', 2)))
-    print('========= after pos ===========')
-    print(player.pos)
-    print('========= after backpack peanut ===========')
-    print(player.backpack.peanut)
-    print('========= after backpack gold ===========')
-    print(player.backpack.gold)

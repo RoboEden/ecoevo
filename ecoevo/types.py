@@ -1,9 +1,5 @@
 from typing import Tuple, Optional
 
-# action = (('move', 'up'), ('sand', -5), ('gold', 10))
-# action = (('consume', 'peanut'), ('gold', -5), ('peanut', 20))
-# action = (('collect', None), None, None))
-
 
 class Move:
     up = 'up'

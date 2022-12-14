@@ -4,7 +4,7 @@ from typing import Dict, List, Tuple
 from loguru import logger
 from ortools.linear_solver import pywraplp
 from ecoevo.entities.player import Player
-from ecoevo.entities.types import *
+from ecoevo.types import *
 
 
 class Trader(object):
