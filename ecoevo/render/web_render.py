@@ -1,7 +1,7 @@
 import plotly.graph_objects as go
 
 from typing import Dict
-from ecoevo.maps import Tile
+from ecoevo.entities import Tile
 from ecoevo.types import *
 from streamlit.delta_generator import DeltaGenerator
 
