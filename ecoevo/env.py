@@ -132,20 +132,26 @@ class EcoEvo:
 
         # check collect
         elif primary_action == Action.collect:
-            item = self.gettile((x,y)).item
+            item = self.gettile(player.pos).item
+            if item:
             # no item to collect or the amount of item not enough
-            if item is None or item.num < item.harvest_num:
-                is_valid = False
-                logger.warning(
-                    f'No resource! Player {player.id} cannot collect {item} at {player.pos}'
-                )
-            # bagpack volume not enough
-            if player.backpack.remain_volume < item.harvest_num * item.capacity:
-                is_valid = False
+                if item.num < item.harvest_num:
+                    is_valid = False
+                    logger.warning(
+                        f'No resource! Player {player.id} cannot collect {item} at {player.pos}'
+                    )
+                # bagpack volume not enough
+                if player.backpack.remain_volume < item.harvest_num * item.capacity:
+                    is_valid = False
 
+                    logger.warning(
+                        f'Bag full! Player {player.id} cannot collect {item} at {self.pos}'
+                    )
+            else:
+                is_valid = False
                 logger.warning(
-                    f'Bag full! Player {player.id} cannot collect {item} at {self.pos}'
-                )
+                        f'No item exists! Player {player.id} cannot collect {player.pos}'
+                    )
 
         # check consume
         elif primary_action == Action.consume:

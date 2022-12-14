@@ -19,10 +19,10 @@ if __name__ == "__main__":
         (('move', 'left'), ('gold', -10), ('sand', 5)),
         (('consume', 'coral'), None, None),
         (('collect', None), None, None),
-    ] * 20
+    ] * 128
     for _ in range(EnvConfig.total_step):
         obs, reward, done, infos = env.step(actions)
-        render.render(env.map)
+        render.render(env.entity_manager.map)
         # Show info
         if input('show info? y/n\n') == 'y':
             print(infos)

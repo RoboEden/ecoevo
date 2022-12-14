@@ -13,3 +13,11 @@ if __name__ == "__main__":
     map = entity_manager.map
     # print(map)
     print(map.keys())
+    
+    old_pos = player1.pos
+    print(player1.pos)
+    print(map[player1.pos])
+    entity_manager.execute(player1, (('move', 'up'), None, None))
+    print(player1.pos)
+    print(map[player1.pos])
+    assert old_pos not in map, "Old pos still exists."

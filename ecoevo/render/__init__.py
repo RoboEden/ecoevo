@@ -1,1 +1,1 @@
-from terminal_render import TerminalRender
+from ecoevo.render.terminal_render import TerminalRender

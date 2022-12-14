@@ -36,7 +36,7 @@ class Player(BaseModel):
 
         # Init
         if self.collect_remain is None:
-            collect_time = getattr(self.ability, item.name)
+            collect_time = self.ability[item.name]
             self.collect_remain = collect_time - 1
 
         # Process collect
