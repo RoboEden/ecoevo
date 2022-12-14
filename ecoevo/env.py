@@ -27,14 +27,14 @@ class EcoEvo:
         logger.add(logging_path, level=logging_level)
 
     @property
-    def num_player(self)->int:
+    def num_player(self) -> int:
         return len(self.players)
 
     @property
-    def all_item_names(self)->list:
+    def all_item_names(self) -> list:
         return list(Player.backpack.dict().keys())
 
-    def gettile(self, pos:PosType)-> Optional[Tile]:
+    def gettile(self, pos: PosType) -> Optional[Tile]:
         map = self.entity_manager.map
         if pos in map:
             return self.entity_manager.map[pos]
@@ -98,15 +98,18 @@ class EcoEvo:
     def get_obs(self, player: Player) -> Dict[PosType, Tile]:
         player_x, player_y = player.pos
         x_min = max(player_x - EnvConfig.visual_radius, 0)
-        x_max = min(player_x + EnvConfig.visual_radius, MapConfig.width-1)
+        x_max = min(player_x + EnvConfig.visual_radius, MapConfig.width - 1)
         y_min = max(player_y - EnvConfig.visual_radius, 0)
-        y_max = min(player_y + EnvConfig.visual_radius, MapConfig.height-1)
+        y_max = min(player_y + EnvConfig.visual_radius, MapConfig.height - 1)
 
         local_obs = {}
-        for i, x in enumerate(range(x_min, x_max)):
-            for j, y in enumerate(range(y_min, y_max)):
-                tile = self.gettile((x,y))
-                if tile: local_obs[(i, j)] = tile
+        for x in range(x_min, x_max + 1):
+            for y in range(y_min, y_max + 1):
+                tile = self.gettile((x, y))
+                if tile:
+                    local_x = x - player_x + EnvConfig.visual_radius
+                    local_y = y - player_y + EnvConfig.visual_radius
+                    local_obs[(local_x, local_y)] = tile
 
         return local_obs
 
@@ -121,7 +124,7 @@ class EcoEvo:
         # check move
         if primary_action == Action.move:
             x, y = player.next_pos(secondary_action)
-            tile = self.gettile((x,y))
+            tile = self.gettile((x, y))
             if tile:
                 if tile.player is not None:
                     hitted_player = tile.player
@@ -134,7 +137,7 @@ class EcoEvo:
         elif primary_action == Action.collect:
             item = self.gettile(player.pos).item
             if item:
-            # no item to collect or the amount of item not enough
+                # no item to collect or the amount of item not enough
                 if item.num < item.harvest_num:
                     is_valid = False
                     logger.warning(
@@ -150,8 +153,8 @@ class EcoEvo:
             else:
                 is_valid = False
                 logger.warning(
-                        f'No item exists! Player {player.id} cannot collect {player.pos}'
-                    )
+                    f'No item exists! Player {player.id} cannot collect {player.pos}'
+                )
 
         # check consume
         elif primary_action == Action.consume:
