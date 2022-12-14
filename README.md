@@ -192,3 +192,8 @@ streamlit run ecoevo/render/app.py
 - Max visual distance?
 - Max trade distance?
 - What's the maximum bag volume?
+- Where is the player itself in its local vision
+- Why the local vision do not use absolute coordinate?
+- What is collect remain?
+- Where to see the trade result?
+- How to get all item & player info from an EcoEvo object?

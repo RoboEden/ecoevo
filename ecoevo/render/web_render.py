@@ -1,4 +1,3 @@
-import streamlit as st
 import plotly.graph_objects as go
 
 from typing import Dict
@@ -33,6 +32,10 @@ class WebRender:
             'stone': '🪨',
             'pumpkin': '🎃',
         }
+        self.init_figure()
+
+
+    def init_figure(self):
         self.fig = go.Figure(
             go.Heatmap(
                 z=[[1.0] * self.width for _ in range(self.height)],
@@ -47,32 +50,20 @@ class WebRender:
 
         self.fig.add_trace(
             go.Scatter(name='item_trace',
-                # x=[pos[0] for pos in poses],
-                # y=[pos[1] - 0.1 for pos in poses],
                 showlegend=False,
                 mode='text',
-                # text=item_emoji,
                 textfont_size=20,
                 textposition="middle center",
-                # customdata=info,
                 hovertemplate=
                 "%{customdata[0]}<br>Num: %{customdata[1]}<extra></extra>"))
 
         self.fig.add_trace(
             go.Scatter(name='player_trace',
-                    #    x=[pos[0] for pos in poses],
-                    #    y=[pos[1] + 0.1 for pos in poses],
                        showlegend=False,
                        mode='text',
-                    #    text=player_emoji,
                        textfont_size=18,
                        textposition="middle center",
-                    #    customdata=info,
-                       hovertemplate="""%{customdata[0]}<br>
-Id: %{customdata[1]}<br>
-Health: %{customdata[2]}<br>
-Pos: %{customdata[3]}<br>
-<extra></extra>"""))
+                       hovertemplate="""%{customdata[0]}<br>Id: %{customdata[1]}<br>Health: %{customdata[2]}<br>Pos: %{customdata[3]}<br><extra></extra>"""))
 
         self.fig.update_layout(
             autosize=False,
