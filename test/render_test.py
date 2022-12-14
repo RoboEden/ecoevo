@@ -1,6 +1,6 @@
 from ecoevo.config import EnvConfig, MapSize
 from ecoevo import EcoEvo
-from ecoevo.render import TerminalRender
+from ecoevo.render.terminal_render import TerminalRender
 from rich import print
 
 if __name__ == "__main__":
@@ -13,13 +13,7 @@ if __name__ == "__main__":
     print('num_player:', env.num_player)  # 7
 
     # Step teset
-    actions = [
-        (('move', 'right'), None, None),
-        (('move', 'up'), ('sand', -5), ('gold', 10)),
-        (('move', 'left'), ('gold', -10), ('sand', 5)),
-        (('consume', 'coral'), None, None),
-        (('collect', None), None, None),
-    ] * 20
+    actions = [(('move', 'right'), None, None)] * len(EnvConfig.personae)
     for _ in range(EnvConfig.total_step):
         obs, reward, done, infos = env.step(actions)
         render.render(env.map)
