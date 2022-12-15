@@ -26,7 +26,7 @@ class EntityManager:
         self.map: Dict[PosType, Tile] = {}
 
     @property
-    def item_array(self)->dict:
+    def item_array(self) -> dict:
         array = {}
         for x in range(self.width):
             for y in range(self.height):
@@ -39,8 +39,7 @@ class EntityManager:
                     array[(x, y)] = item
         return array
 
-
-    def reset_map(self, players: List[Player]) -> Dict[PosType, Tile]:
+    def reset_map(self, players: List[Player]) -> None:
         for pos, item in self.item_array.items():
             self.map[pos] = Tile(item=item, player=None)
         for player in players:
@@ -55,10 +54,9 @@ class EntityManager:
             points.append((x, y))
         return points
 
-
-    def add_player(self, player:Player):
+    def add_player(self, player: Player):
         if player.pos in self.map:
-            tile=self.map[player.pos]
+            tile = self.map[player.pos]
             if tile.player is None:
                 tile.player = player
             else:
@@ -66,19 +64,18 @@ class EntityManager:
         else:
             self.map[player.pos] = Tile(item=None, player=player)
 
-    def remove_player(self, player:Player):
+    def remove_player(self, player: Player):
         tile = self.map[player.pos]
         if tile.item is not None:
             tile.player = None
         else:
             del self.map[player.pos]
 
-    def move_player(self, player:Player, secondary_action):
+    def move_player(self, player: Player, secondary_action):
         self.remove_player(player)
         player.pos = player.next_pos(secondary_action)
-        self.add_player(player)        
+        self.add_player(player)
         player.collect_remain = None
-
 
     def execute(
         self,
@@ -87,7 +84,8 @@ class EntityManager:
     ):
         main_action, sell_offer, buy_offer = action
         primary_action, secondary_action = main_action
-        player.health = max(0, player.health - PlayerConfig.comsumption_per_step)
+        player.health = max(0,
+                            player.health - PlayerConfig.comsumption_per_step)
         if sell_offer is not None and buy_offer is not None:
             player.trade(sell_offer, buy_offer)
         if primary_action == Action.idle:
@@ -107,3 +105,24 @@ class EntityManager:
 
     def refresh(self):
         raise NotImplementedError
+
+    def check_item_refresh(self):
+
+        def _tile_check(tile: Tile) -> None:
+            if tile is None or tile.item is None:
+                return
+            item = tile.item
+            assert item.num >= 0
+            if item.num == 0:
+                if item.refresh_remain is None:
+                    item.refresh_remain = item.refresh_time
+                elif item.refresh_remain > 0:
+                    item.refresh_remain -= 1
+                else:
+                    item.num = item.reserve_num
+                    item.refresh_remain = None
+            else:
+                item.refresh_remain = None
+
+        for _, tile in self.map.items():
+            _tile_check(tile)
