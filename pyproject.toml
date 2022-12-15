@@ -9,25 +9,39 @@ requires-python = ">=3.7, <3.11"
 readme = "README.md"
 dependencies = [
     "numpy",
-    "pandas",
-    "scipy",
-    "gymnasium",
-    "pettingzoo", 
     "ortools",
     "pyyaml",
-    "rich",
     "pydantic",
-    "rich",
     "loguru",
-    "dash",
-    "plotly",
-    "matplotlib",
     "protobuf<=3.20.1",
-    "itsdangerous==2.0.1",
-    "werkzeug~=2.0.0",
     "dm-tree"
 ]
 dynamic = ["version"]
+
+[project.optional-dependencies]
+dev = [
+    "toml",
+    "pre-commit",
+    "pytype",
+    "tox",
+    "pytest",
+    "pytest-cov",
+    "isort",
+    "autoflake",
+    "yapf",
+    "bump2version",
+    "rich",
+]
+
+render = [
+    "itsdangerous==2.0.1",
+    "werkzeug~=2.0.0",
+    "dash",
+    "plotly",
+    "matplotlib",
+    "rich",
+]
+
 
 [tool.setuptools.dynamic]
     version = { attr = "ecoevo.__version__" }

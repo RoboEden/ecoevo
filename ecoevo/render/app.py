@@ -1,8 +1,11 @@
 from ecoevo.config import MapConfig
 from ecoevo import EcoEvo
 from ecoevo.render.web_render import WebRender
-from dash import Dash, dcc, html, Input, Output
-from dash_bootstrap_components import themes
+try:
+    from dash import Dash, dcc, html, Input, Output
+    from dash_bootstrap_components import themes
+except ImportError:
+    print("pip install ecoevo[render]")
 
 app = Dash(__name__,external_stylesheets=[themes.DARKLY])
 
