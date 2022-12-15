@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from ecoevo.config import MapConfig, PlayerConfig, DataPath
 from ecoevo.entities import load_item, Item, Player
 from ecoevo.types import *
+import tree
 
 
 @dataclass
@@ -124,5 +125,4 @@ class EntityManager:
             else:
                 item.refresh_remain = None
 
-        for _, tile in self.map.items():
-            _tile_check(tile)
+        tree.map_structure(_tile_check, self.map)
