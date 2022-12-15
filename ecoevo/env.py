@@ -83,6 +83,8 @@ class EcoEvo:
             if self.is_action_valid(player, actions[player.id]):
                 self.entity_manager.execute(player, action)
 
+        self.entity_manager.check_item_refresh()
+
         # if self.curr_step // EnvConfig.refresh_interval:
         #     self.entity_manager.refresh()
 

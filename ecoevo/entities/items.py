@@ -1,7 +1,7 @@
 import yaml
 from yaml.loader import SafeLoader
 from pydantic import BaseModel
-from typing import Dict
+from typing import Dict, Optional
 from ecoevo.config import EnvConfig, DataPath
 
 with open(DataPath.item_yaml) as file:
@@ -11,14 +11,15 @@ with open(DataPath.item_yaml) as file:
 class Item(BaseModel):
     name: str
     num: int
+    refresh_remain: Optional[int] = None
 
     @property
     def supply(self) -> int:
         return int(ALL_ITEM_DATA[self.name]['supply'])
 
     @property
-    def refresh_rate(self) -> float:
-        return float(ALL_ITEM_DATA[self.name]['refresh_rate'])
+    def refresh_time(self) -> float:
+        return float(ALL_ITEM_DATA[self.name]['refresh_time'])
 
     @property
     def collect_time(self) -> int:
@@ -31,6 +32,10 @@ class Item(BaseModel):
     @property
     def harvest_num(self) -> int:
         return int(ALL_ITEM_DATA[self.name]['harvest_num'])
+
+    @property
+    def reserve_num(self) -> int:
+        return int(ALL_ITEM_DATA[self.name]['reserve_num'])
 
     @property
     def consume_num(self) -> int:
