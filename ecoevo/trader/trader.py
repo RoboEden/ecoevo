@@ -27,6 +27,10 @@ class Trader(object):
         self.mat_if_match, self.mat_volume = [[]], [[]]
         self.list_match = []
 
+        # deal statistical data
+        self.num_trade = 0
+        self.dict_num_trade, self.dict_amount_trade = {}, {}
+
     def filter_legal_deals(
         self,
         players: List[Player],
@@ -85,51 +89,71 @@ class Trader(object):
 
         return legal_deals
 
-    def parse(self, legal_deals: Dict[IdType,
-                                      DealType]) -> Dict[IdType, DealType]:
+    def parse(self, legal_deals: Dict[IdType, DealType]) -> Dict[IdType, DealType]:
+        """
+        tarder parser
+
+        :param legal_deals:  dictionary of legal deals
+
+        :return: match_deals:  result of matched deals
+        """
+
         self.list_deal = list(legal_deals.values())
 
         # process data and run model
         self.mat_if_match, self.mat_volume = self._process()
         self.list_match = self._trade()
 
-        idx2key = list(legal_deals.keys())
         match_deals = {}
+        idx2key = list(legal_deals.keys())
+        self.num_trade = 0
+        self.dict_num_trade, self.dict_amount_trade = {}, {}
         for match in self.list_match:
             idx_A, idx_B = match
-            key_A = idx2key[idx_A]
-            key_B = idx2key[idx_B]
-            deal_A = legal_deals[key_A]
-            deal_B = legal_deals[key_B]
+            key_A, key_B = idx2key[idx_A], idx2key[idx_B]
+            deal_A, deal_B = legal_deals[key_A], legal_deals[key_B]
 
-            min_deal_A, min_deal_B = self.mini_close(deal_A, deal_B)
+            min_deal_A, min_deal_B = self._mini_close(deal_A, deal_B)
+            match_deals[key_A], match_deals[key_B] = min_deal_A, min_deal_B
 
-            match_deals[key_A] = min_deal_A
-            match_deals[key_B] = min_deal_B
+            # update statistical data
+            self.num_trade += 1
+            _, (sell_name_A, sell_num_A), (buy_name_A, buy_num_A) = min_deal_A
+            self.dict_num_trade[sell_name_A] = 1 if (
+                sell_name_A not in self.dict_num_trade) else self.dict_num_trade[sell_name_A] + 1
+            self.dict_num_trade[buy_name_A] = 1 if (
+                buy_name_A not in self.dict_num_trade) else self.dict_num_trade[buy_name_A] + 1
+            self.dict_amount_trade[sell_name_A] = -sell_num_A if (
+                sell_name_A not in self.dict_amount_trade) else self.dict_amount_trade[sell_name_A] + (-sell_num_A)
+            self.dict_amount_trade[buy_name_A] = buy_num_A if (
+                buy_name_A not in self.dict_amount_trade) else self.dict_amount_trade[buy_name_A] + buy_num_A
 
+        logger.debug(f"The number of trades: {self.num_trade}")
+        for item in self.dict_num_trade:
+            logger.debug(f"The number of {item} trades: {self.dict_num_trade[item]}")
+            logger.debug(f"The volume of {item} trades: {self.dict_amount_trade[item]}")
+        
         return match_deals
 
-    def mini_close(
-        self,
-        deal_A: DealType,
-        deal_B: DealType,
-    ):
-        pos_A, sell_offer_A, buy_offer_A = deal_A
-        sell_A_name, sell_A_num = sell_offer_A
-        buy_A_name, buy_A_num = buy_offer_A
+    def _mini_close(self, deal_A: DealType, deal_B: DealType):
+        """
+        get deals tuple with actual trading volume
 
-        pos_B, sell_offer_B, buy_offer_B = deal_B
-        sell_B_name, sell_B_num = sell_offer_B
-        buy_B_name, buy_B_num = buy_offer_B
+        :param deal_A:  deal A
+        :param deal_B:  deal B
 
-        sell_A_num = -min(abs(sell_A_num), buy_B_num)
-        buy_A_num = min(abs(sell_B_num), buy_A_num)
+        :return: min_deal_A:  deal A with actual trading volume
+        :return: min_deal_B:  deal B with actual trading volume
+        """
 
-        sell_B_num = -buy_A_num
-        buy_B_num = abs(sell_A_num)
+        pos_A, (sell_name_A, sell_num_A), (buy_name_A, buy_num_A) = deal_A
+        pos_B, (sell_name_B, sell_num_B), (buy_name_B, buy_num_B) = deal_B
 
-        min_deal_A = pos_A, (sell_A_name, sell_A_num), (buy_A_name, buy_A_num)
-        min_deal_B = pos_B, (sell_B_name, sell_B_num), (buy_B_name, buy_B_num)
+        sell_num_A, buy_num_A = -min(abs(sell_num_A), buy_num_B), min(abs(sell_num_B), buy_num_A)
+        sell_num_B, buy_num_B = -buy_num_A, abs(sell_num_A)
+
+        min_deal_A = pos_A, (sell_name_A, sell_num_A), (buy_name_A, buy_num_A)
+        min_deal_B = pos_B, (sell_name_B, sell_num_B), (buy_name_B, buy_num_B)
 
         return min_deal_A, min_deal_B
 
