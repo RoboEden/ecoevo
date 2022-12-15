@@ -2,7 +2,7 @@ from ecoevo.entities import Tile
 try:
     from rich import print
 except ImportError:
-    print("pip install ecoevo[render]")
+    raise ImportError("Try pip install ecoevo[render]!")
 from typing import Dict, List
 from ecoevo.types import *
 

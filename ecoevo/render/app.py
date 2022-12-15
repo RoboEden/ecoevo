@@ -4,8 +4,8 @@ from ecoevo.render.web_render import WebRender
 try:
     from dash import Dash, dcc, html, Input, Output
     from dash_bootstrap_components import themes
-except ImportError:
-    print("pip install ecoevo[render]")
+except:
+    raise ImportError("Try pip install ecoevo[render]!")
 
 app = Dash(__name__,external_stylesheets=[themes.DARKLY])
 

@@ -1,7 +1,7 @@
 try:
     import plotly.graph_objects as go
 except ImportError:
-    print("pip install ecoevo[render]")
+    raise ImportError("Try pip install ecoevo[render]!")
 
 from typing import Dict
 from ecoevo.entities import Tile
