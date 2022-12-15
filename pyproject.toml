@@ -22,6 +22,7 @@ dependencies = [
     "streamlit",
     "plotly",
     "matplotlib",
+    "dm-tree"
 ]
 dynamic = ["version"]
 
