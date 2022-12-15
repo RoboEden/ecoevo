@@ -2,7 +2,7 @@ import pathlib
 
 
 class EnvConfig:
-    total_step = 30
+    total_step = 1000
     trade_radius = 4
     visual_radius = 7
     personae = [
