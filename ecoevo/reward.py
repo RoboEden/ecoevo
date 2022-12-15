@@ -1,6 +1,5 @@
 import numpy as np
-from ecoevo.entities.player import Player, ALL_PERSONAE
-from ecoevo.entities.items import ALL_ITEM_DATA
+from ecoevo.entities import Player, ALL_PERSONAE, ALL_ITEM_DATA
 from ecoevo.config import RewardConfig
 
 

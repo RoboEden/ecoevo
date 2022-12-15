@@ -1,10 +1,9 @@
-import streamlit as st
 import plotly.graph_objects as go
 
 from typing import Dict
-from ecoevo.maps import Tile
-from ecoevo.entities.types import *
-
+from ecoevo.entities import Tile
+from ecoevo.types import *
+from streamlit.delta_generator import DeltaGenerator
 
 class WebRender:
 
@@ -33,6 +32,10 @@ class WebRender:
             'stone': '🪨',
             'pumpkin': '🎃',
         }
+        self.init_figure()
+
+
+    def init_figure(self):
         self.fig = go.Figure(
             go.Heatmap(
                 z=[[1.0] * self.width for _ in range(self.height)],
@@ -44,7 +47,43 @@ class WebRender:
                 hoverinfo="skip",
             ))
 
-    def add_item_trace(self, map: Dict[PosType, Tile]):
+
+        self.fig.add_trace(
+            go.Scatter(name='item_trace',
+                showlegend=False,
+                mode='text',
+                textfont_size=20,
+                textposition="middle center",
+                hovertemplate=
+                "%{customdata[0]}<br>Num: %{customdata[1]}<extra></extra>"))
+
+        self.fig.add_trace(
+            go.Scatter(name='player_trace',
+                       showlegend=False,
+                       mode='text',
+                       textfont_size=18,
+                       textposition="middle center",
+                       hovertemplate="""%{customdata[0]}<br>Id: %{customdata[1]}<br>Health: %{customdata[2]}<br>Pos: %{customdata[3]}<br><extra></extra>"""))
+
+        self.fig.update_layout(
+            autosize=False,
+            width=800,
+            height=800,
+            margin=dict(l=10, r=10, b=10, t=10, pad=0),
+            paper_bgcolor="#fdfcce",
+            hoverlabel=dict(bgcolor="black",
+                            font_size=16,
+                            font_family="Rockwell"),
+        )
+        self.fig.update_xaxes(visible=False)
+        self.fig.update_yaxes(visible=False)
+
+    def render(self, map: Dict[PosType, Tile], ph:DeltaGenerator):
+        self.update_item_trace(map)
+        self.update_player_trace(map)
+        ph.plotly_chart(self.fig)
+
+    def update_item_trace(self, map: Dict[PosType, Tile]):
         poses = []
         item_emoji = []
         info = []
@@ -55,22 +94,14 @@ class WebRender:
                 info.append([
                     tile.item.name,
                     tile.item.num,
-                ])
+                ])        
+        self.fig.update_traces(x=[pos[0] for pos in poses],
+                                y=[pos[1] + 0.1 for pos in poses],
+                                text=item_emoji,
+                                customdata=info,
+                  selector=dict(type="scatter",name="item_trace"))
 
-        self.fig.add_trace(
-            go.Scatter(
-                x=[pos[0] for pos in poses],
-                y=[pos[1] - 0.1 for pos in poses],
-                showlegend=False,
-                mode='text',
-                text=item_emoji,
-                textfont_size=20,
-                textposition="middle center",
-                customdata=info,
-                hovertemplate=
-                "%{customdata[0]}<br>Num: %{customdata[1]}<extra></extra>"))
-
-    def add_player_trace(self, map: Dict[PosType, Tile]):
+    def update_player_trace(self, map: Dict[PosType, Tile]):
         poses = []
         player_emoji = []
         info = []
@@ -86,35 +117,8 @@ class WebRender:
                     tile.player.collect_remain,
                 ])
 
-        hovertemplate = """%{customdata[0]}<br>
-Id: %{customdata[1]}<br>
-Health: %{customdata[2]}<br>
-Pos: %{customdata[3]}<br>
-<extra></extra>"""
-        self.fig.add_trace(
-            go.Scatter(x=[pos[0] for pos in poses],
-                       y=[pos[1] + 0.1 for pos in poses],
-                       showlegend=False,
-                       mode='text',
-                       text=player_emoji,
-                       textfont_size=18,
-                       textposition="middle center",
-                       customdata=info,
-                       hovertemplate=hovertemplate))
-
-    def render(self, map: Dict[PosType, Tile]):
-        self.add_item_trace(map)
-        self.add_player_trace(map)
-        self.fig.update_layout(
-            autosize=False,
-            width=800,
-            height=800,
-            margin=dict(l=10, r=10, b=10, t=10, pad=0),
-            paper_bgcolor="#fdfcce",
-            hoverlabel=dict(bgcolor="black",
-                            font_size=16,
-                            font_family="Rockwell"),
-        )
-        self.fig.update_xaxes(visible=False)
-        self.fig.update_yaxes(visible=False)
-        st.plotly_chart(self.fig)
+        self.fig.update_traces(x=[pos[0] for pos in poses],
+                                y=[pos[1] + 0.1 for pos in poses],
+                                text=player_emoji,
+                                customdata=info,
+                  selector=dict(type="scatter",name="player_trace"))

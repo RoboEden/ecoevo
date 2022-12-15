@@ -1,26 +1,27 @@
 import streamlit as st
 
-from ecoevo.config import EnvConfig, MapSize
+from ecoevo.config import EnvConfig, MapConfig
 from ecoevo import EcoEvo
 from ecoevo.render.web_render import WebRender
 
 st.set_page_config(layout='wide')
 # Init test
 env = EcoEvo()
-render = WebRender(MapSize.width, MapSize.height)
+render = WebRender(MapConfig.width, MapConfig.height)
 
 # Reset test
-wr = WebRender(MapSize.width, MapSize.height)
+wr = WebRender(MapConfig.width, MapConfig.height)
 obs, infos = env.reset()
+placeholder= st.empty()
+wr.render(env.map, placeholder)
 
 done = False
 while not done:
-    wr.render(env.map)
+    # if st.button('Step'):
     actions = [(('move', 'right'), None, None) for i in range(128)]
     # actions = my_policy(obs, infos) # your policy goes here
     obs, rewards, done, infos = env.step(actions)
-    input()
-
+    wr.render(env.map, placeholder)
 if False:
     # Step teset
     actions = [

@@ -3,10 +3,9 @@ import numpy as np
 
 from typing import List, Dict, Optional
 from dataclasses import dataclass
-from ecoevo.config import MapSize, PlayerConfig, DataPath
-from ecoevo.entities.items import load_item, Item
-from ecoevo.entities.player import Player
-from ecoevo.entities.types import *
+from ecoevo.config import MapConfig, PlayerConfig, DataPath
+from ecoevo.entities import load_item, Item, Player
+from ecoevo.types import *
 
 
 @dataclass
@@ -15,19 +14,20 @@ class Tile:
     player: Optional[Player]
 
 
-class MapManager:
+class EntityManager:
 
     def __init__(self, path: str = DataPath.map_json) -> None:
         with open(path) as fp:
             self.data = dict(json.load(fp))
         self.width = self.data['width']
         self.height = self.data['height']
-        assert self.width == MapSize.width, 'Config not as same as generated'
-        assert self.height == MapSize.height, 'Config not as same as generated'
+        assert self.width == MapConfig.width, 'Config not as same as generated'
+        assert self.height == MapConfig.height, 'Config not as same as generated'
         self.map: Dict[PosType, Tile] = {}
 
-    def reset_map(self) -> Dict[PosType, Tile]:
-        item_array = {}
+    @property
+    def item_array(self)->dict:
+        array = {}
         for x in range(self.width):
             for y in range(self.height):
                 item_name = self.data['tiles'][x][y]
@@ -36,12 +36,15 @@ class MapManager:
                 else:
                     num = self.data['amount'][x][y]
                     item = load_item(item_name, num=num)
-                    item_array[(x, y)] = item
+                    array[(x, y)] = item
+        return array
 
-        for pos, item in item_array.items():
+
+    def reset_map(self, players: List[Player]) -> Dict[PosType, Tile]:
+        for pos, item in self.item_array.items():
             self.map[pos] = Tile(item=item, player=None)
-
-        return self.map
+        for player in players:
+            self.add_player(player)
 
     def sample(self, num: int) -> List[PosType]:
         points = []
@@ -52,39 +55,28 @@ class MapManager:
             points.append((x, y))
         return points
 
-    def load_players(self, players: List[Player]):
-        # Clear player
-        for pos in self.map:
-            if self.map[pos].item is not None:
-                self.map[pos].player = None
-            else:
-                self.map.__delitem__(pos)
 
-        # Allocate player
-        for player in players:
-            if player.pos in self.map:
-                self.map[player.pos].player = player
+    def add_player(self, player:Player):
+        if player.pos in self.map:
+            tile=self.map[player.pos]
+            if tile.player is None:
+                tile.player = player
             else:
-                self.map[player.pos] = Tile(item=None, player=player)
+                raise ValueError(f'Player already exists at {tile}.')
+        else:
+            self.map[player.pos] = Tile(item=None, player=player)
 
-    def move_player(self, player:Player, secondary_action):
-        # remove
+    def remove_player(self, player:Player):
         tile = self.map[player.pos]
         if tile.item is not None:
             tile.player = None
         else:
-            # self.map.__delitem__(player.pos)
             del self.map[player.pos]
 
-        # add
-        next_pos = player.next_pos(secondary_action)
-        if next_pos in self.map:
-            tile=self.map[next_pos]
-            tile.player = player
-        else:
-            self.map[next_pos] = Tile(item=None, player=player)
-        
+    def move_player(self, player:Player, secondary_action):
+        self.remove_player(player)
         player.pos = player.next_pos(secondary_action)
+        self.add_player(player)        
         player.collect_remain = None
 
 
