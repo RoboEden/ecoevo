@@ -15,24 +15,38 @@ obs, infos = env.reset()
 web_render.update(env.entity_manager.map)
 
 app.layout = html.Div([
-    dcc.Graph(id='game-screen', figure=fig),
-    html.Br(),
-    html.Button('Step', id='step-button-state', n_clicks=0, className="btn btn-primary"),
-    html.Div(id='step-text-state'),
-])
+    html.Center([
+        dcc.Graph(id='game-screen', figure=fig),
+        html.Br(),
+        html.Div(id='output-provider'),
+        html.Br(),
+        html.Button('Step', id='step-button-state', className="btn btn-primary")
+    ]),
+    dcc.ConfirmDialogProvider(
+        children=html.Button('Reset', className="btn btn-secondary"),
+        id='reset-danger-provider',
+        message='Are you sure you want to reset?')
+    ])
 
 
-@app.callback(
-              Output('step-text-state', 'children'),
-              Output('game-screen', 'figure'),
+
+@app.callback(Output('game-screen', 'figure'),
+              Output('output-provider', 'children'),
+              Output('reset-danger-provider', 'submit_n_clicks'),
               Input('step-button-state', 'n_clicks'),
+              Input('reset-danger-provider', 'submit_n_clicks')
               )
-def step(n_clicks):
-    actions = [(('move', 'right'), None, None) for i in range(128)]
-    obs, rewards, done, infos = env.step(actions)
+def game_step(n_clicks, submit_n_clicks):
+    if submit_n_clicks:
+        obs, infos = env.reset()
+        web_render.update(env.entity_manager.map)
+        text = u'Game Reset!'
+    else:
+        actions = [(('move', 'right'), None, None) for i in range(128)]
+        obs, rewards, done, infos = env.step(actions)
+        text = u'Current Step {}'.format(n_clicks) if not done else u'Game Over!'
     web_render.update(env.entity_manager.map)
-    text = u'Current Step {}'.format(n_clicks) if not done else u'Game Over!'
-    return text, web_render.fig
+    return web_render.fig, text, 0
     
 if __name__ == '__main__':
     app.run_server(debug=True)

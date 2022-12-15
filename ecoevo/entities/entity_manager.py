@@ -41,6 +41,7 @@ class EntityManager:
 
 
     def reset_map(self, players: List[Player]) -> Dict[PosType, Tile]:
+        self.map = {}
         for pos, item in self.item_array.items():
             self.map[pos] = Tile(item=item, player=None)
         for player in players:
