@@ -1,12 +1,26 @@
 # Economy-Evolution
 
 Economy Evolution Environment for Currency Emergence Research
-## Install
-Clone the repo, `cd` into the folder and run
+
+## Development
+Make sure `pip` is the latest version.
 ```
+pip install --upgrade setuptools
+pip install --upgrade build
 pip install -e .
 ```
-Make sure `pip` is the latest version.
+
+## Packaging
+1. Data files should be included via the  `MANIFEST.in` file.
+2. Build package.
+```
+python -m build
+```
+
+## Install
+```
+pip install dist/ecoevo-0.1.0-py3-none-any.whl
+```
 ## Usage example
 ```python
 from ecoevo import EcoEvo

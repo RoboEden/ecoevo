@@ -1,6 +1,6 @@
 from ecoevo.config import EnvConfig, MapConfig
 from ecoevo import EcoEvo
-from ecoevo.render import TerminalRender
+from ecoevo.render.terminal_render import TerminalRender
 from rich import print
 
 if __name__ == "__main__":

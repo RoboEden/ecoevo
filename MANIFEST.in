@@ -1,0 +1,3 @@
+include ecoevo/entities/items.yaml
+include ecoevo/entities/player.yaml
+include ecoevo/maps/data/base.json
