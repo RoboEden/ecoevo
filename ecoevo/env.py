@@ -46,7 +46,7 @@ class EcoEvo:
     ) -> Tuple[Dict[IdType, Dict[PosType, Tile]], Dict[IdType, dict]]:
         self.players = []
         self.curr_step = 0
-
+        self.reward_parser.reset()
         points = self.entity_manager.sample(len(EnvConfig.personae))
         for id, persona in enumerate(EnvConfig.personae):
             player = Player(persona=persona, id=id, pos=points[id])
