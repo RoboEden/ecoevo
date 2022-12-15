@@ -1,7 +1,8 @@
 import pathlib
 
+
 class EnvConfig:
-    total_step = 1000
+    total_step = 30
     trade_radius = 4
     visual_radius = 7
     personae = [
@@ -33,7 +34,8 @@ class RewardConfig:
     penalty = 1
     rho = 0.5
 
+
 class DataPath:
     item_yaml = pathlib.Path(__file__).parent / "entities" / "items.yaml"
     player_yaml = pathlib.Path(__file__).parent / "entities" / "player.yaml"
-    map_json = pathlib.Path(__file__).parent / "maps" / "data"/"base.json"
+    map_json = pathlib.Path(__file__).parent / "maps" / "data" / "base.json"

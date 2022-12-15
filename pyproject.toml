@@ -19,9 +19,12 @@ dependencies = [
     "pydantic",
     "rich",
     "loguru",
-    "streamlit",
+    "dash",
     "plotly",
     "matplotlib",
+    "protobuf<=3.20.3",
+    "itsdangerous==2.0.1",
+    "werkzeug~=2.0.0"
 ]
 dynamic = ["version"]
 
