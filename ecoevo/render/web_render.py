@@ -69,6 +69,8 @@ class WebRender:
             ))
 
         self.fig.update_layout(
+            dragmode='lasso',
+            modebar_remove=['pan','zoom',  'zoomin', 'zoomout', 'resetscale', 'autoscale'],
             autosize=False,
             width=800,
             height=800,
