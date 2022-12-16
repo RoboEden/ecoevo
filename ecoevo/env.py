@@ -1,13 +1,14 @@
 import sys
 import random
 from loguru import logger
-from typing import Dict, List
+from typing import Dict, List, Tuple, Optional
 
 from ecoevo.config import EnvConfig, MapConfig
 from ecoevo.trader import Trader
 from ecoevo.reward import RewardParser
 from ecoevo.entities import EntityManager, Tile, Player
-from ecoevo.types import *
+from ecoevo import types as tp
+from ecoevo.analyser import Analyser
 
 
 class EcoEvo:
@@ -34,7 +35,7 @@ class EcoEvo:
     def all_item_names(self) -> list:
         return list(Player.backpack.dict().keys())
 
-    def gettile(self, pos: PosType) -> Optional[Tile]:
+    def gettile(self, pos: tp.PosType) -> Optional[Tile]:
         map = self.entity_manager.map
         if pos in map:
             return self.entity_manager.map[pos]
@@ -43,7 +44,7 @@ class EcoEvo:
 
     def reset(
             self
-    ) -> Tuple[Dict[IdType, Dict[PosType, Tile]], Dict[IdType, dict]]:
+    ) -> Tuple[Dict[tp.IdType, Dict[tp.PosType, Tile]], Dict[tp.IdType, dict]]:
         self.players = []
         self.curr_step = 0
         self.reward_parser.reset()
@@ -59,45 +60,59 @@ class EcoEvo:
         self.ids = [player.id for player in self.players]
         return obs, infos
 
-    def step(
-        self, actions: List[ActionType]
-    ) -> Tuple[Dict[IdType, Dict[PosType, Tile]], Dict[IdType, float], bool,
-               Dict[IdType, dict]]:
+    def step(self, actions: List[tp.ActionType]) -> Tuple[
+        Dict[tp.IdType, Dict[tp.PosType, Tile]], Dict[tp.IdType, float], bool, Dict[tp.IdType, dict]]:
+        """
+        tarder parser
+
+        :param actions:  all players actions
+
+        :return: match_deals:  result of matched deals
+        """
+
         self.curr_step += 1
+
+        # trader
         legal_deals = self.trader.filter_legal_deals(self.players, actions)
         matched_deals = self.trader.parse(legal_deals)
+
         # execute
         random.shuffle(self.ids)
         for id in self.ids:
             player = self.players[id]
             main_action, sell_offer, buy_offer = actions[player.id]
             if player.id in matched_deals:
-                player.trade_result = TradeResult.success
+                player.trade_result = tp.TradeResult.success
                 _, sell_offer, buy_offer = matched_deals[player.id]
                 action = (main_action, sell_offer, buy_offer)
             else:
                 if player.id in legal_deals:
-                    player.trade_result = TradeResult.failed
+                    player.trade_result = tp.TradeResult.failed
                 action = (main_action, None, None)
 
             if self.is_action_valid(player, actions[player.id]):
                 self.entity_manager.execute(player, action)
 
+        # refresh items
         self.entity_manager.refresh_item()
 
-        # if self.curr_step // EnvConfig.refresh_interval:
-        #     self.entity_manager.refresh()
-
         obs = {player.id: self.get_obs(player) for player in self.players}
-        rewards = {
-            player.id: self.reward_parser.parse(player)
-            for player in self.players
-        }
+        rewards = {player.id: self.reward_parser.parse(player) for player in self.players}
         done = True if self.curr_step > EnvConfig.total_step else False
-        infos = {}
+
+        # save infos
+        trade_times, item_trade_times, item_trade_amount = Analyser.get_trade_data(matched_deals=matched_deals)
+        avr_reward = sum(rewards.values()) / len(rewards)
+        infos = {
+            'trade_times': trade_times, 
+            'item_trade_times': item_trade_times, 
+            'item_trade_amount': item_trade_amount, 
+            'avr_reward': avr_reward
+        }
+
         return obs, rewards, done, infos
 
-    def get_obs(self, player: Player) -> Dict[PosType, Tile]:
+    def get_obs(self, player: Player) -> Dict[tp.PosType, Tile]:
         player_x, player_y = player.pos
         x_min = max(player_x - EnvConfig.visual_radius, 0)
         x_max = min(player_x + EnvConfig.visual_radius, MapConfig.width - 1)
@@ -115,16 +130,16 @@ class EcoEvo:
 
         return local_obs
 
-    def is_action_valid(self, player: Player, action: ActionType) -> bool:
+    def is_action_valid(self, player: Player, action: tp.ActionType) -> bool:
         is_valid = True
         main_action, sell_offer, buy_offer = action
         primary_action, secondary_action = main_action
 
-        if primary_action == Action.idle:
+        if primary_action == tp.Action.idle:
             pass
 
         # check move
-        if primary_action == Action.move:
+        if primary_action == tp.Action.move:
             x, y = player.next_pos(secondary_action)
             tile = self.gettile((x, y))
             if tile:
@@ -136,7 +151,7 @@ class EcoEvo:
                     )
 
         # check collect
-        elif primary_action == Action.collect:
+        elif primary_action == tp.Action.collect:
             item = self.gettile(player.pos).item
             if item:
                 # no item to collect or the amount of item not enough
@@ -159,7 +174,7 @@ class EcoEvo:
                 )
 
         # check consume
-        elif primary_action == Action.consume:
+        elif primary_action == tp.Action.consume:
             consume_item_name = secondary_action
 
             # handle consume and sell same item

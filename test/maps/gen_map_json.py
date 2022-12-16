@@ -118,14 +118,13 @@ plt.grid(linestyle='dashed', linewidth=1)
 
 # save picture
 path = os.path.dirname(__file__)
-path_files = os.path.join(path, "data/")
-path_picture = os.path.join(path_files, "map.png")
+path_picture = os.path.join(path, "map.png")
 plt.savefig(path_picture)
 
 
 # get json
 mat_type_all_ = [[dict_idx_type[mat_type_all[i][j]] for j in range(map_size)] for i in range(map_size)]
-dict_reserve = {key: dict_item[key]['reserve'] for key in dict_item.keys()}
+dict_reserve = {key: dict_item[key]['reserve_num'] for key in dict_item.keys()}
 dict_json = {
     "width": map_size, 
     "height": map_size, 
@@ -136,6 +135,6 @@ dict_json = {
 json_map = json.dumps(dict_json)
 
 # save json
-path_json = os.path.join(path_files, "base.json")
+path_json = os.path.join(path, "base.json")
 with open(path_json, 'w') as file:
     file.write(json_map)

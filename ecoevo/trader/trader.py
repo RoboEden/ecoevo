@@ -4,7 +4,7 @@ from typing import Dict, List, Tuple
 from loguru import logger
 from ortools.linear_solver import pywraplp
 from ecoevo.entities.player import Player
-from ecoevo.types import *
+from ecoevo import types as tp
 
 
 class Trader(object):
@@ -27,15 +27,11 @@ class Trader(object):
         self.mat_if_match, self.mat_volume = [[]], [[]]
         self.list_match = []
 
-        # deal statistical data
-        self.num_trade = 0
-        self.dict_num_trade, self.dict_amount_trade = {}, {}
-
     def filter_legal_deals(
         self,
         players: List[Player],
-        actions: List[ActionType],
-    ) -> Dict[IdType, DealType]:
+        actions: List[tp.ActionType],
+    ) -> Dict[tp.IdType, tp.DealType]:
         legal_deals = {}
 
         for player in players:
@@ -44,17 +40,17 @@ class Trader(object):
 
             # parse offer
             if sell_offer is None or buy_offer is None:
-                player.trade_result = TradeResult.absent
+                player.trade_result = tp.TradeResult.absent
                 continue
 
             sell_item_name, sell_num = sell_offer
             buy_item_name, buy_num = buy_offer
             if not sell_num < 0:
-                player.trade_result = TradeResult.illegal
+                player.trade_result = tp.TradeResult.illegal
                 logger.debug(f'Invalid sell_num {sell_num}, should be < 0')
                 continue
             if not buy_num > 0:
-                player.trade_result = TradeResult.illegal
+                player.trade_result = tp.TradeResult.illegal
                 logger.debug(f'Invalid buy_num {buy_num}, should be > 0')
                 continue
             sell_num, buy_num = abs(sell_num), abs(buy_num)
@@ -64,7 +60,7 @@ class Trader(object):
 
             # handle sell and consume same item
             least_amount = sell_num
-            if primary_action == Action.consume:
+            if primary_action == tp.Action.consume:
                 consume_item_name = secondary_action
                 if sell_item_name == consume_item_name:
                     least_amount += sell_item.consume_num
@@ -73,13 +69,13 @@ class Trader(object):
                 logger.debug(
                     f'Insufficient {sell_item_name}:{sell_item.num} sell_num {sell_num}'
                 )
-                player.trade_result = TradeResult.illegal
+                player.trade_result = tp.TradeResult.illegal
                 continue
 
             # check buy
             buy_item_volumne = player.backpack[buy_item_name].capacity * buy_num
             if player.backpack.remain_volume < buy_item_volumne:
-                player.trade_result = TradeResult.illegal
+                player.trade_result = tp.TradeResult.illegal
                 logger.debug(
                     f'Insufficient backpack remain volume:{player.backpack.remain_volume}'
                 )
@@ -89,7 +85,7 @@ class Trader(object):
 
         return legal_deals
 
-    def parse(self, legal_deals: Dict[IdType, DealType]) -> Dict[IdType, DealType]:
+    def parse(self, legal_deals: Dict[tp.IdType, tp.DealType]) -> Dict[tp.IdType, tp.DealType]:
         """
         tarder parser
 
@@ -115,27 +111,10 @@ class Trader(object):
 
             min_deal_A, min_deal_B = self._mini_close(deal_A, deal_B)
             match_deals[key_A], match_deals[key_B] = min_deal_A, min_deal_B
-
-            # update statistical data
-            self.num_trade += 1
-            _, (sell_name_A, sell_num_A), (buy_name_A, buy_num_A) = min_deal_A
-            self.dict_num_trade[sell_name_A] = 1 if (
-                sell_name_A not in self.dict_num_trade) else self.dict_num_trade[sell_name_A] + 1
-            self.dict_num_trade[buy_name_A] = 1 if (
-                buy_name_A not in self.dict_num_trade) else self.dict_num_trade[buy_name_A] + 1
-            self.dict_amount_trade[sell_name_A] = -sell_num_A if (
-                sell_name_A not in self.dict_amount_trade) else self.dict_amount_trade[sell_name_A] + (-sell_num_A)
-            self.dict_amount_trade[buy_name_A] = buy_num_A if (
-                buy_name_A not in self.dict_amount_trade) else self.dict_amount_trade[buy_name_A] + buy_num_A
-
-        logger.debug(f"The number of trades: {self.num_trade}")
-        for item in self.dict_num_trade:
-            logger.debug(f"The number of {item} trades: {self.dict_num_trade[item]}")
-            logger.debug(f"The volume of {item} trades: {self.dict_amount_trade[item]}")
         
         return match_deals
 
-    def _mini_close(self, deal_A: DealType, deal_B: DealType):
+    def _mini_close(self, deal_A: tp.DealType, deal_B: tp.DealType):
         """
         get deals tuple with actual trading volume
 
@@ -165,23 +144,19 @@ class Trader(object):
         :return: mat_volume:  trading volume matrix
         """
 
-        mat_if_match = [[False for _ in self.list_deal]
-                        for _ in self.list_deal]
+        mat_if_match = [[False for _ in self.list_deal]for _ in self.list_deal]
         mat_volume = [[0 for _ in self.list_deal] for _ in self.list_deal]
         for i in range(len(self.list_deal)):
             for j in range(len(self.list_deal)):
-                ((pos_x_i, pos_y_i), (item_sell_i, num_sell_i),
-                 (item_buy_i, num_buy_i)) = self.list_deal[i]
-                ((pos_x_j, pos_y_j), (item_sell_j, num_sell_j),
-                 (item_buy_j, num_buy_j)) = self.list_deal[j]
+                ((pos_x_i, pos_y_i), (item_sell_i, num_sell_i), (item_buy_i, num_buy_i)) = self.list_deal[i]
+                ((pos_x_j, pos_y_j), (item_sell_j, num_sell_j), (item_buy_j, num_buy_j)) = self.list_deal[j]
 
                 # jump over same deals
                 if i == j:
                     continue
 
                 # too far to trade
-                if abs(pos_x_i - pos_x_j) > self.trade_radius or abs(
-                        pos_y_i - pos_y_j) > self.trade_radius:
+                if abs(pos_x_i - pos_x_j) > self.trade_radius or abs(pos_y_i - pos_y_j) > self.trade_radius:
                     continue
 
                 # items cannot match
@@ -193,8 +168,7 @@ class Trader(object):
                     continue
 
                 mat_if_match[i][j] = True
-                mat_volume[i][j] = min(abs(num_sell_i), num_buy_i,
-                                       abs(num_sell_j), num_buy_j)
+                mat_volume[i][j] = min(abs(num_sell_i), num_buy_i, abs(num_sell_j), num_buy_j)
 
         return mat_if_match, mat_volume
 

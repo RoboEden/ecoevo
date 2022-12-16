@@ -103,6 +103,10 @@ class EntityManager:
                 f'Failed to parse primary action. Player {player.id}: {primary_action} '
             )
 
+        # reset the remaining collection steps
+        if primary_action != Action.collect:
+            player.collect_remain = None
+
         player.last_action = primary_action
 
     def refresh_item(self):
