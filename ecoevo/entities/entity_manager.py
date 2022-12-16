@@ -103,7 +103,9 @@ class EntityManager:
                 f'Failed to parse primary action. Player {player.id}: {primary_action} '
             )
 
-        player.last_action = primary_action
+        # reset the remaining collection steps
+        if primary_action != Action.collect:
+            player.collect_remain = None
 
     def refresh_item(self):
         def _tile_check(tile: Tile) -> None:
