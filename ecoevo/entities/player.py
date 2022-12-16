@@ -19,7 +19,6 @@ class Player(BaseModel):
     stomach:Bag=Field(default_factory=Bag)
     health:int = Field(default=PlayerConfig.max_health)
     collect_remain:Optional[str]
-    last_action:Optional[str]
     trade_result:str = Field(default=TradeResult.absent)
 
     @property
@@ -30,10 +29,6 @@ class Player(BaseModel):
         return dict(ALL_PERSONAE[self.persona]['ability'])
 
     def collect(self, item:Item):
-        # Collect requires consecutive execution to succeed
-        if self.last_action != Action.collect:
-            self.collect_remain = None
-
         # Init
         if self.collect_remain is None:
             collect_time = self.ability[item.name]
