@@ -92,7 +92,7 @@ class EntityManager:
             player.trade(sell_offer, buy_offer)
         if primary_action == Action.idle:
             pass
-        if primary_action == Action.move:
+        elif primary_action == Action.move:
             self.move_player(player, secondary_action)
         elif primary_action == Action.collect:
             player.collect(self.map[player.pos].item)

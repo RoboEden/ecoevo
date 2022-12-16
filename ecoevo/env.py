@@ -14,8 +14,20 @@ class EcoEvo:
 
     def __init__(self,
                  render_mode=None,
+                 total_step=EnvConfig.total_step,
+                 trade_radius=EnvConfig.trade_radius,
+                 visual_radius=EnvConfig.visual_radius,
+                 personae=EnvConfig.personae,
+                 bag_volume=EnvConfig.bag_volume,
                  logging_level="WARNING",
                  logging_path="out.log"):
+        # Ugly change EnvConfig         
+        EnvConfig.total_step=total_step
+        EnvConfig.trade_radius=trade_radius
+        EnvConfig.visual_radius=visual_radius
+        EnvConfig.personae=personae
+        EnvConfig.bag_volume=bag_volume
+
         self.render_mode = render_mode
         self.entity_manager = EntityManager()
         self.trader = Trader(EnvConfig.trade_radius)
@@ -124,7 +136,7 @@ class EcoEvo:
             pass
 
         # check move
-        if primary_action == Action.move:
+        elif primary_action == Action.move:
             x, y = player.next_pos(secondary_action)
             tile = self.gettile((x, y))
             if tile:
@@ -150,7 +162,7 @@ class EcoEvo:
                     is_valid = False
 
                     logger.warning(
-                        f'Bag full! Player {player.id} cannot collect {item} at {self.pos}'
+                        f'Bag full! Player {player.id} cannot collect {item} at {player.pos}'
                     )
             else:
                 is_valid = False
