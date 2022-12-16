@@ -1,7 +1,8 @@
+from typing import Optional
 from ecoevo import EcoEvo
 from ecoevo.config import MapConfig
 from ecoevo.render.web_render import WebRender
-from ecoevo.render import Dash, html, dcc, dbc, Output, Input
+from ecoevo.render import Dash, html, dcc, dbc, Output, Input, State
 
 
 dbc_css = "https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates/dbc.min.css"
@@ -14,90 +15,109 @@ env = EcoEvo(logging_level='CRITICAL')
 obs, infos = env.reset()
 web_render.update(env.entity_manager.map)
 
-
-control_panel = html.Div([
-    html.Div(children=[
-        html.Label('Main action'),
-        dcc.Dropdown(['Idle', 'Move', 'Collect', 'Consume'], 'Idle'),
-        html.Br(),
-        html.Label('Sell offer'),
-        dcc.Slider(
-            min=0,
-            max=len(env.all_item_names),
-            marks={i: item_name for i, item_name in enumerate(env.all_item_names)},
-            value=3,
-            step=1,
-        ),
-        html.Br(),
-        html.Label('Buy offer'),
-        html.Br(),
-        dcc.Slider(
-            min=0,
-            max=len(env.all_item_names),
-            marks={i: item_name for i, item_name in enumerate(env.all_item_names)},
-            value=3,
-            step=1,
-        )
-    ], style={'padding': 10, 'flex': 1}, className="dbc"),
-
-    # html.Div(children=[
-    #     html.Label('Checkboxes'),
-    #     dcc.Checklist(['New York City', 'Montréal', 'San Francisco'],
-    #                   ['Montréal', 'San Francisco']
-    #     ),
-
-    #     html.Br(),
-    #     html.Label('Text Input'),
-    #     dcc.Input(value='MTL', type='text'),
-    # ], style={'padding': 10, 'flex': 1})
-], style={'display': 'flex', 'flex-direction': 'row'})
-
-game_screen = html.Center([
-        dcc.Graph(id='game-screen', figure=fig, config={'displaylogo': False}),
-        html.Br(),
-        html.Div(id='output-provider'),
-        html.Br(),
-        html.Button('Step', id='step-button-state', className="btn btn-primary")
-    ])
+def column_container(components:list):
+    res =  html.Div([
+        html.Div([component], style={'padding': 10, 'flex': 1}) for component in components
+        ], style={'display': 'flex', 'flex-direction': 'row'})
+    return res
 
 reset_button = dcc.ConfirmDialogProvider(
         children=html.Button('Reset game', className="btn btn-secondary"),
         id='reset-danger-button',
         message='Reset game?'
     )
+step_button = html.Button('Step', id='step-button-state', className="btn btn-primary")
+item_list = ['None'] + env.all_item_names
+control_panel = html.Div([
+        html.Label('Main action'),
+        column_container([
+            dcc.Dropdown([
+                {'label':'Idle', 'value':'idle', 'title':'primary action'},
+                {'label':'Move', 'value':'move', 'title':'primary action'},
+                {'label':'Collect', 'value':'collect', 'title':'primary action'},
+                {'label':'Consume', 'value':'consume', 'title':'primary action'},
+                ], 
+            id='primary-action-state',
+            value='idle',
+            ),
+            dcc.Dropdown([], id='secondary-action-state'),
+        ]),
+        html.Br(),
+        html.Label('Sell offer'),
+        dcc.Slider(min=0, 
+            max=len(item_list)-1,
+            marks={i: item_name for i, item_name in enumerate(item_list)},
+            value=0,
+            step=1,
+            id='sell-item-state'
+        ),
+        html.Br(),
+        html.Label('Buy offer'),
+        html.Br(),
+        dcc.Slider(
+            min=0,
+            max=len(item_list)-1,
+            marks={i: item_name for i, item_name in enumerate(item_list)},
+            value=0,
+            step=1,
+            id='sell-num-state'
+        ),
+    ], style={'padding': 10, 'flex': 1}, className="dbc")
 
 
+game_screen = html.Center([
+        dcc.Graph(id='game-screen', figure=fig, config={'displaylogo': False}),
+        html.Br(),
+        html.Div(id='output-provider'),
+        html.Br(),
+    ], style={'padding': 10, 'flex': 1}, className="dbc")
 app.layout = html.Div([
-    html.Div([    
-        html.Div([game_screen],className='col'),
-        html.Div([
-            control_panel,
-            reset_button,
-        ],className='col'),
-    ], className='row align-items-start'),
-], className='container')
+    game_screen, 
+    control_panel,
+    column_container([
+        step_button,
+        reset_button,
+    ]),
+    ])
+
+@app.callback(Output('secondary-action-state', 'options'),
+              Input('primary-action-state', 'value'),)
+def bind_action(primary_action):
+    if primary_action == 'move':
+        return [
+                {'label':'Up', 'value':'up', 'title':'secondary action'},
+                {'label':'Down', 'value':'down', 'title':'secondary action'},
+                {'label':'Left', 'value':'left', 'title':'secondary action'},
+                {'label':'Right', 'value':'right', 'title':'secondary action'},
+                ]
+    else:
+        return []
 
 
 @app.callback(Output('game-screen', 'figure'),
               Output('output-provider', 'children'),
               Output('reset-danger-button', 'submit_n_clicks'),
               Input('step-button-state', 'n_clicks'),
-              Input('reset-danger-button', 'submit_n_clicks')
+              Input('reset-danger-button', 'submit_n_clicks'),
+              State('primary-action-state', 'value'),
+              State('secondary-action-state', 'value'),
               )
-def game_step(n_clicks, submit_n_clicks):
+def game_step(step_n_clicks, reset_n_clicks, primary_action:Optional[str], secondary_action:Optional[str]):
     reset_msg = u'Ready to play!'
-    step_msg = u'Current Step {}'.format(n_clicks)
-    if submit_n_clicks:
+    step_msg = u'Current Step {}'.format(step_n_clicks)
+    if reset_n_clicks: # 0 or 1
         obs, infos = env.reset()
-        web_render.update(env.entity_manager.map)
         msg = reset_msg
-    else:
-        actions = [(('move', 'right'), None, None) for i in range(128)]
+    elif step_n_clicks: # 0 or 1,2,3...
+        # parse main action
+        if primary_action: primary_action = primary_action.lower()
+        if secondary_action: secondary_action = secondary_action.lower()
+        actions = [((primary_action, secondary_action), None, None) for i in range(128)]
+
         obs, rewards, done, infos = env.step(actions)
-        if done:
-            msg = u'Game Over!'
-        else:
-            msg = step_msg if n_clicks else reset_msg
+        msg = step_msg if not done else u'Game Over!'
+    else:
+        msg = reset_msg
     web_render.update(env.entity_manager.map)
     return web_render.fig, msg, 0
     
