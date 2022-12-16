@@ -165,7 +165,7 @@ class EcoEvo:
                     is_valid = False
 
                     logger.warning(
-                        f'Bag full! Player {player.id} cannot collect {item} at {self.pos}'
+                        f'Bag full! Player {player.id} cannot collect {item} at {player.pos}'
                     )
             else:
                 is_valid = False

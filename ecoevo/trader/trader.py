@@ -232,9 +232,8 @@ class Trader(object):
                 for j in range(num_deal):
                     if j > i and x_[i][j] > 0.9:
                         list_match.append((i, j))
-                        logger.debug(
-                            f"Deal {i} matches {j} with trading volume {mat_volume[i][j]}"
-                        )
+                        logger.debug(f"Deal {i} matches {j} with trading volume {mat_volume[i][j]}")
+            logger.debug(f"Matched deals: {len(list_match) * 2}  Total deals: {num_deal}")
 
         # case 2: infeasible
         elif status == pywraplp.Solver.INFEASIBLE:
