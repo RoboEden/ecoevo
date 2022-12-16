@@ -6,7 +6,7 @@ from typing import List, Dict, Optional
 from dataclasses import dataclass
 from ecoevo.config import MapConfig, PlayerConfig, DataPath
 from ecoevo.entities import load_item, Item, Player
-from ecoevo.types import *
+from ecoevo.types import PosType, ActionType, Action
 
 
 @dataclass

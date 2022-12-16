@@ -1,7 +1,7 @@
 from ecoevo.entities import Tile
 from ecoevo.render import print
 from typing import Dict, List
-from ecoevo.types import *
+from ecoevo.types import PosType
 
 class TerminalRender:
 

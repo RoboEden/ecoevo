@@ -2,7 +2,7 @@
 from typing import Dict
 from ecoevo.entities import Tile
 from ecoevo.render import go
-from ecoevo.types import *
+from ecoevo.types import PosType
 from streamlit.delta_generator import DeltaGenerator
 
 
