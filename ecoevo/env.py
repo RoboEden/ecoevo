@@ -6,7 +6,7 @@ from typing import Dict, List, Tuple, Optional
 from ecoevo.config import EnvConfig, MapConfig
 from ecoevo.trader import Trader
 from ecoevo.reward import RewardParser
-from ecoevo.entities import EntityManager, Tile, Player
+from ecoevo.entities import EntityManager, Tile, Player, ALL_ITEM_DATA
 from ecoevo import types as tp
 from ecoevo.analyser import Analyser
 
@@ -33,7 +33,7 @@ class EcoEvo:
 
     @property
     def all_item_names(self) -> list:
-        return list(Player.backpack.dict().keys())
+        return list(ALL_ITEM_DATA.keys())
 
     def gettile(self, pos: tp.PosType) -> Optional[Tile]:
         map = self.entity_manager.map

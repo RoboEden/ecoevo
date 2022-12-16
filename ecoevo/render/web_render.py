@@ -47,8 +47,8 @@ class WebRender:
                 ygap=2,
                 showscale=False,
                 colorscale=[[0.0, self.gridcolor], [1.0, self.gridcolor]],
-                hoverinfo="skip",
-            ))
+                hoverinfo="skip"),
+            )
 
         self.fig.add_trace(
             go.Scatter(
@@ -58,7 +58,10 @@ class WebRender:
                 textfont_size=20,
                 textposition="middle center",
                 hovertemplate=
-                "%{customdata[0]}<br>Num: %{customdata[1]}<extra></extra>"))
+                "%{customdata[0]}<br>Num: %{customdata[1]}<extra></extra>",
+                selected_textfont_color='rgba(0,0,0,0.5)',
+                unselected_textfont_color='rgba(0,0,0,0.5)'),
+            )
 
         self.fig.add_trace(
             go.Scatter(
@@ -68,10 +71,12 @@ class WebRender:
                 textfont_size=18,
                 textposition="middle center",
                 hovertemplate=
-                """%{customdata[0]}<br>Id: %{customdata[1]}<br>Health: %{customdata[2]}<br>Pos: %{customdata[3]}<br><extra></extra>"""
-            ))
+                """%{customdata[0]}<br>Id: %{customdata[1]}<br>Health: %{customdata[2]}<br>Pos: %{customdata[3]}<br><extra></extra>"""),
+            )
 
         self.fig.update_layout(
+            dragmode='lasso',
+            modebar_remove=['pan','zoom',  'zoomin', 'zoomout', 'resetscale', 'autoscale'],
             autosize=False,
             width=800,
             height=800,
