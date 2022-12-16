@@ -107,8 +107,6 @@ class EntityManager:
         if primary_action != Action.collect:
             player.collect_remain = None
 
-        player.last_action = primary_action
-
     def refresh_item(self):
         def _tile_check(tile: Tile) -> None:
             if tile is None or tile.item is None:
