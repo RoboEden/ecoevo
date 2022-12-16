@@ -8,7 +8,7 @@ from ecoevo.trader import Trader
 from ecoevo.reward import RewardParser
 from ecoevo.analyser import Analyser
 from ecoevo.entities import EntityManager, Tile, Player, ALL_ITEM_DATA
-from ecoevo import types as tp
+from ecoevo.types import IdType, PosType, ActionType, Action, TradeResult
 
 
 class EcoEvo:
@@ -47,7 +47,7 @@ class EcoEvo:
     def all_item_names(self) -> list:
         return list(ALL_ITEM_DATA.keys())
 
-    def gettile(self, pos: tp.PosType) -> Optional[Tile]:
+    def gettile(self, pos: PosType) -> Optional[Tile]:
         map = self.entity_manager.map
         if pos in map:
             return self.entity_manager.map[pos]
@@ -56,7 +56,7 @@ class EcoEvo:
 
     def reset(
             self
-    ) -> Tuple[Dict[tp.IdType, Dict[tp.PosType, Tile]], Dict[tp.IdType, dict]]:
+    ) -> Tuple[Dict[IdType, Dict[PosType, Tile]], Dict[IdType, dict]]:
         self.players = []
         self.curr_step = 0
         self.reward_parser.reset()
@@ -72,8 +72,8 @@ class EcoEvo:
         self.ids = [player.id for player in self.players]
         return obs, infos
 
-    def step(self, actions: List[tp.ActionType]) -> Tuple[
-        Dict[tp.IdType, Dict[tp.PosType, Tile]], Dict[tp.IdType, float], bool, Dict[tp.IdType, dict]]:
+    def step(self, actions: List[ActionType]) -> Tuple[
+        Dict[IdType, Dict[PosType, Tile]], Dict[IdType, float], bool, Dict[IdType, dict]]:
         """
         tarder parser
 
@@ -94,12 +94,12 @@ class EcoEvo:
             player = self.players[id]
             main_action, sell_offer, buy_offer = actions[player.id]
             if player.id in matched_deals:
-                player.trade_result = tp.TradeResult.success
+                player.trade_result = TradeResult.success
                 _, sell_offer, buy_offer = matched_deals[player.id]
                 action = (main_action, sell_offer, buy_offer)
             else:
                 if player.id in legal_deals:
-                    player.trade_result = tp.TradeResult.failed
+                    player.trade_result = TradeResult.failed
                 action = (main_action, None, None)
 
             if self.is_action_valid(player, actions[player.id]):
@@ -124,7 +124,7 @@ class EcoEvo:
 
         return obs, rewards, done, infos
 
-    def get_obs(self, player: Player) -> Dict[tp.PosType, Tile]:
+    def get_obs(self, player: Player) -> Dict[PosType, Tile]:
         player_x, player_y = player.pos
         x_min = max(player_x - EnvConfig.visual_radius, 0)
         x_max = min(player_x + EnvConfig.visual_radius, MapConfig.width - 1)
@@ -142,16 +142,16 @@ class EcoEvo:
 
         return local_obs
 
-    def is_action_valid(self, player: Player, action: tp.ActionType) -> bool:
+    def is_action_valid(self, player: Player, action: ActionType) -> bool:
         is_valid = True
         main_action, sell_offer, buy_offer = action
         primary_action, secondary_action = main_action
 
-        if primary_action == tp.Action.idle:
+        if primary_action == Action.idle:
             pass
 
         # check move
-        elif primary_action == tp.Action.move:
+        elif primary_action == Action.move:
             x, y = player.next_pos(secondary_action)
             tile = self.gettile((x, y))
             if tile:
@@ -163,7 +163,7 @@ class EcoEvo:
                     )
 
         # check collect
-        elif primary_action == tp.Action.collect:
+        elif primary_action == Action.collect:
             item = self.gettile(player.pos).item
             if item:
                 # no item to collect or the amount of item not enough
@@ -186,7 +186,7 @@ class EcoEvo:
                 )
 
         # check consume
-        elif primary_action == tp.Action.consume:
+        elif primary_action == Action.consume:
             consume_item_name = secondary_action
 
             # handle consume and sell same item

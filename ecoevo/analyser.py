@@ -1,7 +1,7 @@
 
 from typing import Dict, Tuple
 
-from ecoevo import types as tp
+from ecoevo.types import IdType, DealType
 from ecoevo.entities import ALL_ITEM_DATA
 
 
@@ -10,7 +10,7 @@ class Analyser(object):
         pass
 
     @staticmethod
-    def get_trade_data(matched_deals: Dict[tp.IdType, tp.DealType]) -> Tuple[int, Dict[str, int], Dict[str, int]]:
+    def get_trade_data(matched_deals: Dict[IdType, DealType]) -> Tuple[int, Dict[str, int], Dict[str, int]]:
         """
         tarder parser
 
