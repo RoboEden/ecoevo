@@ -1,41 +1,59 @@
-import streamlit as st
-
-from ecoevo.config import EnvConfig, MapConfig
+from ecoevo.config import MapConfig
 from ecoevo import EcoEvo
 from ecoevo.render.web_render import WebRender
+try:
+    from dash import Dash, dcc, html, Input, Output
+    from dash_bootstrap_components import themes
+except:
+    raise ImportError("Try pip install ecoevo[render]!")
 
-st.set_page_config(layout='wide')
-# Init test
-env = EcoEvo()
-render = WebRender(MapConfig.width, MapConfig.height)
+app = Dash(__name__,external_stylesheets=[themes.DARKLY])
 
-# Reset test
-wr = WebRender(MapConfig.width, MapConfig.height)
+web_render = WebRender(MapConfig.width, MapConfig.height)
+fig = web_render.fig
+
+env = EcoEvo(logging_level='CRITICAL')
 obs, infos = env.reset()
-placeholder= st.empty()
-wr.render(env.map, placeholder)
+web_render.update(env.entity_manager.map)
 
-done = False
-while not done:
-    # if st.button('Step'):
-    actions = [(('move', 'right'), None, None) for i in range(128)]
-    # actions = my_policy(obs, infos) # your policy goes here
-    obs, rewards, done, infos = env.step(actions)
-    wr.render(env.map, placeholder)
-if False:
-    # Step teset
-    actions = [
-        (('move', 'right'), None, None),
-        (('move', 'up'), ('sand', -5), ('gold', 10)),
-        (('move', 'left'), ('gold', -10), ('sand', 5)),
-        (('consume', 'coral'), None, None),
-        (('collect', None), None, None),
-    ] * 20
-    for _ in range(EnvConfig.total_step):
-        obs, reward, done, infos = env.step(actions)
-        render.render(env.map)
-        # Show info
-        if input('show info? y/n\n') == 'y':
-            print(infos)
-        if input('show obs? y/n\n') == 'y':
-            print(obs)
+app.layout = html.Div([
+    html.Center([
+        dcc.Graph(id='game-screen', figure=fig),
+        html.Br(),
+        html.Div(id='output-provider'),
+        html.Br(),
+        html.Button('Step', id='step-button-state', className="btn btn-primary")
+    ]),
+    dcc.ConfirmDialogProvider(
+        children=html.Button('Restart', className="btn btn-secondary"),
+        id='reset-danger-button',
+        message='Restart game?')
+    ])
+
+
+
+@app.callback(Output('game-screen', 'figure'),
+              Output('output-provider', 'children'),
+              Output('reset-danger-button', 'submit_n_clicks'),
+              Input('step-button-state', 'n_clicks'),
+              Input('reset-danger-button', 'submit_n_clicks')
+              )
+def game_step(n_clicks, submit_n_clicks):
+    reset_msg = u'Ready to play!'
+    step_msg = u'Current Step {}'.format(n_clicks)
+    if submit_n_clicks:
+        obs, infos = env.reset()
+        web_render.update(env.entity_manager.map)
+        msg = reset_msg
+    else:
+        actions = [(('move', 'right'), None, None) for i in range(128)]
+        obs, rewards, done, infos = env.step(actions)
+        if done:
+            msg = u'Game Over!'
+        else:
+            msg = step_msg if n_clicks else reset_msg
+    web_render.update(env.entity_manager.map)
+    return web_render.fig, msg, 0
+    
+if __name__ == '__main__':
+    app.run_server(debug=True)

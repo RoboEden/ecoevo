@@ -46,7 +46,7 @@ class EcoEvo:
     ) -> Tuple[Dict[IdType, Dict[PosType, Tile]], Dict[IdType, dict]]:
         self.players = []
         self.curr_step = 0
-
+        self.reward_parser.reset()
         points = self.entity_manager.sample(len(EnvConfig.personae))
         for id, persona in enumerate(EnvConfig.personae):
             player = Player(persona=persona, id=id, pos=points[id])
@@ -83,7 +83,7 @@ class EcoEvo:
             if self.is_action_valid(player, actions[player.id]):
                 self.entity_manager.execute(player, action)
 
-        self.entity_manager.check_item_refresh()
+        self.entity_manager.refresh_item()
 
         # if self.curr_step // EnvConfig.refresh_interval:
         #     self.entity_manager.refresh()
