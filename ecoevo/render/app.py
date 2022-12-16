@@ -1,14 +1,11 @@
-from ecoevo.config import MapConfig
 from ecoevo import EcoEvo
+from ecoevo.config import MapConfig
 from ecoevo.render.web_render import WebRender
-try:
-    from dash import Dash, dcc, html, Input, Output
-    from dash_bootstrap_components import themes
-except:
-    raise ImportError("Try pip install ecoevo[render]!")
+from ecoevo.render import Dash, html, dcc, dbc, Output, Input
+
 
 dbc_css = "https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates/dbc.min.css"
-app = Dash(__name__,external_stylesheets=[themes.DARKLY, dbc_css])
+app = Dash(__name__,external_stylesheets=[dbc.themes.DARKLY, dbc_css])
 
 web_render = WebRender(MapConfig.width, MapConfig.height)
 fig = web_render.fig
@@ -64,9 +61,9 @@ game_screen = html.Center([
     ])
 
 reset_button = dcc.ConfirmDialogProvider(
-        children=html.Button('Restart', className="btn btn-secondary"),
+        children=html.Button('Reset game', className="btn btn-secondary"),
         id='reset-danger-button',
-        message='Restart game?'
+        message='Reset game?'
     )
 
 

@@ -1,10 +1,7 @@
-try:
-    import plotly.graph_objects as go
-except ImportError:
-    raise ImportError("Try pip install ecoevo[render]!")
 
 from typing import Dict
 from ecoevo.entities import Tile
+from ecoevo.render import go
 from ecoevo.types import *
 from streamlit.delta_generator import DeltaGenerator
 
