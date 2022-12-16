@@ -21,34 +21,38 @@ web_render.update(env.entity_manager.map)
 control_panel = html.Div([
     html.Div(children=[
         html.Label('Main action'),
-        dcc.RadioItems(['Idle', 'Move', 'Collect', 'Consume'], 'Idle'),
+        dcc.Dropdown(['Idle', 'Move', 'Collect', 'Consume'], 'Idle'),
         html.Br(),
         html.Label('Sell offer'),
-        dcc.Dropdown(env.all_item_names, env.all_item_names[0]),
-        html.Br(),
-        html.Label('Buy offer'),
-        dcc.Dropdown(env.all_item_names, env.all_item_names[0]),
-    ], style={'padding': 100, 'flex': 1}, className="dbc"),
-
-    html.Div(children=[
-        html.Label('Checkboxes'),
-        dcc.Checklist(['New York City', 'Montréal', 'San Francisco'],
-                      ['Montréal', 'San Francisco']
-        ),
-
-        html.Br(),
-        html.Label('Text Input'),
-        dcc.Input(value='MTL', type='text'),
-
-        html.Br(),
-        html.Label('Slider'),
         dcc.Slider(
             min=0,
-            max=env.curr_step,
-            marks={i: f'Label {i}' if i == 1 else str(i) for i in range(1, 6)},
-            value=5,
+            max=len(env.all_item_names),
+            marks={i: item_name for i, item_name in enumerate(env.all_item_names)},
+            value=3,
+            step=1,
         ),
-    ], style={'padding': 10, 'flex': 1})
+        html.Br(),
+        html.Label('Buy offer'),
+        html.Br(),
+        dcc.Slider(
+            min=0,
+            max=len(env.all_item_names),
+            marks={i: item_name for i, item_name in enumerate(env.all_item_names)},
+            value=3,
+            step=1,
+        )
+    ], style={'padding': 10, 'flex': 1}, className="dbc"),
+
+    # html.Div(children=[
+    #     html.Label('Checkboxes'),
+    #     dcc.Checklist(['New York City', 'Montréal', 'San Francisco'],
+    #                   ['Montréal', 'San Francisco']
+    #     ),
+
+    #     html.Br(),
+    #     html.Label('Text Input'),
+    #     dcc.Input(value='MTL', type='text'),
+    # ], style={'padding': 10, 'flex': 1})
 ], style={'display': 'flex', 'flex-direction': 'row'})
 
 game_screen = html.Center([
