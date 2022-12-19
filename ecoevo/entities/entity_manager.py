@@ -1,11 +1,12 @@
 import json
-import tree
-import numpy as np
-
-from typing import List, Dict, Optional
 from dataclasses import dataclass
-from ecoevo.config import MapConfig, PlayerConfig, DataPath
-from ecoevo.entities import load_item, Item, Player
+from typing import Dict, List, Optional
+
+import numpy as np
+import tree
+
+from ecoevo.config import DataPath, MapConfig, PlayerConfig
+from ecoevo.entities import Item, Player, load_item
 from ecoevo.types import *
 
 
@@ -41,7 +42,7 @@ class EntityManager:
         return array
 
     def reset_map(self, players: List[Player]) -> None:
-        self.map={}
+        self.map = {}
         for pos, item in self.item_array.items():
             self.map[pos] = Tile(item=item, player=None)
         for player in players:
@@ -108,6 +109,7 @@ class EntityManager:
             player.collect_remain = None
 
     def refresh_item(self):
+
         def _tile_check(tile: Tile) -> None:
             if tile is None or tile.item is None:
                 return
