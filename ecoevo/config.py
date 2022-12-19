@@ -3,8 +3,8 @@ import pathlib
 
 class EnvConfig:
     total_step = 1000
-    trade_radius = 2
-    visual_radius = 4
+    trade_radius = 4
+    visual_radius = 7
     personae = [
         *(['gold_digger'] * 16),
         *(['hazelnut_farmer'] * 16),
