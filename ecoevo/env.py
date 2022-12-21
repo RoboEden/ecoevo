@@ -110,7 +110,7 @@ class EcoEvo:
                 if action_type == Action.consume:
                     food_consume += 1 if player.backpack[action_item].disposable else 0
                 if action_type == Action.collect:
-                    food_collect += 1 if player.backpack[action_item].disposable else 0
+                    food_collect += 1 if self.map[player.pos].item.disposable else 0
         infos['food_consume'] = food_consume
         infos['food_collect'] = food_collect
 
