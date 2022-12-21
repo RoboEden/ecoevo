@@ -9,6 +9,7 @@ from ecoevo.reward import RewardParser
 from ecoevo.entities import EntityManager, Tile, Player, ALL_ITEM_DATA
 from ecoevo import types as tp
 from ecoevo.analyser import Analyser
+from ecoevo.types import Action
 
 
 class EcoEvo:
@@ -22,6 +23,10 @@ class EcoEvo:
         self.trader = Trader(EnvConfig.trade_radius)
         self.reward_parser = RewardParser()
         self.players: List[Player] = []
+
+        # store infos for last step
+        self.last_infos = {}
+
         # Logging
         logger.remove()
         logger.add(sys.stderr, level=logging_level)
@@ -56,8 +61,12 @@ class EcoEvo:
         self.entity_manager.reset_map(self.players)
 
         obs = {player.id: self.get_obs(player) for player in self.players}
+
         infos = {}
+        self.last_infos = infos
+
         self.ids = [player.id for player in self.players]
+
         return obs, infos
 
     def step(self, actions: List[tp.ActionType]) -> Tuple[
@@ -76,7 +85,10 @@ class EcoEvo:
         legal_deals = self.trader.filter_legal_deals(self.players, actions)
         matched_deals = self.trader.parse(legal_deals)
 
+        infos = {}
+
         # execute
+        food_consume, food_collect = 0, 0
         random.shuffle(self.ids)
         for id in self.ids:
             player = self.players[id]
@@ -93,6 +105,15 @@ class EcoEvo:
             if self.is_action_valid(player, actions[player.id]):
                 self.entity_manager.execute(player, action)
 
+                # update action info
+                (action_type, action_item), _, _ = action
+                if action_type == Action.consume:
+                    food_consume += 1 if player.backpack[action_item].disposable else 0
+                if action_type == Action.collect:
+                    food_collect += 1 if player.backpack[action_item].disposable else 0
+        infos['food_consume'] = food_consume
+        infos['food_collect'] = food_collect
+
         # refresh items
         self.entity_manager.refresh_item()
 
@@ -100,15 +121,29 @@ class EcoEvo:
         rewards = {player.id: self.reward_parser.parse(player) for player in self.players}
         done = True if self.curr_step > EnvConfig.total_step else False
 
-        # save infos
+        # trade and reward info
         trade_times, item_trade_times, item_trade_amount = Analyser.get_trade_data(matched_deals=matched_deals)
-        avr_reward = sum(rewards.values()) / len(rewards)
+        sum_reward = sum(rewards.values())
         infos = {
             'trade_times': trade_times, 
             'item_trade_times': item_trade_times, 
             'item_trade_amount': item_trade_amount, 
-            'avr_reward': avr_reward
+            'sum_reward': sum_reward
         }
+
+        # global game statistics
+        infos['total_trade_times'] = infos[
+            'trade_times'] + self.last_infos['total_trade_times'] if self.last_infos else infos['trade_times']
+        for item in ALL_ITEM_DATA.keys():
+            infos['total_{}_trade'.format(item)] = infos['item_trade_amount'][item] + self.last_infos[
+                'total_{}_trade'.format(item)] if self.last_infos else infos['item_trade_amount'][item]
+        infos['total_food_consume'] = infos[
+            'food_consume'] + self.last_infos['total_food_consume'] if self.last_infos else infos['food_consume']
+        infos['total_food_collect'] = infos[
+            'food_collect'] + self.last_infos['total_food_collect'] if self.last_infos else infos['food_collect']
+
+        # update last info
+        self.last_infos = infos
 
         return obs, rewards, done, infos
 
