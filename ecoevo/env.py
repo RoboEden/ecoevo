@@ -124,12 +124,10 @@ class EcoEvo:
         # trade and reward info
         trade_times, item_trade_times, item_trade_amount = Analyser.get_trade_data(matched_deals=matched_deals)
         sum_reward = sum(rewards.values())
-        infos = {
-            'trade_times': trade_times, 
-            'item_trade_times': item_trade_times, 
-            'item_trade_amount': item_trade_amount, 
-            'sum_reward': sum_reward
-        }
+        infos['trade_times'] = trade_times
+        infos['item_trade_times'] = item_trade_times
+        infos['item_trade_amount'] = item_trade_amount
+        infos['sum_reward'] = sum_reward
 
         # global game statistics
         infos['total_trade_times'] = infos[
