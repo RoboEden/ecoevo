@@ -87,8 +87,6 @@ class EntityManager:
     ):
         main_action, sell_offer, buy_offer = action
         primary_action, secondary_action = main_action
-        player.health = max(0,
-                            player.health - PlayerConfig.comsumption_per_step)
         if sell_offer is not None and buy_offer is not None:
             player.trade(sell_offer, buy_offer)
         if primary_action == Action.idle:

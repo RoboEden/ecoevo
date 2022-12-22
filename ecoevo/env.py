@@ -3,7 +3,7 @@ import random
 from loguru import logger
 from typing import Dict, List, Tuple, Optional
 
-from ecoevo.config import EnvConfig, MapConfig
+from ecoevo.config import EnvConfig, MapConfig, PlayerConfig
 from ecoevo.trader import Trader
 from ecoevo.reward import RewardParser
 from ecoevo.entities import EntityManager, Tile, Player, ALL_ITEM_DATA
@@ -97,6 +97,7 @@ class EcoEvo:
                     player.trade_result = tp.TradeResult.failed
                 action = (main_action, None, None)
 
+            player.health = max(0, player.health - PlayerConfig.comsumption_per_step)
             if self.is_action_valid(player, actions[player.id]):
                 self.entity_manager.execute(player, action)
 
