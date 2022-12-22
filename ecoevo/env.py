@@ -33,8 +33,8 @@ class EcoEvo:
     def num_player(self) -> int:
         return len(self.players)
 
-    @property
-    def all_item_names(self) -> list:
+    @staticmethod
+    def all_item_names() -> list:
         return list(ALL_ITEM_DATA.keys())
 
     def gettile(self, pos: tp.PosType) -> Optional[Tile]:
