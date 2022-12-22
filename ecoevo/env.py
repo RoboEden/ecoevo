@@ -24,9 +24,6 @@ class EcoEvo:
         self.reward_parser = RewardParser()
         self.players: List[Player] = []
 
-        # store infos for last step
-        self.last_infos = {}
-
         # Logging
         logger.remove()
         logger.add(sys.stderr, level=logging_level)
@@ -61,9 +58,7 @@ class EcoEvo:
         self.entity_manager.reset_map(self.players)
 
         obs = {player.id: self.get_obs(player) for player in self.players}
-
         infos = {}
-        self.last_infos = infos
 
         self.ids = [player.id for player in self.players]
 
@@ -125,23 +120,11 @@ class EcoEvo:
         trade_times, item_trade_times, item_trade_amount = Analyser.get_trade_data(matched_deals=matched_deals)
         sum_reward = sum(rewards.values())
         infos['trade_times'] = trade_times
-        infos['item_trade_times'] = item_trade_times
-        infos['item_trade_amount'] = item_trade_amount
-        infos['sum_reward'] = sum_reward
-
-        # global game statistics
-        infos['total_trade_times'] = infos[
-            'trade_times'] + self.last_infos['total_trade_times'] if self.last_infos else infos['trade_times']
         for item in ALL_ITEM_DATA.keys():
-            infos['total_{}_trade'.format(item)] = infos['item_trade_amount'][item] + self.last_infos[
-                'total_{}_trade'.format(item)] if self.last_infos else infos['item_trade_amount'][item]
-        infos['total_food_consume'] = infos[
-            'food_consume'] + self.last_infos['total_food_consume'] if self.last_infos else infos['food_consume']
-        infos['total_food_collect'] = infos[
-            'food_collect'] + self.last_infos['total_food_collect'] if self.last_infos else infos['food_collect']
-
-        # update last info
-        self.last_infos = infos
+            infos['{}_trade_times'.format(item)] = item_trade_times[item]
+        for item in ALL_ITEM_DATA.keys():
+            infos['{}_trade_amount'.format(item)] = item_trade_amount[item]
+        infos['sum_reward'] = sum_reward
 
         return obs, rewards, done, infos
 
