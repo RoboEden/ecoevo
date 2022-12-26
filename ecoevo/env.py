@@ -80,8 +80,6 @@ class EcoEvo:
         legal_deals = self.trader.filter_legal_deals(self.players, actions)
         matched_deals = self.trader.parse(legal_deals)
 
-        infos = {}
-
         # execute
         food_consume, food_collect = 0, 0
         random.shuffle(self.ids)
@@ -101,14 +99,12 @@ class EcoEvo:
             if self.is_action_valid(player, actions[player.id]):
                 self.entity_manager.execute(player, action)
 
-                # update action info
+                # update food info
                 (action_type, action_item), _, _ = action
                 if action_type == Action.consume:
                     food_consume += 1 if player.backpack[action_item].disposable else 0
                 if action_type == Action.collect:
                     food_collect += 1 if self.entity_manager.map[player.pos].item.disposable else 0
-        infos['food_consume'] = food_consume
-        infos['food_collect'] = food_collect
 
         # refresh items
         self.entity_manager.refresh_item()
@@ -117,17 +113,11 @@ class EcoEvo:
         rewards = {player.id: self.reward_parser.parse(player) for player in self.players}
         done = True if self.curr_step > EnvConfig.total_step else False
 
-        # trade and reward info
-        trade_times, item_trade_times, item_trade_amount = Analyser.get_trade_data(matched_deals=matched_deals)
-        sum_reward = sum(rewards.values())
-        infos['trade_times'] = trade_times
-        for item in ALL_ITEM_DATA.keys():
-            infos['{}_trade_times'.format(item)] = item_trade_times[item]
-        for item in ALL_ITEM_DATA.keys():
-            infos['{}_trade_amount'.format(item)] = item_trade_amount[item]
-        infos['sum_reward'] = sum_reward
+        # get info
+        info = Analyser.get_info(
+            rewards=rewards, matched_deals=matched_deals, food_consume=food_consume, food_collect=food_collect)
 
-        return obs, rewards, done, infos
+        return obs, rewards, done, info
 
     def get_obs(self, player: Player) -> Dict[tp.PosType, Tile]:
         player_x, player_y = player.pos

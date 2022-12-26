@@ -10,6 +10,37 @@ class Analyser(object):
         pass
 
     @staticmethod
+    def get_info(rewards: Dict[int, float], matched_deals: Dict[
+        tp.IdType, tp.DealType], food_consume: int, food_collect: int) -> Dict[str, int or float]:
+        """
+        tarder parser
+
+        :param rewards:  rewards dictionary, player id to reward
+        :param matched_deals:  matched deals
+        :param food_consume:  total food consume times at current step
+        :param food_collect:  total food collect times at current step
+
+        :return: trade_times:  total trade times
+        """
+
+        info = {}
+
+        sum_reward = sum(rewards.values())
+        info['sum_reward'] = sum_reward
+
+        trade_times, item_trade_times, item_trade_amount = Analyser.get_trade_data(matched_deals=matched_deals)
+        info['trade_times'] = trade_times
+        for item in ALL_ITEM_DATA.keys():
+            info['{}_trade_times'.format(item)] = item_trade_times[item]
+        for item in ALL_ITEM_DATA.keys():
+            info['{}_trade_amount'.format(item)] = item_trade_amount[item]
+
+        info['food_consume'] = food_consume
+        info['food_collect'] = food_collect
+
+        return info
+
+    @staticmethod
     def get_trade_data(matched_deals: Dict[tp.IdType, tp.DealType]) -> Tuple[int, Dict[str, int], Dict[str, int]]:
         """
         tarder parser
