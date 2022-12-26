@@ -38,7 +38,8 @@ class Analyser(object):
 
         # food consume times
         food_consume = 0
-        for (action_type, action_item) in actions_valid:
+        for pid in actions_valid:
+            (action_type, action_item) = actions_valid[pid]
             if action_type == Action.consume and bool(ALL_ITEM_DATA[action_item]['disposable']):
                 food_consume += 1
         info['food_consume'] = food_consume
