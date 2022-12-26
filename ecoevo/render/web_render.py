@@ -1,9 +1,7 @@
-
 from typing import Dict
 from ecoevo.entities import Tile
-from ecoevo.render import go
+from ecoevo.render import graph_objects as go
 from ecoevo.types import PosType
-from streamlit.delta_generator import DeltaGenerator
 
 
 class WebRender:
@@ -37,15 +35,14 @@ class WebRender:
 
     def init_figure(self):
         self.fig = go.Figure(
-            go.Heatmap(
-                z=[[1.0] * self.width for _ in range(self.height)],
-                zmax=1,
-                xgap=2,
-                ygap=2,
-                showscale=False,
-                colorscale=[[0.0, self.gridcolor], [1.0, self.gridcolor]],
-                hoverinfo="skip"),
-            )
+            go.Heatmap(z=[[1.0] * self.width for _ in range(self.height)],
+                       zmax=1,
+                       xgap=2,
+                       ygap=2,
+                       showscale=False,
+                       colorscale=[[0.0, self.gridcolor],
+                                   [1.0, self.gridcolor]],
+                       hoverinfo="skip"), )
 
         self.fig.add_trace(
             go.Scatter(
@@ -57,8 +54,7 @@ class WebRender:
                 hovertemplate=
                 "%{customdata[0]}<br>Num: %{customdata[1]}<extra></extra>",
                 selected_textfont_color='rgba(0,0,0,0.5)',
-                unselected_textfont_color='rgba(0,0,0,0.5)'),
-            )
+                unselected_textfont_color='rgba(0,0,0,0.5)'), )
 
         self.fig.add_trace(
             go.Scatter(
@@ -68,12 +64,14 @@ class WebRender:
                 textfont_size=18,
                 textposition="middle center",
                 hovertemplate=
-                """%{customdata[0]}<br>Id: %{customdata[1]}<br>Health: %{customdata[2]}<br>Pos: %{customdata[3]}<br><extra></extra>"""),
-            )
+                """%{customdata[0]}<br>Id: %{customdata[1s]}<extra></extra>"""
+            ), )
 
         self.fig.update_layout(
             dragmode='lasso',
-            modebar_remove=['pan','zoom',  'zoomin', 'zoomout', 'resetscale', 'autoscale'],
+            modebar_remove=[
+                'pan', 'zoom', 'zoomin', 'zoomout', 'resetscale', 'autoscale'
+            ],
             autosize=False,
             width=800,
             height=800,
@@ -86,14 +84,12 @@ class WebRender:
         )
         self.fig.update_xaxes(visible=False)
         self.fig.update_yaxes(visible=False)
+        self.fig.update_layout(clickmode='event+select')
 
     def update(self, map: Dict[PosType, Tile]):
         self.update_item_trace(map)
         self.update_player_trace(map)
         # ph.plotly_chart(self.fig)
-
-    def show(self, ph: DeltaGenerator):
-        ph.plotly_chart(self.fig)
 
     def update_item_trace(self, map: Dict[PosType, Tile]):
         poses = []
@@ -125,9 +121,9 @@ class WebRender:
                 info.append([
                     tile.player.persona,
                     tile.player.id,
-                    tile.player.health,
-                    tile.player.pos,
-                    tile.player.collect_remain,
+                    # tile.player.health,
+                    # tile.player.pos,
+                    # tile.player.collect_remain,
                 ])
 
         self.fig.update_traces(x=[pos[0] for pos in poses],
