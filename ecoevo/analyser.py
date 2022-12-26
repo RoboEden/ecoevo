@@ -28,6 +28,7 @@ class Analyser(object):
         sum_reward = sum(rewards.values())
         info['sum_reward'] = sum_reward
 
+        # trade info
         trade_times, item_trade_times, item_trade_amount = Analyser.get_trade_data(matched_deals=matched_deals)
         info['trade_times'] = trade_times
         for item in ALL_ITEM_DATA.keys():
