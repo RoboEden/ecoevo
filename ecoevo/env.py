@@ -9,7 +9,6 @@ from ecoevo.reward import RewardParser
 from ecoevo.entities import EntityManager, Tile, Player, ALL_ITEM_DATA
 from ecoevo import types as tp
 from ecoevo.analyser import Analyser
-from ecoevo.types import Action
 
 
 class EcoEvo:
@@ -81,8 +80,8 @@ class EcoEvo:
         matched_deals = self.trader.parse(legal_deals)
 
         # execute
-        food_consume, food_collect = 0, 0
         random.shuffle(self.ids)
+        actions_valid = {}
         for id in self.ids:
             player = self.players[id]
             main_action, sell_offer, buy_offer = actions[player.id]
@@ -99,12 +98,9 @@ class EcoEvo:
             if self.is_action_valid(player, actions[player.id]):
                 self.entity_manager.execute(player, action)
 
-                # update food info
-                (action_type, action_item), _, _ = action
-                if action_type == Action.consume:
-                    food_consume += 1 if player.backpack[action_item].disposable else 0
-                if action_type == Action.collect:
-                    food_collect += 1 if self.entity_manager.map[player.pos].item.disposable else 0
+                # validated actions
+                action_, _, _ = action
+                actions_valid[player.id] = action_
 
         # refresh items
         self.entity_manager.refresh_item()
@@ -114,8 +110,7 @@ class EcoEvo:
         done = True if self.curr_step > EnvConfig.total_step else False
 
         # get info
-        info = Analyser.get_info(
-            rewards=rewards, matched_deals=matched_deals, food_consume=food_consume, food_collect=food_collect)
+        info = Analyser.get_info(rewards=rewards, matched_deals=matched_deals, actions_valid=actions_valid)
 
         return obs, rewards, done, info
 

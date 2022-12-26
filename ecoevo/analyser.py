@@ -3,6 +3,7 @@ from typing import Dict, Tuple
 
 from ecoevo import types as tp
 from ecoevo.entities import ALL_ITEM_DATA
+from ecoevo.types import Action
 
 
 class Analyser(object):
@@ -11,14 +12,13 @@ class Analyser(object):
 
     @staticmethod
     def get_info(rewards: Dict[int, float], matched_deals: Dict[
-        tp.IdType, tp.DealType], food_consume: int, food_collect: int) -> Dict[str, int or float]:
+        tp.IdType, tp.DealType], actions_valid: Dict[int, Tuple[str, str]]) -> Dict[str, int or float]:
         """
         tarder parser
 
         :param rewards:  rewards dictionary, player id to reward
         :param matched_deals:  matched deals
-        :param food_consume:  total food consume times at current step
-        :param food_collect:  total food collect times at current step
+        :param actions_valid:  validated actions dictionary, player id to action tuple
 
         :return: trade_times:  total trade times
         """
@@ -36,8 +36,12 @@ class Analyser(object):
         for item in ALL_ITEM_DATA.keys():
             info['{}_trade_amount'.format(item)] = item_trade_amount[item]
 
+        # food consume times
+        food_consume = 0
+        for (action_type, action_item) in actions_valid:
+            if action_type == Action.consume and bool(ALL_ITEM_DATA[action_item]['disposable']):
+                food_consume += 1
         info['food_consume'] = food_consume
-        info['food_collect'] = food_collect
 
         return info
 
