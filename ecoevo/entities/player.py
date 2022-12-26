@@ -55,7 +55,7 @@ class Player(BaseModel):
             item_in_stomach.num += item_in_bag.consume_num
         else:
             item_in_stomach.num += item_in_bag.num
-        self.health = min(self.health + item_in_stomach.supply,
+        self.health = min(self.health + item_in_stomach.supply * item_in_stomach.num,
                           PlayerConfig.max_health)
 
     def next_pos(

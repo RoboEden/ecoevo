@@ -3,7 +3,7 @@ import random
 from loguru import logger
 from typing import Dict, List, Tuple, Optional
 
-from ecoevo.config import EnvConfig, MapConfig
+from ecoevo.config import EnvConfig, MapConfig, PlayerConfig
 from ecoevo.trader import Trader
 from ecoevo.reward import RewardParser
 from ecoevo.entities import EntityManager, Tile, Player, ALL_ITEM_DATA
@@ -22,6 +22,7 @@ class EcoEvo:
         self.trader = Trader(EnvConfig.trade_radius)
         self.reward_parser = RewardParser()
         self.players: List[Player] = []
+
         # Logging
         logger.remove()
         logger.add(sys.stderr, level=logging_level)
@@ -31,8 +32,8 @@ class EcoEvo:
     def num_player(self) -> int:
         return len(self.players)
 
-    @property
-    def all_item_names(self) -> list:
+    @staticmethod
+    def all_item_names() -> list:
         return list(ALL_ITEM_DATA.keys())
 
     def gettile(self, pos: tp.PosType) -> Optional[Tile]:
@@ -57,7 +58,9 @@ class EcoEvo:
 
         obs = {player.id: self.get_obs(player) for player in self.players}
         infos = {}
+
         self.ids = [player.id for player in self.players]
+
         return obs, infos
 
     def step(self, actions: List[tp.ActionType]) -> Tuple[
@@ -78,6 +81,7 @@ class EcoEvo:
 
         # execute
         random.shuffle(self.ids)
+        actions_valid = {}
         for id in self.ids:
             player = self.players[id]
             main_action, sell_offer, buy_offer = actions[player.id]
@@ -90,8 +94,13 @@ class EcoEvo:
                     player.trade_result = tp.TradeResult.failed
                 action = (main_action, None, None)
 
+            player.health = max(0, player.health - PlayerConfig.comsumption_per_step)
             if self.is_action_valid(player, actions[player.id]):
                 self.entity_manager.execute(player, action)
+
+                # validated actions
+                action_, _, _ = action
+                actions_valid[player.id] = action_
 
         # refresh items
         self.entity_manager.refresh_item()
@@ -100,17 +109,10 @@ class EcoEvo:
         rewards = {player.id: self.reward_parser.parse(player) for player in self.players}
         done = True if self.curr_step > EnvConfig.total_step else False
 
-        # save infos
-        trade_times, item_trade_times, item_trade_amount = Analyser.get_trade_data(matched_deals=matched_deals)
-        avr_reward = sum(rewards.values()) / len(rewards)
-        infos = {
-            'trade_times': trade_times, 
-            'item_trade_times': item_trade_times, 
-            'item_trade_amount': item_trade_amount, 
-            'avr_reward': avr_reward
-        }
+        # get info
+        info = Analyser.get_info(rewards=rewards, matched_deals=matched_deals, actions_valid=actions_valid)
 
-        return obs, rewards, done, infos
+        return obs, rewards, done, info
 
     def get_obs(self, player: Player) -> Dict[tp.PosType, Tile]:
         player_x, player_y = player.pos
