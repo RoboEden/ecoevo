@@ -4,7 +4,7 @@ from rich import print
 from ecoevo.entities.items import ALL_ITEM_DATA, load_item
 
 
-def get_info(player: Player, rw_parser: RewardParser, ndigits=4):
+def get_info(player: Player, rw_parser: RewardParser, ndigits=8):
     last_u = rw_parser.last_utilities[player.id]
     u = reward_parser.utility(player)
     cost = reward_parser.cost(player)
@@ -28,23 +28,24 @@ if __name__ == "__main__":
 
     # Consume
     for itm_name in player.stomach.dict():
-        player.stomach[itm_name].num += 1
+        player.stomach[itm_name].num += player.stomach[itm_name].harvest_num
         print(f"Consume a {itm_name}:", get_info(player, reward_parser))
 
     # Consume the same item multiple times
     for _ in range(10):
         itm_name = "gold"
-        player.stomach[itm_name].num += 1
+        player.stomach[itm_name].num += player.stomach[itm_name].harvest_num
         print(f"Consume a {itm_name}:", get_info(player, reward_parser))
 
     # Weight
     for itm_name in player.backpack.dict():
-        player.backpack[itm_name].num += 1
+        player.backpack[itm_name].num += player.stomach[itm_name].harvest_num
         print(f"Add a {itm_name}:", get_info(player, reward_parser))
 
     # Health
     while player.health > 0:
-        player.health -= 30
-        print(f"Player HP: {player.health}", get_info(player, reward_parser))
+        player.health -= 20
+        if player.health >= 0:
+            print(f"Player HP: {player.health}", get_info(player, reward_parser))
 
     print(f"Player HP: {player.health}", get_info(player, reward_parser))

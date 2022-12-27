@@ -1,7 +1,7 @@
 gold:
   id: 1
   supply: 0
-  refresh_time: 0
+  refresh_time: 1000000
   collect_time: 9
   capacity: 1
   harvest_num: 100
@@ -23,18 +23,18 @@ hazelnut:
 coral:
   id: 3
   supply: 0
-  refresh_time: 0
+  refresh_time: 1000000
   collect_time: 9
   capacity: 100
   harvest_num: 1
-  reserve_num: 5000
+  reserve_num: 50
   consume_num: 0
   expiry: 0
   disposable: False
 sand:
   id: 4
   supply: 0
-  refresh_time: 0
+  refresh_time: 1000000
   collect_time: 3
   capacity: 1
   harvest_num: 100
@@ -49,7 +49,7 @@ pineapple:
   collect_time: 9
   capacity: 100
   harvest_num: 1
-  reserve_num: 100
+  reserve_num: 1
   consume_num: 1
   expiry: 0
   disposable: True
@@ -67,11 +67,11 @@ peanut:
 stone:
   id: 7
   supply: 0
-  refresh_time: 0
+  refresh_time: 1000000
   collect_time: 3
   capacity: 100
   harvest_num: 1
-  reserve_num: 15000
+  reserve_num: 150
   consume_num: 0
   expiry: 0
   disposable: False
@@ -82,7 +82,7 @@ pumpkin:
   collect_time: 3
   capacity: 100
   harvest_num: 1
-  reserve_num: 100
+  reserve_num: 1
   consume_num: 1
   expiry: 0
   disposable: True

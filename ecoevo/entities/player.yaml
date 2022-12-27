@@ -1,13 +1,13 @@
 gold_digger:
   preference:
-    gold: 0.00005
-    hazelnut: 0.00005
-    coral: 0.00005
-    sand: 0.000015
-    pineapple: 0.00005
-    peanut: 0.000015
-    stone: 0.000015
-    pumpkin: 0.000015
+    gold: 0.05
+    hazelnut: 0.05
+    coral: 0.05
+    sand: 0.015
+    pineapple: 0.05
+    peanut: 0.015
+    stone: 0.015
+    pumpkin: 0.015
   ability:
     gold: 3
     hazelnut: 9
@@ -19,14 +19,14 @@ gold_digger:
     pumpkin: 3
 hazelnut_farmer:
   preference:
-    gold: 0.00005
-    hazelnut: 0.00005
-    coral: 0.00005
-    sand: 0.000015
-    pineapple: 0.00005
-    peanut: 0.000015
-    stone: 0.000015
-    pumpkin: 0.000015
+    gold: 0.05
+    hazelnut: 0.05
+    coral: 0.05
+    sand: 0.015
+    pineapple: 0.05
+    peanut: 0.015
+    stone: 0.015
+    pumpkin: 0.015
   ability:
     gold: 9
     hazelnut: 3
@@ -38,14 +38,14 @@ hazelnut_farmer:
     pumpkin: 3
 coral_collector:
   preference:
-    gold: 0.00005
-    hazelnut: 0.00005
-    coral: 0.00005
-    sand: 0.000015
-    pineapple: 0.00005
-    peanut: 0.000015
-    stone: 0.000015
-    pumpkin: 0.000015
+    gold: 0.05
+    hazelnut: 0.05
+    coral: 0.05
+    sand: 0.015
+    pineapple: 0.05
+    peanut: 0.015
+    stone: 0.015
+    pumpkin: 0.015
   ability:
     gold: 9
     hazelnut: 9
@@ -57,14 +57,14 @@ coral_collector:
     pumpkin: 3
 sand_picker:
   preference:
-    gold: 0.00005
-    hazelnut: 0.00005
-    coral: 0.00005
-    sand: 0.000015
-    pineapple: 0.00005
-    peanut: 0.000015
-    stone: 0.000015
-    pumpkin: 0.000015
+    gold: 0.05
+    hazelnut: 0.05
+    coral: 0.05
+    sand: 0.015
+    pineapple: 0.05
+    peanut: 0.015
+    stone: 0.015
+    pumpkin: 0.015
   ability:
     gold: 9
     hazelnut: 9
@@ -76,14 +76,14 @@ sand_picker:
     pumpkin: 3
 pineapple_farmer:
   preference:
-    gold: 0.00005
-    hazelnut: 0.00005
-    coral: 0.00005
-    sand: 0.000015
-    pineapple: 0.00005
-    peanut: 0.000015
-    stone: 0.000015
-    pumpkin: 0.000015
+    gold: 0.05
+    hazelnut: 0.05
+    coral: 0.05
+    sand: 0.015
+    pineapple: 0.05
+    peanut: 0.015
+    stone: 0.015
+    pumpkin: 0.015
   ability:
     gold: 9
     hazelnut: 9
@@ -95,14 +95,14 @@ pineapple_farmer:
     pumpkin: 3 
 peanut_farmer:
   preference:
-    gold: 0.00005
-    hazelnut: 0.00005
-    coral: 0.00005
-    sand: 0.000015
-    pineapple: 0.00005
-    peanut: 0.000015
-    stone: 0.000015
-    pumpkin: 0.000015
+    gold: 0.05
+    hazelnut: 0.05
+    coral: 0.05
+    sand: 0.015
+    pineapple: 0.05
+    peanut: 0.015
+    stone: 0.015
+    pumpkin: 0.015
   ability:
     gold: 9
     hazelnut: 9
@@ -114,14 +114,14 @@ peanut_farmer:
     pumpkin: 3
 stone_picker:
   preference:
-    gold: 0.00005
-    hazelnut: 0.00005
-    coral: 0.00005
-    sand: 0.000015
-    pineapple: 0.00005
-    peanut: 0.000015
-    stone: 0.000015
-    pumpkin: 0.000015
+    gold: 0.05
+    hazelnut: 0.05
+    coral: 0.05
+    sand: 0.015
+    pineapple: 0.05
+    peanut: 0.015
+    stone: 0.015
+    pumpkin: 0.015
   ability:
     gold: 9
     hazelnut: 9
@@ -133,14 +133,14 @@ stone_picker:
     pumpkin: 3
 pumpkin_farmer:
   preference:
-    gold: 0.00005
-    hazelnut: 0.00005
-    coral: 0.00005
-    sand: 0.000015
-    pineapple: 0.00005
-    peanut: 0.000015
-    stone: 0.000015
-    pumpkin: 0.000015
+    gold: 0.05
+    hazelnut: 0.05
+    coral: 0.05
+    sand: 0.015
+    pineapple: 0.05
+    peanut: 0.015
+    stone: 0.015
+    pumpkin: 0.015
   ability:
     gold: 9
     hazelnut: 9
