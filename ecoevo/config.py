@@ -26,13 +26,13 @@ class MapConfig:
 
 class PlayerConfig:
     max_health = 100
-    comsumption_per_step = 10
+    comsumption_per_step = 1
 
 
 class RewardConfig:
     threshold = 0
     weight_coef = 0.0001
-    penalty = 1
+    penalty = 0
     rho = 0.5
 
 
