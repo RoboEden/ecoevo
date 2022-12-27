@@ -110,7 +110,16 @@ class EcoEvo:
         done = True if self.curr_step > EnvConfig.total_step else False
 
         # get info
-        info = Analyser.get_info(rewards=rewards, matched_deals=matched_deals, actions_valid=actions_valid)
+        dict_reward_info = {
+            player.id: {
+                'reward': rewards[player.id], 
+                'utility': self.reward_parser.last_utilities[player.id], 
+                'cost': self.reward_parser.last_costs[player.id]} 
+            for player in self.players
+        }
+        info = Analyser.get_info(
+            done=done, players=self.players, 
+            dict_reward_info=dict_reward_info, matched_deals=matched_deals, actions_valid=actions_valid)
 
         return obs, rewards, done, info
 

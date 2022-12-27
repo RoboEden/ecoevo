@@ -27,11 +27,16 @@ class Trader(object):
         self.mat_if_match, self.mat_volume = [[]], [[]]
         self.list_match = []
 
-    def filter_legal_deals(
-        self,
-        players: List[Player],
-        actions: List[tp.ActionType],
-    ) -> Dict[tp.IdType, tp.DealType]:
+    def filter_legal_deals(self, players: List[Player], actions: List[tp.ActionType]) -> Dict[tp.IdType, tp.DealType]:
+        """
+        tarder parser
+
+        :param players:  list of players
+        :param actions:  list of actions
+
+        :return: legal_deals:  dict of legal deals
+        """
+
         legal_deals = {}
 
         for player in players:
@@ -45,11 +50,15 @@ class Trader(object):
 
             sell_item_name, sell_num = sell_offer
             buy_item_name, buy_num = buy_offer
-            if not sell_num < 0:
+            if sell_item_name == buy_item_name:
+                player.trade_result = tp.TradeResult.illegal
+                logger.debug(f'Invalid: sell item is the same as buy item {sell_item_name}')
+                continue
+            if sell_num >= 0:
                 player.trade_result = tp.TradeResult.illegal
                 logger.debug(f'Invalid sell_num {sell_num}, should be < 0')
                 continue
-            if not buy_num > 0:
+            if buy_num <= 0:
                 player.trade_result = tp.TradeResult.illegal
                 logger.debug(f'Invalid buy_num {buy_num}, should be > 0')
                 continue
