@@ -54,11 +54,11 @@ class Trader(object):
                 player.trade_result = tp.TradeResult.illegal
                 logger.debug(f'Invalid: sell item is the same as buy item {sell_item_name}')
                 continue
-            if not sell_num < 0:
+            if sell_num >= 0:
                 player.trade_result = tp.TradeResult.illegal
                 logger.debug(f'Invalid sell_num {sell_num}, should be < 0')
                 continue
-            if not buy_num > 0:
+            if buy_num <= 0:
                 player.trade_result = tp.TradeResult.illegal
                 logger.debug(f'Invalid buy_num {buy_num}, should be > 0')
                 continue

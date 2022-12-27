@@ -1,8 +1,8 @@
 
-from typing import Dict, Tuple
+from typing import List, Dict, Tuple
 
 from ecoevo import types as tp
-from ecoevo.entities import ALL_ITEM_DATA
+from ecoevo.entities import Player, ALL_ITEM_DATA
 from ecoevo.types import Action
 
 
@@ -11,22 +11,27 @@ class Analyser(object):
         pass
 
     @staticmethod
-    def get_info(rewards: Dict[int, float], matched_deals: Dict[
+    def get_info(done: bool, players: List[Player], dict_reward_info: Dict[int, Dict], matched_deals: Dict[
         tp.IdType, tp.DealType], actions_valid: Dict[int, Tuple[str, str]]) -> Dict[str, int or float]:
         """
         tarder parser
 
-        :param rewards:  rewards dictionary, player id to reward
+        :param done:  if episode done
+        :param players:  list of all players
+        :param dict_reward_info:  reward info dictionary: rewards, utilities and costs
         :param matched_deals:  matched deals
         :param actions_valid:  validated actions dictionary, player id to action tuple
 
-        :return: trade_times:  total trade times
+        :return: info:  info of current step
         """
 
-        info = {}
+        rewards = {pid: dict_reward_info[pid]['reward'] for pid in dict_reward_info}
+        utilities = {pid: dict_reward_info[pid]['utility'] for pid in dict_reward_info}
+        costs = {pid: dict_reward_info[pid]['cost'] for pid in dict_reward_info}
 
-        sum_reward = sum(rewards.values())
-        info['sum_reward'] = sum_reward
+        info = {}
+        info['sum_reward'] = sum(rewards.values())
+        info['sum_cost'] = sum(costs.values())
 
         # trade info
         trade_times, item_trade_times, item_trade_amount = Analyser.get_trade_data(matched_deals=matched_deals)
@@ -36,13 +41,27 @@ class Analyser(object):
         for item in ALL_ITEM_DATA.keys():
             info['{}_trade_amount'.format(item)] = item_trade_amount[item]
 
-        # food consume times
-        food_consume = 0
+        # consume times
+        for item in ALL_ITEM_DATA.keys():
+            info['{}_consume_times'.format(item)] = 0
         for pid in actions_valid:
             (action_type, action_item) = actions_valid[pid]
-            if action_type == Action.consume and bool(ALL_ITEM_DATA[action_item]['disposable']):
-                food_consume += 1
-        info['food_consume'] = food_consume
+            if action_type == Action.consume:
+                info['{}_consume_times'.format(action_item)] += 1
+
+        # final consume amount
+        for item in ALL_ITEM_DATA.keys():
+            info['{}_consume_amount'.format(item)] = 0
+        if done:
+            for player in players:
+                info['{}_consume_amount'.format(action_item)] += player.stomach[action_item].num
+
+        # final utility
+        info['final_avr_utility'], info['final_max_utility'], info['final_min_utility'] = 0, 0, 0
+        if done:
+            info['final_avr_utility'] = sum(utilities.values()) / len(players)
+            info['final_max_utility'] = max(utilities.values())
+            info['final_min_utility'] = min(utilities.values())
 
         return info
 

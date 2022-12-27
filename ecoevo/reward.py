@@ -16,7 +16,6 @@ class RewardParser:
     def __init__(self) -> None:
         self.player_types = list(ALL_PERSONAE.keys())
         self.item_names = list(ALL_ITEM_DATA.keys())
-        self.last_utilities = {}
 
         # get alphas
         self.alphas = {
@@ -25,8 +24,12 @@ class RewardParser:
             for player_type in ALL_PERSONAE
         }
 
+        self.last_utilities = {}
+        self.last_costs = {}
+
     def reset(self) -> None:
         self.last_utilities = {}
+        self.last_costs = {}
 
     def utility(self, player: Player) -> float:
         alpha = self.alphas[player.persona]
@@ -41,19 +44,17 @@ class RewardParser:
         return cost
 
     def parse(self, player: Player) -> float:
-        # Utility
+        # utility
         u = self.utility(player)
-        if player.id not in self.last_utilities:
-            last_u = u
-        else:
-            last_u = self.last_utilities[player.id]
+        last_u = self.last_utilities[player.id] if player.id in self.last_utilities else u
         du = u - last_u
         self.last_utilities[player.id] = u
 
-        # Cost
+        # cost
         cost = self.cost(player)
+        self.last_costs[player.id] = u
 
-        # Reward
+        # reward
         reward = du - cost
 
         return reward
