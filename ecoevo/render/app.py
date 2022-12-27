@@ -5,6 +5,7 @@ from ecoevo.config import MapConfig
 from ecoevo.render.web_render import WebRender
 from ecoevo.render import Dash, dash_table, html, dcc, Output, Input, State
 from ecoevo.render import dash_bootstrap_components as dbc
+from ecoevo.render import print
 
 dbc_css = "https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates/dbc.min.css"
 app = Dash(__name__, external_stylesheets=[dbc.themes.DARKLY, dbc_css])
@@ -123,19 +124,12 @@ df = pd.read_csv(
 table = html.Div([
     dash_table.DataTable(
         id='datatable-interactivity',
-        columns=[{
-            "name": i,
-            "id": i,
-            "deletable": True,
-            "selectable": True
-        } for i in df.columns],
-        data=df.to_dict('records'),
         editable=True,
         filter_action="native",
         sort_action="native",
         sort_mode="multi",
         column_selectable="single",
-        row_selectable="multi",
+        row_selectable=False,
         row_deletable=True,
         selected_columns=[],
         selected_rows=[],
@@ -151,7 +145,6 @@ table = html.Div([
             'color': 'white'
         },
     ),
-    # html.Div(id='datatable-interactivity-container')
 ])
 
 app.layout = html.Div([
@@ -177,21 +170,47 @@ def update_styles(selected_columns):
     } for i in selected_columns]
 
 
-@app.callback(Output('selected-data', 'children'),
+@app.callback(Output('datatable-interactivity', 'data'),
+              Output('datatable-interactivity', 'columns'),
               Input('game-screen', 'selectedData'))
 def display_selected_data(selectedData):
+    columns_name = [
+        'persona',
+        'id',
+        'pos',
+        'health',
+        'trade_result',
+    ]
+
+    columns = [{
+        "name": i,
+        "id": i,
+        "deletable": False,
+        "selectable": False
+    } for i in columns_name]
+
     _data = json.dumps(selectedData, indent=2)
     _data = json.loads(_data)
     if _data is None:
-        return _data
+        return _data, columns
     _data = _data['points']
-    ids = []
+    selected_players = []
     for d in _data:
         custom_data = d['customdata']
         if custom_data[0] in web_render.player_to_emoji.keys():
             id = custom_data[1]
-            ids.append(id)
-    return str(ids)
+            player = env.players[id]
+            assert player.id == id
+            player_dict = player.dict()
+            del player_dict['backpack']
+            del player_dict['stomach']
+            del player_dict['collect_remain']
+            selected_players.append(player_dict)
+
+    df = pd.DataFrame(selected_players)
+    data = df.to_dict('records')
+    print(data)
+    return data, columns
 
 
 @app.callback(
