@@ -32,18 +32,68 @@ def column_container(components: list):
 
 
 reset_button = dcc.ConfirmDialogProvider(children=html.Button(
-    'Reset game', className="btn btn-secondary"),
+    'Reset game', className="btn btn-danger"),
                                          id='reset-danger-button',
                                          message='Reset game?')
 step_button = html.Button('Step',
                           id='step-button-state',
-                          className="btn btn-primary")
+                          className="btn btn-success")
 write_button = html.Button('Write',
                            id='write-button-state',
-                           className="btn btn-light")
+                           className="btn btn-primary")
 
 item_list = ['None'] + env.all_item_names
+columns_name = [
+    'id',
+    'primary action',
+    'secondary action',
+    'sell offer',
+    'buy offer',
+]
+
+columns = [{
+    "name": i,
+    "id": i,
+    "deletable": False,
+    "selectable": False
+} for i in columns_name]
+
 control_panel = html.Div([
+    html.Div('Control Panel', className="card-header"),
+    html.Label('Selected players'),
+    html.Div([
+        dash_table.DataTable(
+            columns=columns,
+            id='datatable-interactivity',
+            virtualization=True,
+            editable=True,
+            sort_action="native",
+            sort_mode="multi",
+            column_selectable="single",
+            row_selectable=False,
+            row_deletable=True,
+            selected_columns=[],
+            selected_rows=[],
+            style_header={
+                'backgroundColor': 'rgb(30, 30, 30)',
+                'color': 'white'
+            },
+            style_data={
+                'backgroundColor': 'rgb(50, 50, 50)',
+                'color': 'white'
+            },
+            page_action='none',
+            style_table={
+                'height': '300px',
+                'overflowY': 'auto'
+            },
+        )
+    ],
+             className='card border-secondary mb-3',
+             style={
+                 'padding': 10,
+                 'flex': 1
+             }),
     html.Label('Main action'),
     column_container([
         dcc.Dropdown(
@@ -74,7 +124,6 @@ control_panel = html.Div([
         ),
         dcc.Dropdown([], id='secondary-action-state'),
     ]),
-    html.Br(),
     html.Label('Sell offer'),
     dcc.Slider(min=0,
                max=len(item_list) - 1,
@@ -83,9 +132,7 @@ control_panel = html.Div([
                value=0,
                step=1,
                id='sell-item-state'),
-    html.Br(),
     html.Label('Buy offer'),
-    html.Br(),
     dcc.Slider(min=0,
                max=len(item_list) - 1,
                marks={i: item_name
@@ -93,8 +140,13 @@ control_panel = html.Div([
                value=0,
                step=1,
                id='sell-num-state'),
+    write_button,
 ],
-                         className="dbc")
+                         className='dbc card border-dark mb-3',
+                         style={
+                             'padding': 10,
+                             'flex': 1
+                         })
 
 game_screen = html.Center([
     dcc.Graph(id='game-screen', figure=fig, config={'displaylogo': False}),
@@ -104,58 +156,15 @@ game_screen = html.Center([
 ],
                           className="dbc")
 
-columns_name = [
-    'primary action',
-    'secondary_action',
-    'sell offer',
-    'buy offer',
-]
-
-columns = [{
-    "name": i,
-    "id": i,
-    "deletable": False,
-    "selectable": False
-} for i in columns_name]
-
-table = html.Div([
-    dash_table.DataTable(
-        columns=columns,
-        id='datatable-interactivity',
-        editable=True,
-        filter_action="native",
-        sort_action="native",
-        sort_mode="multi",
-        column_selectable="single",
-        row_selectable=False,
-        row_deletable=True,
-        selected_columns=[],
-        selected_rows=[],
-        page_action="native",
-        page_current=0,
-        page_size=10,
-        style_header={
-            'backgroundColor': 'rgb(30, 30, 30)',
-            'color': 'white'
-        },
-        style_data={
-            'backgroundColor': 'rgb(50, 50, 50)',
-            'color': 'white'
-        },
-    ),
-])
-
 app.layout = column_container([
     html.Div(),
     html.Div([
         game_screen,
-        column_container([step_button, reset_button]),
+        column_container([reset_button, step_button]),
     ]),
-    html.Div([table, control_panel, write_button]),
+    control_panel,
     html.Div(),
 ])
-
-default_actions = [(('idle', None), None, None) for i in range(128)]
 
 # @app.callback(Output('datatable-interactivity', 'style_data_conditional'),
 #               Input('datatable-interactivity', 'selected_columns'))
@@ -167,6 +176,8 @@ default_actions = [(('idle', None), None, None) for i in range(128)]
 #         'background_color': '#D2F3FF'
 #     } for i in selected_columns]
 
+default_actions = [(('idle', None), None, None) for i in range(128)]
+
 
 @app.callback(
     Output('datatable-interactivity', 'data'),
@@ -176,43 +187,41 @@ default_actions = [(('idle', None), None, None) for i in range(128)]
     State('primary-action-state', 'value'),
     State('secondary-action-state', 'value'),
 )
-def display_selected_actions(selectedData, write_n_clicks,
-                             primary_action: Optional[str],
-                             secondary_action: Optional[str]):
+def control_panel_logic(selectedData, write_n_clicks,
+                        primary_action: Optional[str],
+                        secondary_action: Optional[str]):
     global default_actions
-    _data = json.loads(json.dumps(selectedData, indent=2))
-    if _data is None:
-        return None, 0
-
-    _data = _data['points']
-
     ids = []
-    for d in _data:
-        custom_data = d['customdata']
-        if custom_data[0] in web_render.player_to_emoji.keys():
-            id = custom_data[1]
-            ids.append(id)
-
-    if write_n_clicks:  # 0 or 1
-        # parse main action
-        if primary_action: primary_action = primary_action.lower()
-        if secondary_action: secondary_action = secondary_action.lower()
-        action_to_write = ((primary_action, secondary_action), None, None)
-        for id in ids:
-            default_actions[id] = action_to_write
-    # display from default_actions
-
     selected_actions = []
-    for id in ids:
-        _action = default_actions[id]
-        main_action, sell_offer, buy_offer = _action
-        primary_action, secondary_action = main_action
-        selected_actions.append({
-            'primary action': primary_action,
-            'secondary_action': secondary_action,
-            'sell offer': sell_offer,
-            'buy offer': buy_offer,
-        })
+    _data = json.loads(json.dumps(selectedData, indent=2))
+    if _data is not None:
+        _data = _data['points']
+        for d in _data:
+            custom_data = d['customdata']
+            if custom_data[0] in web_render.player_to_emoji.keys():
+                id = custom_data[1]
+                ids.append(id)
+
+        if write_n_clicks:  # 0 or 1
+            # parse main action
+            if primary_action: primary_action = primary_action.lower()
+            if secondary_action: secondary_action = secondary_action.lower()
+            action_to_write = ((primary_action, secondary_action), None, None)
+            for id in ids:
+                default_actions[id] = action_to_write
+        # display from default_actions
+
+        for id in ids:
+            _action = default_actions[id]
+            main_action, sell_offer, buy_offer = _action
+            primary_action, secondary_action = main_action
+            selected_actions.append({
+                'id': id,
+                'primary action': primary_action,
+                'secondary_action': secondary_action,
+                'sell offer': sell_offer,
+                'buy offer': buy_offer,
+            })
 
     return selected_actions, 0
 
