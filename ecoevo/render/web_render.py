@@ -64,10 +64,11 @@ class WebRender:
                 textfont_size=18,
                 textposition="middle center",
                 hovertemplate=
-                """%{customdata[0]}<br>Id: %{customdata[1]}<extra></extra>"""
-            ), )
+                """%{customdata[0]}<br>Id: %{customdata[1]}<extra></extra>"""),
+        )
 
         self.fig.update_layout(
+            clickmode='event+select',
             dragmode='lasso',
             modebar_remove=[
                 'pan', 'zoom', 'zoomin', 'zoomout', 'resetscale', 'autoscale'
@@ -84,7 +85,6 @@ class WebRender:
         )
         self.fig.update_xaxes(visible=False)
         self.fig.update_yaxes(visible=False)
-        self.fig.update_layout(clickmode='event+select')
 
     def update(self, map: Dict[PosType, Tile]):
         self.update_item_trace(map)

@@ -1,16 +1,18 @@
 import json
 from typing import Optional
 from ecoevo import EcoEvo
-from ecoevo.config import MapConfig
+from ecoevo.config import EnvConfig, MapConfig
 from ecoevo.render.web_render import WebRender
 from ecoevo.render import Dash, dash_table, html, dcc, Output, Input, State
+from ecoevo.render import graph_objects as go
 from ecoevo.render import dash_bootstrap_components as dbc
 
 dbc_css = "https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates/dbc.min.css"
 app = Dash(__name__, external_stylesheets=[dbc.themes.DARKLY, dbc_css])
 
 web_render = WebRender(MapConfig.width, MapConfig.height)
-fig = web_render.fig
+obs_render = WebRender(2 * EnvConfig.visual_radius + 1,
+                       2 * EnvConfig.visual_radius + 1)
 
 env = EcoEvo(logging_level='CRITICAL')
 obs, infos = env.reset()
@@ -58,6 +60,27 @@ columns = [{
     "selectable": False
 } for i in columns_name]
 
+info_panel = html.Div([
+    html.Div('Info Panel', className="card-header"),
+    html.Label('Basic info'),
+    html.Div('', id='basic-provider'),
+    html.Label('Backpack & Stomach'),
+    html.Div('', id='backpack-stomach-provider'),
+    html.Label('Persona Details'),
+    html.Div('', id='preference-provider'),
+    html.Label('Obs'),
+    html.Div('', id='obs-provider'),
+    html.Label('Reward'),
+    html.Div('', id='reward-provider'),
+    html.Label('Info'),
+    html.Div('', id='info-provider'),
+],
+                      className='card border-secondary mb-3',
+                      style={
+                          'padding': 10,
+                          'flex': 1
+                      })
+
 control_panel = html.Div([
     html.Div('Control Panel', className="card-header"),
     html.Label('Selected players'),
@@ -65,7 +88,6 @@ control_panel = html.Div([
         dash_table.DataTable(
             columns=columns,
             id='datatable-interactivity',
-            virtualization=True,
             editable=True,
             sort_action="native",
             sort_mode="multi",
@@ -84,7 +106,7 @@ control_panel = html.Div([
             },
             page_action='none',
             style_table={
-                'height': '300px',
+                'height': 400,
                 'overflowY': 'auto'
             },
         )
@@ -147,9 +169,10 @@ control_panel = html.Div([
                              'padding': 10,
                              'flex': 1
                          })
-
 game_screen = html.Center([
-    dcc.Graph(id='game-screen', figure=fig, config={'displaylogo': False}),
+    dcc.Graph(id='game-screen',
+              figure=web_render.fig,
+              config={'displaylogo': False}),
     html.Br(),
     html.Div(id='output-provider'),
     html.Br(),
@@ -157,14 +180,14 @@ game_screen = html.Center([
                           className="dbc")
 
 app.layout = column_container([
-    html.Div(),
+    info_panel,
     html.Div([
         game_screen,
         column_container([reset_button, step_button]),
     ]),
     control_panel,
-    html.Div(),
 ])
+
 
 # @app.callback(Output('datatable-interactivity', 'style_data_conditional'),
 #               Input('datatable-interactivity', 'selected_columns'))
@@ -175,57 +198,6 @@ app.layout = column_container([
 #         },
 #         'background_color': '#D2F3FF'
 #     } for i in selected_columns]
-
-default_actions = [(('idle', None), None, None) for i in range(128)]
-
-
-@app.callback(
-    Output('datatable-interactivity', 'data'),
-    Output('write-button-state', 'n_clicks'),
-    Input('game-screen', 'selectedData'),
-    Input('write-button-state', 'n_clicks'),
-    State('primary-action-state', 'value'),
-    State('secondary-action-state', 'value'),
-)
-def control_panel_logic(selectedData, write_n_clicks,
-                        primary_action: Optional[str],
-                        secondary_action: Optional[str]):
-    global default_actions
-    ids = []
-    selected_actions = []
-    _data = json.loads(json.dumps(selectedData, indent=2))
-    if _data is not None:
-        _data = _data['points']
-        for d in _data:
-            custom_data = d['customdata']
-            if custom_data[0] in web_render.player_to_emoji.keys():
-                id = custom_data[1]
-                ids.append(id)
-
-        if write_n_clicks:  # 0 or 1
-            # parse main action
-            if primary_action: primary_action = primary_action.lower()
-            if secondary_action: secondary_action = secondary_action.lower()
-            action_to_write = ((primary_action, secondary_action), None, None)
-            for id in ids:
-                default_actions[id] = action_to_write
-        # display from default_actions
-
-        for id in ids:
-            _action = default_actions[id]
-            main_action, sell_offer, buy_offer = _action
-            primary_action, secondary_action = main_action
-            selected_actions.append({
-                'id': id,
-                'primary action': primary_action,
-                'secondary_action': secondary_action,
-                'sell offer': sell_offer,
-                'buy offer': buy_offer,
-            })
-
-    return selected_actions, 0
-
-
 @app.callback(
     Output('secondary-action-state', 'options'),
     Input('primary-action-state', 'value'),
@@ -258,6 +230,168 @@ def bind_action(primary_action):
         return []
 
 
+default_actions = [(('idle', None), None, None) for i in range(128)]
+obs = [None] * env.num_player
+rewards = [0.0] * env.num_player
+info = [{}] * env.num_player
+
+
+@app.callback(
+    Output('datatable-interactivity', 'data'),
+    Output('write-button-state', 'n_clicks'),
+    Input('game-screen', 'selectedData'),
+    Input('write-button-state', 'n_clicks'),
+    State('primary-action-state', 'value'),
+    State('secondary-action-state', 'value'),
+)
+def control_panel_logic(selectedData, write_n_clicks,
+                        primary_action: Optional[str],
+                        secondary_action: Optional[str]):
+    global default_actions
+    ids = []
+    selected_actions = []
+    _data = json.loads(json.dumps(selectedData))
+    if _data is not None:
+        _data = _data['points']
+        for d in _data:
+            custom_data = d['customdata']
+            if custom_data[0] in web_render.player_to_emoji.keys():
+                id = custom_data[1]
+                ids.append(id)
+
+        if write_n_clicks:  # 0 or 1
+            # parse main action
+            if primary_action: primary_action = primary_action.lower()
+            if secondary_action: secondary_action = secondary_action.lower()
+            action_to_write = ((primary_action, secondary_action), None, None)
+            for id in ids:
+                default_actions[id] = action_to_write
+        # display from default_actions
+
+        for id in ids:
+            _action = default_actions[id]
+            main_action, sell_offer, buy_offer = _action
+            primary_action, secondary_action = main_action
+            selected_actions.append({
+                'id': id,
+                'primary action': primary_action,
+                'secondary action': secondary_action,
+                'sell offer': sell_offer,
+                'buy offer': buy_offer,
+            })
+
+    return selected_actions, 0
+
+
+@app.callback(
+    Output('basic-provider', 'children'),
+    Output('preference-provider', 'children'),
+    Output('backpack-stomach-provider', 'children'),
+    Output('obs-provider', 'children'),
+    Output('reward-provider', 'children'),
+    Output('info-provider', 'children'),
+    Input('game-screen', 'selectedData'),
+)
+def info_panel_logic(selectedData):
+    basic = None
+    preference = None
+    backpack_stomach_fig = None
+    stomack_fig = None
+    local_obs = None
+    myreward = None
+    myinfo = None
+    _data = json.loads(json.dumps(selectedData, indent=2))
+    if _data is not None and len(_data['points']):
+        custom_data = _data['points'][0]['customdata']
+        if custom_data[0] in web_render.player_to_emoji.keys():
+            id = custom_data[1]
+            player = env.players[id]
+            assert player.id == id, 'env.player is shuffled! Only env.ids can be shuffled.'
+
+            # basic
+            basic = dbc.Table(
+                [
+                    html.Thead(
+                        html.Tr([
+                            html.Th("persona"),
+                            html.Th("id"),
+                            html.Th("pos"),
+                            html.Th("health"),
+                            html.Th("collect remain"),
+                            html.Th("trade result"),
+                        ])),
+                    html.Tbody([
+                        html.Tr([
+                            html.Td(player.persona),
+                            html.Td(player.id),
+                            html.Td(player.pos),
+                            html.Td(player.health),
+                            html.Td(player.collect_remain),
+                            html.Td(player.trade_result),
+                        ])
+                    ])
+                ],
+                bordered=True,
+                dark=True,
+                hover=True,
+                responsive=True,
+                striped=True,
+            )
+
+            # plot radar
+            categories = list(player.preference.keys())
+            fig = go.Figure()
+            fig.add_trace(
+                go.Scatterpolar(
+                    r=[v * 1e5 for v in player.preference.values()],
+                    theta=categories,
+                    fill='toself',
+                    name='preference'))
+            fig.add_trace(
+                go.Scatterpolar(r=list(player.ability.values()),
+                                theta=categories,
+                                fill='toself',
+                                name='ability'))
+            fig.update_layout(
+                width=400,
+                height=300,
+                font_color="white",
+                paper_bgcolor="#303030",
+                plot_bgcolor="#e9e9e9",
+                polar=dict(radialaxis=dict(visible=True, range=[0, 10])),
+                showlegend=True)
+
+            preference = dcc.Graph(figure=fig, config={'displaylogo': False})
+
+            # backpack figs
+            fig = go.Figure(data=[
+                go.Bar(
+                    name='Backpack',
+                    x=[item.name for item in player.backpack.dict().values()],
+                    y=[item.num for item in player.backpack.dict().values()]),
+                go.Bar(
+                    name='Stomach',
+                    x=[item.name for item in player.stomach.dict().values()],
+                    y=[item.num for item in player.stomach.dict().values()])
+            ])
+            fig.update_layout(barmode='group',
+                              width=400,
+                              height=300,
+                              yaxis_range=[0, 100],
+                              font_color="white",
+                              paper_bgcolor="#303030",
+                              plot_bgcolor="#e9e9e9")
+            backpack_stomach_fig = dcc.Graph(figure=fig,
+                                             config={'displaylogo': False})
+
+            # obs_render.update(obs[id])
+            # local_obs = dcc.Graph(obs_render.fig)
+            myreward = rewards[id]
+            myinfo = html.Pre(json.dumps(info[id], indent=2))
+
+    return basic, preference, backpack_stomach_fig, local_obs, myreward, myinfo
+
+
 @app.callback(
     Output('game-screen', 'figure'),
     Output('output-provider', 'children'),
@@ -265,7 +399,8 @@ def bind_action(primary_action):
     Input('step-button-state', 'n_clicks'),
     Input('reset-danger-button', 'submit_n_clicks'),
 )
-def game_step(step_n_clicks, reset_n_clicks):
+def game_screen_logic(step_n_clicks, reset_n_clicks):
+    global obs, rewards, infos
     reset_msg = u'Ready to play!'
     step_msg = u'Current Step {}'.format(step_n_clicks)
     if reset_n_clicks:  # 0 or 1
