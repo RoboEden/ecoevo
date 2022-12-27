@@ -5,7 +5,6 @@ from ecoevo.config import MapConfig
 from ecoevo.render.web_render import WebRender
 from ecoevo.render import Dash, dash_table, html, dcc, Output, Input, State
 from ecoevo.render import dash_bootstrap_components as dbc
-from ecoevo.render import print
 
 dbc_css = "https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates/dbc.min.css"
 app = Dash(__name__, external_stylesheets=[dbc.themes.DARKLY, dbc_css])
@@ -39,6 +38,10 @@ reset_button = dcc.ConfirmDialogProvider(children=html.Button(
 step_button = html.Button('Step',
                           id='step-button-state',
                           className="btn btn-primary")
+write_button = html.Button('Write',
+                           id='write-button-state',
+                           className="btn btn-light")
+
 item_list = ['None'] + env.all_item_names
 control_panel = html.Div([
     html.Label('Main action'),
@@ -101,28 +104,23 @@ game_screen = html.Center([
 ],
                           className="dbc")
 
-selected_data = html.Div([
-    dcc.Markdown("""
-                **Selection Data**
+columns_name = [
+    'primary action',
+    'secondary_action',
+    'sell offer',
+    'buy offer',
+]
 
-                Choose the lasso or rectangle tool in the graph's menu
-                bar and then select points in the graph.
-
-                Note that if `layout.clickmode = 'event+select'`, selection data also
-                accumulates (or un-accumulates) selected data if you hold down the shift
-                button while clicking.
-            """),
-    html.Pre(id='selected-data'),
-])
-
-import pandas as pd
-
-df = pd.read_csv(
-    'https://raw.githubusercontent.com/plotly/datasets/master/gapminder2007.csv'
-)
+columns = [{
+    "name": i,
+    "id": i,
+    "deletable": False,
+    "selectable": False
+} for i in columns_name]
 
 table = html.Div([
     dash_table.DataTable(
+        columns=columns,
         id='datatable-interactivity',
         editable=True,
         filter_action="native",
@@ -147,70 +145,76 @@ table = html.Div([
     ),
 ])
 
-app.layout = html.Div([
-    game_screen,
-    control_panel,
-    column_container([
-        step_button,
-        reset_button,
+app.layout = column_container([
+    html.Div(),
+    html.Div([
+        game_screen,
+        column_container([step_button, reset_button]),
     ]),
-    selected_data,
-    table,
+    html.Div([table, control_panel, write_button]),
+    html.Div(),
 ])
 
+default_actions = [(('idle', None), None, None) for i in range(128)]
 
-@app.callback(Output('datatable-interactivity', 'style_data_conditional'),
-              Input('datatable-interactivity', 'selected_columns'))
-def update_styles(selected_columns):
-    return [{
-        'if': {
-            'column_id': i
-        },
-        'background_color': '#D2F3FF'
-    } for i in selected_columns]
+# @app.callback(Output('datatable-interactivity', 'style_data_conditional'),
+#               Input('datatable-interactivity', 'selected_columns'))
+# def update_styles(selected_columns):
+#     return [{
+#         'if': {
+#             'column_id': i
+#         },
+#         'background_color': '#D2F3FF'
+#     } for i in selected_columns]
 
 
-@app.callback(Output('datatable-interactivity', 'data'),
-              Output('datatable-interactivity', 'columns'),
-              Input('game-screen', 'selectedData'))
-def display_selected_data(selectedData):
-    columns_name = [
-        'persona',
-        'id',
-        'pos',
-        'health',
-        'trade_result',
-    ]
-
-    columns = [{
-        "name": i,
-        "id": i,
-        "deletable": False,
-        "selectable": False
-    } for i in columns_name]
-
-    _data = json.dumps(selectedData, indent=2)
-    _data = json.loads(_data)
+@app.callback(
+    Output('datatable-interactivity', 'data'),
+    Output('write-button-state', 'n_clicks'),
+    Input('game-screen', 'selectedData'),
+    Input('write-button-state', 'n_clicks'),
+    State('primary-action-state', 'value'),
+    State('secondary-action-state', 'value'),
+)
+def display_selected_actions(selectedData, write_n_clicks,
+                             primary_action: Optional[str],
+                             secondary_action: Optional[str]):
+    global default_actions
+    _data = json.loads(json.dumps(selectedData, indent=2))
     if _data is None:
-        return _data, columns
+        return None, 0
+
     _data = _data['points']
-    selected_players = []
+
+    ids = []
     for d in _data:
         custom_data = d['customdata']
         if custom_data[0] in web_render.player_to_emoji.keys():
             id = custom_data[1]
-            player = env.players[id]
-            assert player.id == id
-            player_dict = player.dict()
-            del player_dict['backpack']
-            del player_dict['stomach']
-            del player_dict['collect_remain']
-            selected_players.append(player_dict)
+            ids.append(id)
 
-    df = pd.DataFrame(selected_players)
-    data = df.to_dict('records')
-    print(data)
-    return data, columns
+    if write_n_clicks:  # 0 or 1
+        # parse main action
+        if primary_action: primary_action = primary_action.lower()
+        if secondary_action: secondary_action = secondary_action.lower()
+        action_to_write = ((primary_action, secondary_action), None, None)
+        for id in ids:
+            default_actions[id] = action_to_write
+    # display from default_actions
+
+    selected_actions = []
+    for id in ids:
+        _action = default_actions[id]
+        main_action, sell_offer, buy_offer = _action
+        primary_action, secondary_action = main_action
+        selected_actions.append({
+            'primary action': primary_action,
+            'secondary_action': secondary_action,
+            'sell offer': sell_offer,
+            'buy offer': buy_offer,
+        })
+
+    return selected_actions, 0
 
 
 @app.callback(
@@ -251,11 +255,8 @@ def bind_action(primary_action):
     Output('reset-danger-button', 'submit_n_clicks'),
     Input('step-button-state', 'n_clicks'),
     Input('reset-danger-button', 'submit_n_clicks'),
-    State('primary-action-state', 'value'),
-    State('secondary-action-state', 'value'),
 )
-def game_step(step_n_clicks, reset_n_clicks, primary_action: Optional[str],
-              secondary_action: Optional[str]):
+def game_step(step_n_clicks, reset_n_clicks):
     reset_msg = u'Ready to play!'
     step_msg = u'Current Step {}'.format(step_n_clicks)
     if reset_n_clicks:  # 0 or 1
@@ -263,11 +264,7 @@ def game_step(step_n_clicks, reset_n_clicks, primary_action: Optional[str],
         msg = reset_msg
     elif step_n_clicks:  # 0 or 1,2,3...
         # parse main action
-        if primary_action: primary_action = primary_action.lower()
-        if secondary_action: secondary_action = secondary_action.lower()
-        actions = [((primary_action, secondary_action), None, None)
-                   for i in range(128)]
-
+        actions = default_actions
         obs, rewards, done, infos = env.step(actions)
         msg = step_msg if not done else u'Game Over!'
     else:

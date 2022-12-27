@@ -64,7 +64,7 @@ class WebRender:
                 textfont_size=18,
                 textposition="middle center",
                 hovertemplate=
-                """%{customdata[0]}<br>Id: %{customdata[1s]}<extra></extra>"""
+                """%{customdata[0]}<br>Id: %{customdata[1]}<extra></extra>"""
             ), )
 
         self.fig.update_layout(
