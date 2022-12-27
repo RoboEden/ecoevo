@@ -290,9 +290,9 @@ def control_panel_logic(selectedData, write_n_clicks,
     Output('obs-provider', 'children'),
     Output('reward-provider', 'children'),
     Output('info-provider', 'children'),
-    Input('game-screen', 'selectedData'),
+    Input('game-screen', 'hoverData'),
 )
-def info_panel_logic(selectedData):
+def info_panel_logic(hoverData):
     basic = None
     preference = None
     backpack_stomach_fig = None
@@ -300,7 +300,7 @@ def info_panel_logic(selectedData):
     local_obs = None
     myreward = None
     myinfo = None
-    _data = json.loads(json.dumps(selectedData, indent=2))
+    _data = json.loads(json.dumps(hoverData, indent=2))
     if _data is not None and len(_data['points']):
         custom_data = _data['points'][0]['customdata']
         if custom_data[0] in web_render.player_to_emoji.keys():
