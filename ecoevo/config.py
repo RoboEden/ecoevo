@@ -31,8 +31,8 @@ class PlayerConfig:
 
 class RewardConfig:
     threshold = 0
-    weight_coef = 0.0001
-    penalty = 0
+    weight_coef = 0
+    penalty = 1
     rho = 0.5
 
 
