@@ -54,7 +54,8 @@ class Analyser(object):
             info['{}_final_consume_amount'.format(item)] = 0
         if done:
             for player in players:
-                info['{}_final_consume_amount'.format(action_item)] += player.stomach[action_item].num
+                for item in ALL_ITEM_DATA.keys():
+                    info['{}_final_consume_amount'.format(item)] += player.stomach[item].num
 
         # final utility
         info['final_avr_utility'], info['final_max_utility'], info['final_min_utility'] = 0, 0, 0
