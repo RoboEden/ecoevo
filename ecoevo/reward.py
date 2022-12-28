@@ -55,7 +55,7 @@ class RewardParser:
         # cost
         cost = self.cost(player)
         self.last_costs[player.id] = cost
-        self.total_costs[player.id] += cost
+        self.total_costs[player.id] = self.total_costs[player.id] + cost if player.id in self.total_costs else cost
 
         # reward
         reward = du - cost
