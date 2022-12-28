@@ -30,8 +30,6 @@ class Analyser(object):
         costs = {pid: dict_reward_info[pid]['cost'] for pid in dict_reward_info}
 
         info = {}
-        info['sum_reward'] = sum(rewards.values())
-        info['sum_cost'] = sum(costs.values())
 
         # trade info
         trade_times, item_trade_times, item_trade_amount = Analyser.get_trade_data(matched_deals=matched_deals)
@@ -59,10 +57,14 @@ class Analyser(object):
 
         # final utility
         info['final_avr_utility'], info['final_max_utility'], info['final_min_utility'] = 0, 0, 0
+        info['final_avr_cost'], info['final_max_cost'], info['final_min_cost'] = 0, 0, 0
         if done:
             info['final_avr_utility'] = sum(utilities.values()) / len(players)
             info['final_max_utility'] = max(utilities.values())
             info['final_min_utility'] = min(utilities.values())
+            info['final_avr_cost'] = sum(costs.values()) / len(players)
+            info['final_max_cost'] = max(costs.values())
+            info['final_min_cost'] = min(costs.values())
 
         return info
 
