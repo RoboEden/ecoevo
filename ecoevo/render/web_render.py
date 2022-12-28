@@ -51,6 +51,7 @@ class WebRender:
                 mode='text',
                 textfont_size=20,
                 textposition="middle center",
+                textfont_color="rgba(0,0,0,0.7)",
                 hovertemplate=
                 "%{customdata[0]}<br>Num: %{customdata[1]}<extra></extra>",
                 selected_textfont_color='rgba(0,0,0,0.5)',

@@ -1,4 +1,3 @@
-from ecoevo.config import EnvConfig
 from ecoevo import EcoEvo
 from rich import print
 
