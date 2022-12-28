@@ -26,10 +26,12 @@ class RewardParser:
 
         self.last_utilities = {}
         self.last_costs = {}
+        self.total_costs = {}
 
     def reset(self) -> None:
         self.last_utilities = {}
         self.last_costs = {}
+        self.total_costs = {}
 
     def utility(self, player: Player) -> float:
         alpha = self.alphas[player.persona]
@@ -52,7 +54,8 @@ class RewardParser:
 
         # cost
         cost = self.cost(player)
-        self.last_costs[player.id] = u
+        self.last_costs[player.id] = cost
+        self.total_costs[player.id] = self.total_costs[player.id] + cost if player.id in self.total_costs else cost
 
         # reward
         reward = du - cost
