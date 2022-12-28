@@ -1,18 +1,21 @@
-
 from typing import List, Dict, Tuple
 
-from ecoevo import types as tp
 from ecoevo.entities import Player, ALL_ITEM_DATA
-from ecoevo.types import Action
+from ecoevo.types import Action, IdType, DealType
 
 
 class Analyser(object):
+
     def __init__(self) -> None:
         pass
 
     @staticmethod
-    def get_info(done: bool, players: List[Player], dict_reward_info: Dict[int, Dict], matched_deals: Dict[
-        tp.IdType, tp.DealType], actions_valid: Dict[int, Tuple[str, str]]) -> Dict[str, int or float]:
+    def get_info(
+            done: bool, players: List[Player],
+            dict_reward_info: Dict[int, Dict], matched_deals: Dict[IdType,
+                                                                   DealType],
+            actions_valid: Dict[int, Tuple[str,
+                                           str]]) -> Dict[str, int or float]:
         """
         tarder parser
 
@@ -25,14 +28,24 @@ class Analyser(object):
         :return: info:  info of current step
         """
 
-        rewards = {pid: dict_reward_info[pid]['reward'] for pid in dict_reward_info}
-        utilities = {pid: dict_reward_info[pid]['utility'] for pid in dict_reward_info}
-        costs = {pid: dict_reward_info[pid]['cost'] for pid in dict_reward_info}
+        rewards = {
+            pid: dict_reward_info[pid]['reward']
+            for pid in dict_reward_info
+        }
+        utilities = {
+            pid: dict_reward_info[pid]['utility']
+            for pid in dict_reward_info
+        }
+        costs = {
+            pid: dict_reward_info[pid]['cost']
+            for pid in dict_reward_info
+        }
 
         info = {}
 
         # trade info
-        trade_times, item_trade_times, item_trade_amount = Analyser.get_trade_data(matched_deals=matched_deals)
+        trade_times, item_trade_times, item_trade_amount = Analyser.get_trade_data(
+            matched_deals=matched_deals)
         info['trade_times'] = trade_times
         for item in ALL_ITEM_DATA.keys():
             info['{}_trade_times'.format(item)] = item_trade_times[item]
@@ -53,11 +66,14 @@ class Analyser(object):
         if done:
             for player in players:
                 for item in ALL_ITEM_DATA.keys():
-                    info['{}_final_consume_amount'.format(item)] += player.stomach[item].num
+                    info['{}_final_consume_amount'.format(
+                        item)] += player.stomach[item].num
 
         # final utility
-        info['final_avr_utility'], info['final_max_utility'], info['final_min_utility'] = 0, 0, 0
-        info['final_avr_cost'], info['final_max_cost'], info['final_min_cost'] = 0, 0, 0
+        info['final_avr_utility'], info['final_max_utility'], info[
+            'final_min_utility'] = 0, 0, 0
+        info['final_avr_cost'], info['final_max_cost'], info[
+            'final_min_cost'] = 0, 0, 0
         if done:
             info['final_avr_utility'] = sum(utilities.values()) / len(players)
             info['final_max_utility'] = max(utilities.values())
@@ -69,7 +85,9 @@ class Analyser(object):
         return info
 
     @staticmethod
-    def get_trade_data(matched_deals: Dict[tp.IdType, tp.DealType]) -> Tuple[int, Dict[str, int], Dict[str, int]]:
+    def get_trade_data(
+        matched_deals: Dict[IdType, DealType]
+    ) -> Tuple[int, Dict[str, int], Dict[str, int]]:
         """
         tarder parser
 
@@ -85,7 +103,11 @@ class Analyser(object):
 
         # trade times and amounts of each items
         list_item = list(ALL_ITEM_DATA.keys())
-        item_trade_times, item_trade_amount = {item: 0 for item in list_item}, {item: 0 for item in list_item}
+        item_trade_times, item_trade_amount = {item: 0
+                                               for item in list_item}, {
+                                                   item: 0
+                                                   for item in list_item
+                                               }
         for player_id in matched_deals:
             _, _, (buy_name, buy_num) = matched_deals[player_id]
             item_trade_times[buy_name] += 1
