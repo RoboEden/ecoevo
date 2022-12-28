@@ -1,7 +1,7 @@
 import json
 from typing import Optional
 from ecoevo import EcoEvo
-from ecoevo.config import EnvConfig, MapConfig
+from ecoevo.config import MapConfig
 from ecoevo.render.web_render import WebRender
 from ecoevo.render import Dash, dash_table, html, dcc, Output, Input, State
 from ecoevo.render import graph_objects as go
@@ -9,15 +9,13 @@ from ecoevo.render import dash_bootstrap_components as dbc
 
 dbc_css = "https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates/dbc.min.css"
 app = Dash(__name__, external_stylesheets=[dbc.themes.DARKLY, dbc_css])
+env = EcoEvo(logging_level='CRITICAL')
 
 web_render = WebRender(MapConfig.width, MapConfig.height)
-obs_render = WebRender(2 * EnvConfig.visual_radius + 1,
-                       2 * EnvConfig.visual_radius + 1)
-
-env = EcoEvo(logging_level='CRITICAL')
+obs_render = WebRender(2 * env.cfg.visual_radius + 1,
+                       2 * env.cfg.visual_radius + 1)
 obs, infos = env.reset()
 web_render.update(env.entity_manager.map)
-
 
 def column_container(components: list):
     res = html.Div([

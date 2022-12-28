@@ -15,23 +15,13 @@ class EcoEvo:
 
     def __init__(self,
                  render_mode=None,
-                 total_step=EnvConfig.total_step,
-                 trade_radius=EnvConfig.trade_radius,
-                 visual_radius=EnvConfig.visual_radius,
-                 personae=EnvConfig.personae,
-                 bag_volume=EnvConfig.bag_volume,
+                 config=EnvConfig,
                  logging_level="WARNING",
                  logging_path="out.log"):
-        # Ugly change EnvConfig
-        EnvConfig.total_step = total_step
-        EnvConfig.trade_radius = trade_radius
-        EnvConfig.visual_radius = visual_radius
-        EnvConfig.personae = personae
-        EnvConfig.bag_volume = bag_volume
-
+        self.cfg = config
         self.render_mode = render_mode
         self.entity_manager = EntityManager()
-        self.trader = Trader(EnvConfig.trade_radius)
+        self.trader = Trader(self.cfg.trade_radius)
         self.reward_parser = RewardParser()
         self.players: List[Player] = []
 
@@ -61,8 +51,8 @@ class EcoEvo:
         self.players = []
         self.curr_step = 0
         self.reward_parser.reset()
-        points = self.entity_manager.sample(len(EnvConfig.personae))
-        for id, persona in enumerate(EnvConfig.personae):
+        points = self.entity_manager.sample(len(self.cfg.personae))
+        for id, persona in enumerate(self.cfg.personae):
             player = Player(persona=persona, id=id, pos=points[id])
             self.players.append(player)
 
@@ -108,7 +98,8 @@ class EcoEvo:
                     player.trade_result = TradeResult.failed
                 action = (main_action, None, None)
 
-            player.health = max(0, player.health - PlayerConfig.comsumption_per_step)
+            player.health = max(
+                0, player.health - PlayerConfig.comsumption_per_step)
             if self.is_action_valid(player, actions[player.id]):
                 self.entity_manager.execute(player, action)
 
@@ -124,36 +115,39 @@ class EcoEvo:
             player.id: self.reward_parser.parse(player)
             for player in self.players
         }
-        done = True if self.curr_step > EnvConfig.total_step else False
+        done = True if self.curr_step > self.cfg.total_step else False
 
         # get info
         dict_reward_info = {
             player.id: {
-                'reward': rewards[player.id], 
-                'utility': self.reward_parser.last_utilities[player.id], 
-                'cost': self.reward_parser.total_costs[player.id]} 
+                'reward': rewards[player.id],
+                'utility': self.reward_parser.last_utilities[player.id],
+                'cost': self.reward_parser.total_costs[player.id]
+            }
             for player in self.players
         }
-        info = Analyser.get_info(
-            done=done, players=self.players, 
-            dict_reward_info=dict_reward_info, matched_deals=matched_deals, actions_valid=actions_valid)
+        info = Analyser.get_info(done=done,
+                                 players=self.players,
+                                 dict_reward_info=dict_reward_info,
+                                 matched_deals=matched_deals,
+                                 actions_valid=actions_valid)
 
         return obs, rewards, done, info
 
     def get_obs(self, player: Player) -> Dict[PosType, Tile]:
         player_x, player_y = player.pos
-        x_min = max(player_x - EnvConfig.visual_radius, 0)
-        x_max = min(player_x + EnvConfig.visual_radius, MapConfig.width - 1)
-        y_min = max(player_y - EnvConfig.visual_radius, 0)
-        y_max = min(player_y + EnvConfig.visual_radius, MapConfig.height - 1)
+        x_min = max(player_x - self.cfg.visual_radius, 0)
+        x_max = min(player_x + self.cfg.visual_radius, MapConfig.width - 1)
+        y_min = max(player_y - self.cfg.visual_radius, 0)
+        y_max = min(player_y + self.cfg.visual_radius, MapConfig.height - 1)
 
         local_obs = {}
         for x in range(x_min, x_max + 1):
             for y in range(y_min, y_max + 1):
                 tile = self.gettile((x, y))
                 if tile:
-                    local_x = x - player_x + EnvConfig.visual_radius
-                    local_y = y - player_y + EnvConfig.visual_radius
+                    local_x = x - player_x + self.cfg.visual_radius
+                    local_y = y - player_y + self.cfg.visual_radius
                     local_obs[(local_x, local_y)] = tile
 
         return local_obs
