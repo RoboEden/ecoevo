@@ -1,7 +1,7 @@
 import json
 from typing import Optional
 from ecoevo import EcoEvo
-from ecoevo.config import MapConfig
+from ecoevo.config import MapConfig, PlayerConfig
 from ecoevo.render.web_render import WebRender
 from ecoevo.render import Dash, dash_table, html, dcc, Output, Input, State
 from ecoevo.render import graph_objects as go
@@ -17,20 +17,6 @@ obs_render = WebRender(2 * env.cfg.visual_radius + 1,
 obs, infos = env.reset()
 web_render.update(env.entity_manager.map)
 
-def column_container(components: list):
-    res = html.Div([
-        html.Div([component], style={
-            'padding': 10,
-            'flex': 1
-        }) for component in components
-    ],
-                   style={
-                       'display': 'flex',
-                       'flex-direction': 'row'
-                   })
-    return res
-
-
 reset_button = dcc.ConfirmDialogProvider(children=html.Button(
     'Reset game', className="btn btn-danger"),
                                          id='reset-danger-button',
@@ -43,6 +29,17 @@ write_button = html.Button('Write',
                            className="btn btn-primary")
 
 item_list = ['None'] + env.all_item_names
+item_to_color = {
+    'gold': '#f9c23c',
+    'hazelnut': '#6d4534',
+    'coral': '#029ee1',
+    'sand': '#f14f4c',
+    'pineapple': '#86d72f',
+    'peanut': '#f3ad61',
+    'stone': '#9b9b9b',
+    'pumpkin': '#ff8257',
+}
+
 columns_name = [
     'id',
     'primary action',
@@ -115,18 +112,20 @@ control_panel = html.Div([
                  'flex': 1
              }),
     html.Label('Main action'),
-    column_container([
-        dcc.Dropdown(
-            [{
-                'label': primary_action.capitalize(),
-                'value': primary_action,
-                'title': 'primary action'
-            } for primary_action in all_primary_action],
-            id='primary-action-state',
-            value='idle',
-            clearable=False,
-        ),
-        dcc.Dropdown([], id='secondary-action-state', clearable=False),
+    dbc.Row([
+        dbc.Col(
+            dcc.Dropdown(
+                [{
+                    'label': primary_action.capitalize(),
+                    'value': primary_action,
+                    'title': 'primary action'
+                } for primary_action in all_primary_action],
+                id='primary-action-state',
+                value='idle',
+                clearable=False,
+            )),
+        dbc.Col(dcc.Dropdown([], id='secondary-action-state',
+                             clearable=False)),
     ]),
     html.Label('Sell offer'),
     dcc.Slider(min=0,
@@ -161,14 +160,20 @@ game_screen = html.Center([
 ],
                           className="dbc")
 
-app.layout = column_container([
-    info_panel,
-    html.Div([
-        game_screen,
-        column_container([reset_button, step_button]),
-    ]),
-    control_panel,
-])
+app.layout = html.Div(
+    dbc.Row([
+        dbc.Col(info_panel),
+        dbc.Col(dbc.Row([
+            game_screen,
+            dbc.Col(reset_button),
+            dbc.Col(step_button),
+        ]),
+                width={
+                    "size": "auto",
+                    "order": 'first',
+                }),
+        dbc.Col(control_panel),
+    ]))
 
 # @app.callback(Output('datatable-interactivity', 'style_data_conditional'),
 #               Input('datatable-interactivity', 'selected_columns'))
@@ -301,44 +306,52 @@ def update_info(id: int):
                         fill='toself',
                         name='ability'))
     fig.add_trace(
-        go.Scatterpolar(r=[v * 1e5 for v in player.preference.values()],
+        go.Scatterpolar(r=[v * 1e2 for v in player.preference.values()],
                         theta=categories,
                         fill='toself',
                         name='preference'))
-    fig.update_layout(width=400,
-                      height=300,
-                      font_color="white",
-                      paper_bgcolor="#303030",
-                      plot_bgcolor="#e9e9e9",
-                      polar=dict(radialaxis=dict(visible=True, range=[0, 10])),
-                      showlegend=True)
+    fig.update_layout(
+        width=400,
+        height=300,
+        font_color="white",
+        paper_bgcolor="#303030",
+        plot_bgcolor="#e9e9e9",
+        polar=dict(radialaxis=dict(visible=False, range=[0, 10])),
+        showlegend=True)
 
     preference = dcc.Graph(figure=fig, config={'displaylogo': False})
 
     # backpack figs
-    fig = go.Figure(data=[
-        go.Bar(name='Backpack',
-               x=[item.name for item in player.backpack.dict().values()],
-               y=[item.num for item in player.backpack.dict().values()]),
-        go.Bar(name='Stomach',
-               x=[item.name for item in player.stomach.dict().values()],
-               y=[item.num for item in player.stomach.dict().values()])
+    # fig = go.Figure(data=[
+    #     go.Bar(name='Backpack',
+    #            x=[item.name for item in player.backpack.dict().values()],
+    #            y=[item.num for item in player.backpack.dict().values()]),
+    #     go.Bar(name='Stomach',
+    #            x=[item.name for item in player.stomach.dict().values()],
+    #            y=[item.num for item in player.stomach.dict().values()])
+    # ])
+    # fig.update_layout(barmode='group',
+    #                   width=400,
+    #                   height=300,
+    #                   yaxis_range=[0, 10],
+    #                   font_color="white",
+    #                   paper_bgcolor="#303030",
+    #                   plot_bgcolor="#e9e9e9")
+    # bac_sto_fig = dcc.Graph(figure=fig, config={'displaylogo': False})
+    progress = dbc.Progress([
+        dbc.Progress(value=item.num * item.capacity,
+        max=PlayerConfig.bag_volume,
+                     color=item_to_color[item.name],
+                     bar=True,
+                     label=item.name.capitalize())
+        for item in player.backpack.dict().values()
     ])
-    fig.update_layout(barmode='group',
-                      width=400,
-                      height=300,
-                      yaxis_range=[0, 10],
-                      font_color="white",
-                      paper_bgcolor="#303030",
-                      plot_bgcolor="#e9e9e9")
-    bac_sto_fig = dcc.Graph(figure=fig, config={'displaylogo': False})
-
     # obs_render.update(obs[id])
     # local_obs = dcc.Graph(obs_render.fig)
     myreward = rewards[id]
     myinfo = html.Pre(json.dumps(info[id], indent=2))
 
-    return basic, preference, bac_sto_fig, myreward, myinfo
+    return basic, preference, progress, myreward, myinfo
 
 
 @app.callback(
