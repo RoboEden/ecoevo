@@ -6,7 +6,6 @@ from ecoevo.render.web_render import WebRender
 from ecoevo.render import Dash, dash_table, html, dcc, Output, Input, State
 from ecoevo.render import graph_objects as go
 from ecoevo.render import dash_bootstrap_components as dbc
-from ecoevo.render import print
 
 dbc_css = "https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates/dbc.min.css"
 app = Dash(__name__, external_stylesheets=[dbc.themes.DARKLY, dbc_css])
@@ -244,7 +243,6 @@ def control_panel_logic(selectedData, write_n_clicks,
             # parse main action
             if secondary_action == 'none': secondary_action = None
             action_to_write = ((primary_action, secondary_action), None, None)
-            print(action_to_write)
             for id in ids:
                 default_actions[id] = action_to_write
         # display from default_actions
@@ -264,114 +262,114 @@ def control_panel_logic(selectedData, write_n_clicks,
     return selected_actions, 0
 
 
+def update_info(id: int):
+    player = env.players[id]
+    # basic
+    basic = dbc.Table(
+        [
+            html.Thead(
+                html.Tr([
+                    html.Th("persona"),
+                    html.Th("id"),
+                    html.Th("pos"),
+                    html.Th("health"),
+                    html.Th("collect remain"),
+                    html.Th("trade result"),
+                ])),
+            html.Tbody([
+                html.Tr([
+                    html.Td(' '.join(player.persona.split('_'))),
+                    html.Td(player.id),
+                    html.Td(str(player.pos)),
+                    html.Td(player.health),
+                    html.Td(player.collect_remain),
+                    html.Td(player.trade_result),
+                ])
+            ])
+        ],
+        bordered=False,
+        dark=True,
+        hover=True,
+        responsive=True,
+        striped=True,
+    )
+
+    # plot radar
+    categories = list(player.preference.keys())
+    fig = go.Figure()
+    fig.add_trace(
+        go.Scatterpolar(r=list(player.ability.values()),
+                        theta=categories,
+                        fill='toself',
+                        name='ability'))
+    fig.add_trace(
+        go.Scatterpolar(r=[v * 1e5 for v in player.preference.values()],
+                        theta=categories,
+                        fill='toself',
+                        name='preference'))
+    fig.update_layout(width=400,
+                      height=300,
+                      font_color="white",
+                      paper_bgcolor="#303030",
+                      plot_bgcolor="#e9e9e9",
+                      polar=dict(radialaxis=dict(visible=True, range=[0, 10])),
+                      showlegend=True)
+
+    preference = dcc.Graph(figure=fig, config={'displaylogo': False})
+
+    # backpack figs
+    fig = go.Figure(data=[
+        go.Bar(name='Backpack',
+               x=[item.name for item in player.backpack.dict().values()],
+               y=[item.num for item in player.backpack.dict().values()]),
+        go.Bar(name='Stomach',
+               x=[item.name for item in player.stomach.dict().values()],
+               y=[item.num for item in player.stomach.dict().values()])
+    ])
+    fig.update_layout(barmode='group',
+                      width=400,
+                      height=300,
+                      yaxis_range=[0, 10],
+                      font_color="white",
+                      paper_bgcolor="#303030",
+                      plot_bgcolor="#e9e9e9")
+    bac_sto_fig = dcc.Graph(figure=fig, config={'displaylogo': False})
+
+    # obs_render.update(obs[id])
+    # local_obs = dcc.Graph(obs_render.fig)
+    myreward = rewards[id]
+    myinfo = html.Pre(json.dumps(info[id], indent=2))
+
+    return basic, preference, bac_sto_fig, myreward, myinfo
+
+
 @app.callback(
     Output('basic-provider', 'children'),
     Output('preference-provider', 'children'),
     Output('backpack-stomach-provider', 'children'),
-    Output('obs-provider', 'children'),
+    # Output('obs-provider', 'children'),
     Output('reward-provider', 'children'),
     Output('info-provider', 'children'),
     Input('game-screen', 'clickData'),
     Input('step-button-state', 'n_clicks'),
+    Input('reset-danger-button', 'submit_n_clicks'),
 )
-def info_panel_logic(clickData, step_n_clicks):
-    basic = None
-    preference = None
-    backpack_stomach_fig = None
-    local_obs = None
-    myreward = None
-    myinfo = None
-
+def info_panel_logic(clickData, step_n_clicks, reset_n_clicks):
     # update clickData
-    player = None
+    if reset_n_clicks:
+        return None, None, None, None, None
+    id = None
+    basic, preference, bac_sto_fig, myreward, myinfo = None, None, None, None, None
     _data = json.loads(json.dumps(clickData, indent=2))
     if _data is not None and len(_data['points']):
         custom_data = _data['points'][0]['customdata']
         if custom_data[0] in web_render.player_to_emoji.keys():
             id = custom_data[1]
-            player = env.players[id]
-            assert player.id == id, 'env.player is shuffled! Only env.ids can be shuffled.'
-
-    if player is not None:  # update upon step or clickData change
-        # basic
-        basic = dbc.Table(
-            [
-                html.Thead(
-                    html.Tr([
-                        html.Th("persona"),
-                        html.Th("id"),
-                        html.Th("pos"),
-                        html.Th("health"),
-                        html.Th("collect remain"),
-                        html.Th("trade result"),
-                    ])),
-                html.Tbody([
-                    html.Tr([
-                        html.Td(player.persona),
-                        html.Td(player.id),
-                        html.Td(player.pos),
-                        html.Td(player.health),
-                        html.Td(player.collect_remain),
-                        html.Td(player.trade_result),
-                    ])
-                ])
-            ],
-            bordered=True,
-            dark=True,
-            hover=True,
-            responsive=True,
-            striped=True,
-        )
-
-        # plot radar
-        categories = list(player.preference.keys())
-        fig = go.Figure()
-        fig.add_trace(
-            go.Scatterpolar(r=list(player.ability.values()),
-                            theta=categories,
-                            fill='toself',
-                            name='ability'))
-        fig.add_trace(
-            go.Scatterpolar(r=[v * 1e5 for v in player.preference.values()],
-                            theta=categories,
-                            fill='toself',
-                            name='preference'))
-        fig.update_layout(
-            width=400,
-            height=300,
-            font_color="white",
-            paper_bgcolor="#303030",
-            plot_bgcolor="#e9e9e9",
-            polar=dict(radialaxis=dict(visible=True, range=[0, 10])),
-            showlegend=True)
-
-        preference = dcc.Graph(figure=fig, config={'displaylogo': False})
-
-        # backpack figs
-        fig = go.Figure(data=[
-            go.Bar(name='Backpack',
-                   x=[item.name for item in player.backpack.dict().values()],
-                   y=[item.num for item in player.backpack.dict().values()]),
-            go.Bar(name='Stomach',
-                   x=[item.name for item in player.stomach.dict().values()],
-                   y=[item.num for item in player.stomach.dict().values()])
-        ])
-        fig.update_layout(barmode='group',
-                          width=400,
-                          height=300,
-                          yaxis_range=[0, 10],
-                          font_color="white",
-                          paper_bgcolor="#303030",
-                          plot_bgcolor="#e9e9e9")
-        backpack_stomach_fig = dcc.Graph(figure=fig,
-                                         config={'displaylogo': False})
-
-        # obs_render.update(obs[id])
-        # local_obs = dcc.Graph(obs_render.fig)
-        myreward = rewards[id]
-        myinfo = html.Pre(json.dumps(info[id], indent=2))
-
-    return basic, preference, backpack_stomach_fig, local_obs, myreward, myinfo
+    if step_n_clicks and id is not None:  # update upon step or clickData change
+        basic, preference, bac_sto_fig, myreward, myinfo = update_info(id)
+    elif id is not None:
+        basic, preference, bac_sto_fig, myreward, myinfo = update_info(id)
+    return basic, preference, bac_sto_fig, myreward, myinfo
 
 
 @app.callback(
