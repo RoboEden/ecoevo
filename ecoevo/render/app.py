@@ -6,6 +6,7 @@ from ecoevo.render.web_render import WebRender
 from ecoevo.render import Dash, dash_table, html, dcc, Output, Input, State
 from ecoevo.render import graph_objects as go
 from ecoevo.render import dash_bootstrap_components as dbc
+from ecoevo.render import print
 
 dbc_css = "https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates/dbc.min.css"
 app = Dash(__name__, external_stylesheets=[dbc.themes.DARKLY, dbc_css])
@@ -80,7 +81,7 @@ info_panel = html.Div([
                           'padding': 10,
                           'flex': 1
                       })
-
+all_primary_action = ['idle', 'move', 'collect', 'consume']
 control_panel = html.Div([
     html.Div('Control Panel', className="card-header"),
     html.Label('Selected players'),
@@ -119,32 +120,16 @@ control_panel = html.Div([
     html.Label('Main action'),
     column_container([
         dcc.Dropdown(
-            [
-                {
-                    'label': 'Idle',
-                    'value': 'idle',
-                    'title': 'primary action'
-                },
-                {
-                    'label': 'Move',
-                    'value': 'move',
-                    'title': 'primary action'
-                },
-                {
-                    'label': 'Collect',
-                    'value': 'collect',
-                    'title': 'primary action'
-                },
-                {
-                    'label': 'Consume',
-                    'value': 'consume',
-                    'title': 'primary action'
-                },
-            ],
+            [{
+                'label': primary_action.capitalize(),
+                'value': primary_action,
+                'title': 'primary action'
+            } for primary_action in all_primary_action],
             id='primary-action-state',
             value='idle',
+            clearable=False,
         ),
-        dcc.Dropdown([], id='secondary-action-state'),
+        dcc.Dropdown([], id='secondary-action-state', clearable=False),
     ]),
     html.Label('Sell offer'),
     dcc.Slider(min=0,
@@ -188,7 +173,6 @@ app.layout = column_container([
     control_panel,
 ])
 
-
 # @app.callback(Output('datatable-interactivity', 'style_data_conditional'),
 #               Input('datatable-interactivity', 'selected_columns'))
 # def update_styles(selected_columns):
@@ -198,36 +182,33 @@ app.layout = column_container([
 #         },
 #         'background_color': '#D2F3FF'
 #     } for i in selected_columns]
+
+
 @app.callback(
     Output('secondary-action-state', 'options'),
+    Output('secondary-action-state', 'value'),
     Input('primary-action-state', 'value'),
 )
 def bind_action(primary_action):
-    if primary_action == 'move':
-        return [
-            {
-                'label': 'Up',
-                'value': 'up',
-                'title': 'secondary action'
-            },
-            {
-                'label': 'Down',
-                'value': 'down',
-                'title': 'secondary action'
-            },
-            {
-                'label': 'Left',
-                'value': 'left',
-                'title': 'secondary action'
-            },
-            {
-                'label': 'Right',
-                'value': 'right',
-                'title': 'secondary action'
-            },
-        ]
-    else:
-        return []
+    if primary_action in ['idle', 'collect']:
+        return [{
+            'label': 'None',
+            'value': 'none',
+            'title': 'secondary action'
+        }], 'none'
+    elif primary_action == 'move':
+        all_directions = ['up', 'down', 'left', 'right']
+        return [{
+            'label': direction.capitalize(),
+            'value': direction,
+            'title': 'secondary action'
+        } for direction in all_directions], 'up'
+    elif primary_action == 'consume':
+        return [{
+            'label': item_name.capitalize(),
+            'value': item_name,
+            'title': 'secondary action'
+        } for item_name in env.all_item_names], env.all_item_names[0]
 
 
 default_actions = [(('idle', None), None, None) for i in range(128)]
@@ -261,9 +242,9 @@ def control_panel_logic(selectedData, write_n_clicks,
 
         if write_n_clicks:  # 0 or 1
             # parse main action
-            if primary_action: primary_action = primary_action.lower()
-            if secondary_action: secondary_action = secondary_action.lower()
+            if secondary_action == 'none': secondary_action = None
             action_to_write = ((primary_action, secondary_action), None, None)
+            print(action_to_write)
             for id in ids:
                 default_actions[id] = action_to_write
         # display from default_actions
@@ -290,17 +271,20 @@ def control_panel_logic(selectedData, write_n_clicks,
     Output('obs-provider', 'children'),
     Output('reward-provider', 'children'),
     Output('info-provider', 'children'),
-    Input('game-screen', 'hoverData'),
+    Input('game-screen', 'clickData'),
+    Input('step-button-state', 'n_clicks'),
 )
-def info_panel_logic(hoverData):
+def info_panel_logic(clickData, step_n_clicks):
     basic = None
     preference = None
     backpack_stomach_fig = None
-    stomack_fig = None
     local_obs = None
     myreward = None
     myinfo = None
-    _data = json.loads(json.dumps(hoverData, indent=2))
+
+    # update clickData
+    player = None
+    _data = json.loads(json.dumps(clickData, indent=2))
     if _data is not None and len(_data['points']):
         custom_data = _data['points'][0]['customdata']
         if custom_data[0] in web_render.player_to_emoji.keys():
@@ -308,86 +292,84 @@ def info_panel_logic(hoverData):
             player = env.players[id]
             assert player.id == id, 'env.player is shuffled! Only env.ids can be shuffled.'
 
-            # basic
-            basic = dbc.Table(
-                [
-                    html.Thead(
-                        html.Tr([
-                            html.Th("persona"),
-                            html.Th("id"),
-                            html.Th("pos"),
-                            html.Th("health"),
-                            html.Th("collect remain"),
-                            html.Th("trade result"),
-                        ])),
-                    html.Tbody([
-                        html.Tr([
-                            html.Td(player.persona),
-                            html.Td(player.id),
-                            html.Td(player.pos),
-                            html.Td(player.health),
-                            html.Td(player.collect_remain),
-                            html.Td(player.trade_result),
-                        ])
+    if player is not None:  # update upon step or clickData change
+        # basic
+        basic = dbc.Table(
+            [
+                html.Thead(
+                    html.Tr([
+                        html.Th("persona"),
+                        html.Th("id"),
+                        html.Th("pos"),
+                        html.Th("health"),
+                        html.Th("collect remain"),
+                        html.Th("trade result"),
+                    ])),
+                html.Tbody([
+                    html.Tr([
+                        html.Td(player.persona),
+                        html.Td(player.id),
+                        html.Td(player.pos),
+                        html.Td(player.health),
+                        html.Td(player.collect_remain),
+                        html.Td(player.trade_result),
                     ])
-                ],
-                bordered=True,
-                dark=True,
-                hover=True,
-                responsive=True,
-                striped=True,
-            )
+                ])
+            ],
+            bordered=True,
+            dark=True,
+            hover=True,
+            responsive=True,
+            striped=True,
+        )
 
-            # plot radar
-            categories = list(player.preference.keys())
-            fig = go.Figure()
-            fig.add_trace(
-                go.Scatterpolar(
-                    r=[v * 1e5 for v in player.preference.values()],
-                    theta=categories,
-                    fill='toself',
-                    name='preference'))
-            fig.add_trace(
-                go.Scatterpolar(r=list(player.ability.values()),
-                                theta=categories,
-                                fill='toself',
-                                name='ability'))
-            fig.update_layout(
-                width=400,
-                height=300,
-                font_color="white",
-                paper_bgcolor="#303030",
-                plot_bgcolor="#e9e9e9",
-                polar=dict(radialaxis=dict(visible=True, range=[0, 10])),
-                showlegend=True)
+        # plot radar
+        categories = list(player.preference.keys())
+        fig = go.Figure()
+        fig.add_trace(
+            go.Scatterpolar(r=list(player.ability.values()),
+                            theta=categories,
+                            fill='toself',
+                            name='ability'))
+        fig.add_trace(
+            go.Scatterpolar(r=[v * 1e5 for v in player.preference.values()],
+                            theta=categories,
+                            fill='toself',
+                            name='preference'))
+        fig.update_layout(
+            width=400,
+            height=300,
+            font_color="white",
+            paper_bgcolor="#303030",
+            plot_bgcolor="#e9e9e9",
+            polar=dict(radialaxis=dict(visible=True, range=[0, 10])),
+            showlegend=True)
 
-            preference = dcc.Graph(figure=fig, config={'displaylogo': False})
+        preference = dcc.Graph(figure=fig, config={'displaylogo': False})
 
-            # backpack figs
-            fig = go.Figure(data=[
-                go.Bar(
-                    name='Backpack',
-                    x=[item.name for item in player.backpack.dict().values()],
-                    y=[item.num for item in player.backpack.dict().values()]),
-                go.Bar(
-                    name='Stomach',
-                    x=[item.name for item in player.stomach.dict().values()],
-                    y=[item.num for item in player.stomach.dict().values()])
-            ])
-            fig.update_layout(barmode='group',
-                              width=400,
-                              height=300,
-                              yaxis_range=[0, 100],
-                              font_color="white",
-                              paper_bgcolor="#303030",
-                              plot_bgcolor="#e9e9e9")
-            backpack_stomach_fig = dcc.Graph(figure=fig,
-                                             config={'displaylogo': False})
+        # backpack figs
+        fig = go.Figure(data=[
+            go.Bar(name='Backpack',
+                   x=[item.name for item in player.backpack.dict().values()],
+                   y=[item.num for item in player.backpack.dict().values()]),
+            go.Bar(name='Stomach',
+                   x=[item.name for item in player.stomach.dict().values()],
+                   y=[item.num for item in player.stomach.dict().values()])
+        ])
+        fig.update_layout(barmode='group',
+                          width=400,
+                          height=300,
+                          yaxis_range=[0, 10],
+                          font_color="white",
+                          paper_bgcolor="#303030",
+                          plot_bgcolor="#e9e9e9")
+        backpack_stomach_fig = dcc.Graph(figure=fig,
+                                         config={'displaylogo': False})
 
-            # obs_render.update(obs[id])
-            # local_obs = dcc.Graph(obs_render.fig)
-            myreward = rewards[id]
-            myinfo = html.Pre(json.dumps(info[id], indent=2))
+        # obs_render.update(obs[id])
+        # local_obs = dcc.Graph(obs_render.fig)
+        myreward = rewards[id]
+        myinfo = html.Pre(json.dumps(info[id], indent=2))
 
     return basic, preference, backpack_stomach_fig, local_obs, myreward, myinfo
 

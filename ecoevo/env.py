@@ -22,12 +22,12 @@ class EcoEvo:
                  bag_volume=EnvConfig.bag_volume,
                  logging_level="WARNING",
                  logging_path="out.log"):
-        # Ugly change EnvConfig         
-        EnvConfig.total_step=total_step
-        EnvConfig.trade_radius=trade_radius
-        EnvConfig.visual_radius=visual_radius
-        EnvConfig.personae=personae
-        EnvConfig.bag_volume=bag_volume
+        # Ugly change EnvConfig
+        EnvConfig.total_step = total_step
+        EnvConfig.trade_radius = trade_radius
+        EnvConfig.visual_radius = visual_radius
+        EnvConfig.personae = personae
+        EnvConfig.bag_volume = bag_volume
 
         self.render_mode = render_mode
         self.entity_manager = EntityManager()
@@ -44,7 +44,7 @@ class EcoEvo:
         return len(self.players)
 
     @property
-    def all_item_names(self) -> list:
+    def all_item_names(self) -> List[str]:
         return list(ALL_ITEM_DATA.keys())
 
     def gettile(self, pos: PosType) -> Optional[Tile]:
@@ -72,8 +72,10 @@ class EcoEvo:
         self.ids = [player.id for player in self.players]
         return obs, infos
 
-    def step(self, actions: List[ActionType]) -> Tuple[
-        Dict[IdType, Dict[PosType, Tile]], Dict[IdType, float], bool, Dict[IdType, dict]]:
+    def step(
+        self, actions: List[ActionType]
+    ) -> Tuple[Dict[IdType, Dict[PosType, Tile]], Dict[IdType, float], bool,
+               Dict[IdType, dict]]:
         """
         tarder parser
 
@@ -109,16 +111,20 @@ class EcoEvo:
         self.entity_manager.refresh_item()
 
         obs = {player.id: self.get_obs(player) for player in self.players}
-        rewards = {player.id: self.reward_parser.parse(player) for player in self.players}
+        rewards = {
+            player.id: self.reward_parser.parse(player)
+            for player in self.players
+        }
         done = True if self.curr_step > EnvConfig.total_step else False
 
         # save infos
-        trade_times, item_trade_times, item_trade_amount = Analyser.get_trade_data(matched_deals=matched_deals)
+        trade_times, item_trade_times, item_trade_amount = Analyser.get_trade_data(
+            matched_deals=matched_deals)
         avr_reward = sum(rewards.values()) / len(rewards)
         infos = {
-            'trade_times': trade_times, 
-            'item_trade_times': item_trade_times, 
-            'item_trade_amount': item_trade_amount, 
+            'trade_times': trade_times,
+            'item_trade_times': item_trade_times,
+            'item_trade_amount': item_trade_amount,
             'avr_reward': avr_reward
         }
 
