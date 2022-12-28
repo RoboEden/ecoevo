@@ -20,7 +20,7 @@ if __name__ == "__main__":
         (('consume', 'coral'), None, None),
         (('collect', None), None, None),
     ] * 128
-    for _ in range(EnvConfig.total_step):
+    for _ in range(env.cfg.total_step):
         obs, reward, done, infos = env.step(actions)
         render.render(env.entity_manager.map)
         # Show info

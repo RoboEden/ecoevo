@@ -1,13 +1,13 @@
 import json
-from dataclasses import dataclass
-from typing import Dict, List, Optional
-
 import numpy as np
 import tree
 
-from ecoevo.config import DataPath, MapConfig, PlayerConfig
-from ecoevo.entities import Item, Player, load_item
-from ecoevo.types import *
+from typing import Dict, List, Optional
+from dataclasses import dataclass
+
+from ecoevo.config import MapConfig, DataPath
+from ecoevo.entities import load_item, Item, Player
+from ecoevo.types import PosType, ActionType, Action
 
 
 @dataclass

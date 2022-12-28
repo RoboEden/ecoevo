@@ -4,7 +4,7 @@ from typing import Dict, List, Tuple
 from loguru import logger
 from ortools.linear_solver import pywraplp
 from ecoevo.entities.player import Player
-from ecoevo import types as tp
+from ecoevo.types import IdType,DealType, ActionType, Action, TradeResult
 
 
 class Trader(object):
@@ -27,7 +27,7 @@ class Trader(object):
         self.mat_if_match, self.mat_volume = [[]], [[]]
         self.list_match = []
 
-    def filter_legal_deals(self, players: List[Player], actions: List[tp.ActionType]) -> Dict[tp.IdType, tp.DealType]:
+    def filter_legal_deals(self, players: List[Player], actions: List[ActionType]) -> Dict[IdType, DealType]:
         """
         tarder parser
 
@@ -45,21 +45,21 @@ class Trader(object):
 
             # parse offer
             if sell_offer is None or buy_offer is None:
-                player.trade_result = tp.TradeResult.absent
+                player.trade_result = TradeResult.absent
                 continue
 
             sell_item_name, sell_num = sell_offer
             buy_item_name, buy_num = buy_offer
             if sell_item_name == buy_item_name:
-                player.trade_result = tp.TradeResult.illegal
+                player.trade_result = TradeResult.illegal
                 logger.debug(f'Invalid: sell item is the same as buy item {sell_item_name}')
                 continue
             if sell_num >= 0:
-                player.trade_result = tp.TradeResult.illegal
+                player.trade_result = TradeResult.illegal
                 logger.debug(f'Invalid sell_num {sell_num}, should be < 0')
                 continue
             if buy_num <= 0:
-                player.trade_result = tp.TradeResult.illegal
+                player.trade_result = TradeResult.illegal
                 logger.debug(f'Invalid buy_num {buy_num}, should be > 0')
                 continue
             sell_num, buy_num = abs(sell_num), abs(buy_num)
@@ -69,7 +69,7 @@ class Trader(object):
 
             # handle sell and consume same item
             least_amount = sell_num
-            if primary_action == tp.Action.consume:
+            if primary_action == Action.consume:
                 consume_item_name = secondary_action
                 if sell_item_name == consume_item_name:
                     least_amount += sell_item.consume_num
@@ -78,13 +78,13 @@ class Trader(object):
                 logger.debug(
                     f'Insufficient {sell_item_name}:{sell_item.num} sell_num {sell_num}'
                 )
-                player.trade_result = tp.TradeResult.illegal
+                player.trade_result = TradeResult.illegal
                 continue
 
             # check buy
             buy_item_volumne = player.backpack[buy_item_name].capacity * buy_num
             if player.backpack.remain_volume < buy_item_volumne:
-                player.trade_result = tp.TradeResult.illegal
+                player.trade_result = TradeResult.illegal
                 logger.debug(
                     f'Insufficient backpack remain volume:{player.backpack.remain_volume}'
                 )
@@ -94,7 +94,7 @@ class Trader(object):
 
         return legal_deals
 
-    def parse(self, legal_deals: Dict[tp.IdType, tp.DealType]) -> Dict[tp.IdType, tp.DealType]:
+    def parse(self, legal_deals: Dict[IdType, DealType]) -> Dict[IdType, DealType]:
         """
         tarder parser
 
@@ -123,7 +123,7 @@ class Trader(object):
         
         return match_deals
 
-    def _mini_close(self, deal_A: tp.DealType, deal_B: tp.DealType):
+    def _mini_close(self, deal_A: DealType, deal_B: DealType):
         """
         get deals tuple with actual trading volume
 

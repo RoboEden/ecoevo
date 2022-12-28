@@ -2,10 +2,11 @@ import yaml
 
 from pydantic import BaseModel, Field
 from yaml.loader import SafeLoader
+from typing import Optional
 
 from ecoevo.config import MapConfig, PlayerConfig, DataPath
 from ecoevo.entities.items import Bag, Item
-from ecoevo.types import *
+from ecoevo.types import IdType, PosType, OfferType, Move, TradeResult
 
 with open(DataPath.player_yaml) as file:
     ALL_PERSONAE = yaml.load(file, Loader=SafeLoader)

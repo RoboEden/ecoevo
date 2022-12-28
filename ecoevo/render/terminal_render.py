@@ -1,11 +1,7 @@
 from ecoevo.entities import Tile
-try:
-    from rich import print
-except ImportError:
-    raise ImportError("Try pip install ecoevo[render]!")
+from ecoevo.render import print
 from typing import Dict, List
-from ecoevo.types import *
-
+from ecoevo.types import PosType
 
 class TerminalRender:
 

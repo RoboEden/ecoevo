@@ -1,9 +1,0 @@
-[server]
-port = 8080
-fileWatcherType = "none"
-
-[theme]
-base = "dark"
-primaryColor = "#00CDE2"
-backgroundColor = "#111111"
-secondaryBackgroundColor = "#373C38"
