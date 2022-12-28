@@ -1,10 +1,11 @@
 import json
-import tree
 import numpy as np
+import tree
 
-from typing import List, Dict, Optional
+from typing import Dict, List, Optional
 from dataclasses import dataclass
-from ecoevo.config import MapConfig, PlayerConfig, DataPath
+
+from ecoevo.config import MapConfig, DataPath
 from ecoevo.entities import load_item, Item, Player
 from ecoevo.types import PosType, ActionType, Action
 
@@ -41,7 +42,7 @@ class EntityManager:
         return array
 
     def reset_map(self, players: List[Player]) -> None:
-        self.map={}
+        self.map = {}
         for pos, item in self.item_array.items():
             self.map[pos] = Tile(item=item, player=None)
         for player in players:
@@ -86,8 +87,6 @@ class EntityManager:
     ):
         main_action, sell_offer, buy_offer = action
         primary_action, secondary_action = main_action
-        player.health = max(0,
-                            player.health - PlayerConfig.comsumption_per_step)
         if sell_offer is not None and buy_offer is not None:
             player.trade(sell_offer, buy_offer)
         if primary_action == Action.idle:
@@ -108,6 +107,7 @@ class EntityManager:
             player.collect_remain = None
 
     def refresh_item(self):
+
         def _tile_check(tile: Tile) -> None:
             if tile is None or tile.item is None:
                 return

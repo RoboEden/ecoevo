@@ -5,15 +5,16 @@ class EnvConfig:
     total_step = 1000
     trade_radius = 4
     visual_radius = 7
+    num_person_type = 16
     personae = [
-        *(['gold_digger'] * 16),
-        *(['hazelnut_farmer'] * 16),
-        *(['coral_collector'] * 16),
-        *(['sand_picker'] * 16),
-        *(['pineapple_farmer'] * 16),
-        *(['peanut_farmer'] * 16),
-        *(['stone_picker'] * 16),
-        *(['pumpkin_farmer'] * 16),
+        *(['gold_digger'] * num_person_type),
+        *(['hazelnut_farmer'] * num_person_type),
+        *(['coral_collector'] * num_person_type),
+        *(['sand_picker'] * num_person_type),
+        *(['pineapple_farmer'] * num_person_type),
+        *(['peanut_farmer'] * num_person_type),
+        *(['stone_picker'] * num_person_type),
+        *(['pumpkin_farmer'] * num_person_type),
     ]
     bag_volume = 1000
 
@@ -25,12 +26,12 @@ class MapConfig:
 
 class PlayerConfig:
     max_health = 100
-    comsumption_per_step = 10
+    comsumption_per_step = 1
 
 
 class RewardConfig:
     threshold = 0
-    weight_coef = 0.0001
+    weight_coef = 0
     penalty = 1
     rho = 0.5
 
