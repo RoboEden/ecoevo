@@ -5,7 +5,7 @@ except ImportError:
 
 from typing import Dict
 from ecoevo.entities import Tile
-from ecoevo.types import *
+from ecoevo.types import PosType
 from streamlit.delta_generator import DeltaGenerator
 
 

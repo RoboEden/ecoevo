@@ -4,7 +4,7 @@ try:
 except ImportError:
     raise ImportError("Try pip install ecoevo[render]!")
 from typing import Dict, List
-from ecoevo.types import *
+from ecoevo.types import PosType
 
 
 class TerminalRender:

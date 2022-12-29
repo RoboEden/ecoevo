@@ -1,11 +1,12 @@
 import yaml
+from typing import Optional
 
 from pydantic import BaseModel, Field
 from yaml.loader import SafeLoader
 
 from ecoevo.config import MapConfig, PlayerConfig, DataPath
 from ecoevo.entities.items import Bag, Item
-from ecoevo.types import *
+from ecoevo.types import Move, TradeResult, IdType, PosType, OfferType
 
 with open(DataPath.player_yaml) as file:
     ALL_PERSONAE = yaml.load(file, Loader=SafeLoader)
@@ -13,8 +14,8 @@ with open(DataPath.player_yaml) as file:
 
 class Player(BaseModel):
     persona:str
-    id:IdType
-    pos:PosType
+    id: IdType
+    pos: PosType
     backpack:Bag=Field(default_factory=Bag)
     stomach:Bag=Field(default_factory=Bag)
     health:int = Field(default=PlayerConfig.max_health)

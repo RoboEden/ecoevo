@@ -7,7 +7,7 @@ import tree
 
 from ecoevo.config import DataPath, MapConfig, PlayerConfig
 from ecoevo.entities import Item, Player, load_item
-from ecoevo.types import *
+from ecoevo.types import Action, PosType, ActionType
 
 
 @dataclass

@@ -1,7 +1,6 @@
-
 from typing import List, Dict, Tuple
 
-from ecoevo import types as tp
+from ecoevo.types import IdType, DealType
 from ecoevo.entities import Player, ALL_ITEM_DATA
 from ecoevo.types import Action
 
@@ -12,7 +11,7 @@ class Analyser(object):
 
     @staticmethod
     def get_info(done: bool, players: List[Player], dict_reward_info: Dict[int, Dict], matched_deals: Dict[
-        tp.IdType, tp.DealType], actions_valid: Dict[int, Tuple[str, str]]) -> Dict[str, int or float]:
+        IdType, DealType], actions_valid: Dict[int, Tuple[str, str]]) -> Dict[str, int or float]:
         """
         tarder parser
 
@@ -69,7 +68,7 @@ class Analyser(object):
         return info
 
     @staticmethod
-    def get_trade_data(matched_deals: Dict[tp.IdType, tp.DealType]) -> Tuple[int, Dict[str, int], Dict[str, int]]:
+    def get_trade_data(matched_deals: Dict[IdType, DealType]) -> Tuple[int, Dict[str, int], Dict[str, int]]:
         """
         tarder parser
 
