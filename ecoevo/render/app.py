@@ -2,7 +2,7 @@ import json
 from typing import Optional
 from ecoevo import EcoEvo
 from ecoevo.config import MapConfig, PlayerConfig
-from ecoevo.render.web_render import WebRender
+from ecoevo.render.game_screen import GameScreen
 from ecoevo.render import Dash, dash_table, html, dcc, Output, Input, State
 from ecoevo.render import graph_objects as go
 from ecoevo.render import dash_bootstrap_components as dbc
@@ -11,11 +11,11 @@ dbc_css = "https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates/dbc.mi
 app = Dash(__name__, external_stylesheets=[dbc.themes.DARKLY, dbc_css])
 env = EcoEvo(logging_level='CRITICAL')
 
-web_render = WebRender(MapConfig.width, MapConfig.height)
-obs_render = WebRender(2 * env.cfg.visual_radius + 1,
-                       2 * env.cfg.visual_radius + 1)
+gs_render = GameScreen(MapConfig.width, MapConfig.height)
+obs_render = GameScreen(2 * env.cfg.visual_radius + 1,
+                        2 * env.cfg.visual_radius + 1)
 obs, infos = env.reset()
-web_render.update(env.entity_manager.map)
+gs_render.update(env.entity_manager.map)
 
 reset_button = dcc.ConfirmDialogProvider(children=html.Button(
     'Reset game', className="btn btn-danger"),
@@ -151,14 +151,124 @@ control_panel = html.Div([
                              'flex': 1
                          })
 game_screen = html.Center([
-    dcc.Graph(id='game-screen',
-              figure=web_render.fig,
-              config={'displaylogo': False}),
+    dcc.Graph(
+        id='game-screen', figure=gs_render.fig, config={'displaylogo': False}),
     html.Br(),
     html.Div(id='output-provider'),
     html.Br(),
 ],
                           className="dbc")
+
+
+def update_info(id: int):
+    player = env.players[id]
+    # basic
+    basic = dbc.Table(
+        [
+            html.Thead(
+                html.Tr([
+                    html.Th("persona"),
+                    html.Th("id"),
+                    html.Th("pos"),
+                    html.Th("health"),
+                    html.Th("collect remain"),
+                    html.Th("trade result"),
+                ])),
+            html.Tbody([
+                html.Tr([
+                    html.Td(' '.join(player.persona.split('_'))),
+                    html.Td(player.id),
+                    html.Td(str(player.pos)),
+                    html.Td(player.health),
+                    html.Td(player.collect_remain),
+                    html.Td(player.trade_result),
+                ])
+            ])
+        ],
+        bordered=False,
+        dark=True,
+        hover=True,
+        responsive=True,
+        striped=True,
+    )
+
+    # plot radar
+    categories = list(player.preference.keys())
+    fig = go.Figure()
+    fig.add_trace(
+        go.Scatterpolar(r=list(player.ability.values()),
+                        theta=categories,
+                        fill='toself',
+                        name='ability'))
+    fig.add_trace(
+        go.Scatterpolar(r=[v * 1e2 for v in player.preference.values()],
+                        theta=categories,
+                        fill='toself',
+                        name='preference'))
+    fig.update_layout(
+        width=400,
+        height=300,
+        font_color="white",
+        paper_bgcolor="#303030",
+        plot_bgcolor="#e9e9e9",
+        polar=dict(radialaxis=dict(visible=False, range=[0, 10])),
+        showlegend=True)
+
+    preference = dcc.Graph(figure=fig, config={'displaylogo': False})
+
+    def get_progress(is_backpack: bool = True):
+        if is_backpack:
+            where = 'backpack'
+            item_list = player.backpack.dict().values()
+        else:
+            where = 'stomach'
+            item_list = player.stomach.dict().values()
+        return dbc.ListGroupItem([
+            dbc.Progress([
+                dbc.Progress(value=item.num * item.capacity,
+                             color=item_to_color[item.name],
+                             label=item.name.capitalize(),
+                             id=f'{item.name}-{where}-bar',
+                             max=PlayerConfig.bag_volume,
+                             bar=True) for item in item_list
+            ]),
+            html.Div([
+                dbc.Popover(
+                    [
+                        dbc.PopoverHeader(item.name.capitalize()),
+                        dbc.PopoverBody([
+                            html.Div(f'num: {item.num}'),
+                            html.Div(f'capacity: {item.capacity}'),
+                        ])
+                    ],
+                    target=f'{item.name}-{where}-bar',
+                    trigger="hover",
+                ) for item in item_list
+            ])
+        ],
+                                 id=f'{where}-list-group-item')
+
+    progress = dbc.ListGroup([
+        get_progress(is_backpack=True),
+        dbc.Popover([
+            dbc.PopoverHeader('Backpack'),
+        ],
+                    target=f'backpack-list-group-item',
+                    trigger="hover"),
+        get_progress(is_backpack=False),
+        dbc.Popover([
+            dbc.PopoverHeader('Stomach'),
+        ],
+                    target=f'stomach-list-group-item',
+                    trigger="hover"),
+    ])
+    # obs_render.update(obs[id])
+    # local_obs = dcc.Graph(obs_render.fig)
+    myreward = rewards[id]
+    myinfo = html.Pre(json.dumps(info[id], indent=2))
+
+    return basic, preference, progress, myreward, myinfo
+
 
 app.layout = html.Div(
     dbc.Row([
@@ -238,7 +348,7 @@ def control_panel_logic(selectedData, write_n_clicks,
         _data = _data['points']
         for d in _data:
             custom_data = d['customdata']
-            if custom_data[0] in web_render.player_to_emoji.keys():
+            if custom_data[0] in gs_render.player_to_emoji.keys():
                 id = custom_data[1]
                 ids.append(id)
 
@@ -265,95 +375,6 @@ def control_panel_logic(selectedData, write_n_clicks,
     return selected_actions, 0
 
 
-def update_info(id: int):
-    player = env.players[id]
-    # basic
-    basic = dbc.Table(
-        [
-            html.Thead(
-                html.Tr([
-                    html.Th("persona"),
-                    html.Th("id"),
-                    html.Th("pos"),
-                    html.Th("health"),
-                    html.Th("collect remain"),
-                    html.Th("trade result"),
-                ])),
-            html.Tbody([
-                html.Tr([
-                    html.Td(' '.join(player.persona.split('_'))),
-                    html.Td(player.id),
-                    html.Td(str(player.pos)),
-                    html.Td(player.health),
-                    html.Td(player.collect_remain),
-                    html.Td(player.trade_result),
-                ])
-            ])
-        ],
-        bordered=False,
-        dark=True,
-        hover=True,
-        responsive=True,
-        striped=True,
-    )
-
-    # plot radar
-    categories = list(player.preference.keys())
-    fig = go.Figure()
-    fig.add_trace(
-        go.Scatterpolar(r=list(player.ability.values()),
-                        theta=categories,
-                        fill='toself',
-                        name='ability'))
-    fig.add_trace(
-        go.Scatterpolar(r=[v * 1e2 for v in player.preference.values()],
-                        theta=categories,
-                        fill='toself',
-                        name='preference'))
-    fig.update_layout(
-        width=400,
-        height=300,
-        font_color="white",
-        paper_bgcolor="#303030",
-        plot_bgcolor="#e9e9e9",
-        polar=dict(radialaxis=dict(visible=False, range=[0, 10])),
-        showlegend=True)
-
-    preference = dcc.Graph(figure=fig, config={'displaylogo': False})
-
-    # backpack figs
-    # fig = go.Figure(data=[
-    #     go.Bar(name='Backpack',
-    #            x=[item.name for item in player.backpack.dict().values()],
-    #            y=[item.num for item in player.backpack.dict().values()]),
-    #     go.Bar(name='Stomach',
-    #            x=[item.name for item in player.stomach.dict().values()],
-    #            y=[item.num for item in player.stomach.dict().values()])
-    # ])
-    # fig.update_layout(barmode='group',
-    #                   width=400,
-    #                   height=300,
-    #                   yaxis_range=[0, 10],
-    #                   font_color="white",
-    #                   paper_bgcolor="#303030",
-    #                   plot_bgcolor="#e9e9e9")
-    # bac_sto_fig = dcc.Graph(figure=fig, config={'displaylogo': False})
-    progress = dbc.Progress([
-        dbc.Progress(value=item.num * item.capacity,
-        max=PlayerConfig.bag_volume,
-                     color=item_to_color[item.name],
-                     bar=True,
-                     label=item.name.capitalize())
-        for item in player.backpack.dict().values()
-    ])
-    # obs_render.update(obs[id])
-    # local_obs = dcc.Graph(obs_render.fig)
-    myreward = rewards[id]
-    myinfo = html.Pre(json.dumps(info[id], indent=2))
-
-    return basic, preference, progress, myreward, myinfo
-
-
 @app.callback(
     Output('basic-provider', 'children'),
     Output('preference-provider', 'children'),
@@ -374,7 +395,7 @@ def info_panel_logic(clickData, step_n_clicks, reset_n_clicks):
     _data = json.loads(json.dumps(clickData, indent=2))
     if _data is not None and len(_data['points']):
         custom_data = _data['points'][0]['customdata']
-        if custom_data[0] in web_render.player_to_emoji.keys():
+        if custom_data[0] in gs_render.player_to_emoji.keys():
             id = custom_data[1]
     if step_n_clicks and id is not None:  # update upon step or clickData change
         basic, preference, bac_sto_fig, myreward, myinfo = update_info(id)
@@ -404,8 +425,8 @@ def game_screen_logic(step_n_clicks, reset_n_clicks):
         msg = step_msg if not done else u'Game Over!'
     else:
         msg = reset_msg
-    web_render.update(env.entity_manager.map)
-    return web_render.fig, msg, 0
+    gs_render.update(env.entity_manager.map)
+    return gs_render.fig, msg, 0
 
 
 if __name__ == '__main__':

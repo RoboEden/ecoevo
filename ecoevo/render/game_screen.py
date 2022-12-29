@@ -4,7 +4,7 @@ from ecoevo.render import graph_objects as go
 from ecoevo.types import PosType
 
 
-class WebRender:
+class GameScreen:
 
     def __init__(self, width: int, height: int) -> None:
         self.width = width
