@@ -1,10 +1,12 @@
 from datetime import datetime
 from typing import Dict, List, Tuple
+import copy
+import math
 
 from loguru import logger
 from ortools.linear_solver import pywraplp
 from ecoevo.entities.player import Player
-from ecoevo import types as tp
+from ecoevo.types import Action, TradeResult, IdType, DealType, ActionType
 
 
 class Trader(object):
@@ -12,54 +14,91 @@ class Trader(object):
     trader
     """
 
-    def __init__(self, trade_radius) -> None:
+    def __init__(self, trade_radius: int) -> None:
         """
         trader, initialise
 
-        :param list_deal:  list of deals
+        :param trade_radius:  trade radius
         """
 
         # param
         self.trade_radius = trade_radius
 
-        # deal info
-        self.list_deal = []
-        self.mat_if_match, self.mat_volume = [[]], [[]]
-        self.list_match = []
+        # mode
+        # self.mode = 'ip'  # IP model
+        self.mode = 'heu'  # heuristic method
 
-    def filter_legal_deals(self, players: List[Player], actions: List[tp.ActionType]) -> Dict[tp.IdType, tp.DealType]:
+        # env info
+        self.players: List[Player] = []
+        self.actions: List[ActionType] = []
+        self.legal_deals: Dict[IdType, DealType] = {}
+    
+    def parse(self, players: List[Player], actions: List[ActionType]) -> Dict[IdType, DealType]:
         """
         tarder parser
 
         :param players:  list of players
         :param actions:  list of actions
 
-        :return: legal_deals:  dict of legal deals
+        :return: match_deals:  result of matched deals
+        """
+
+        self.players, self.actions = players, actions
+        self.legal_deals = self._get_legal_deals()
+
+        match_deals = {}
+
+        # method 1: IP model
+        if self.mode == 'IP':
+            list_deal = list(self.legal_deals.values())
+            mat_if_match, mat_volume = self._ip_process(list_deal=list_deal)
+            list_match = self._ip_model(list_deal=list_deal, mat_if_match=mat_if_match, mat_volume=mat_volume)
+            
+            # result process
+            idx2key = list(self.legal_deals.keys())
+            for match in list_match:
+                idx_1, idx_2 = match
+                key_1, key_2 = idx2key[idx_1], idx2key[idx_2]
+                deal_1, deal_2 = self.legal_deals[key_1], self.legal_deals[key_2]
+                
+                min_deal_1, min_deal_2 = self._mini_close(deal_1=deal_1, deal_2=deal_2)
+                match_deals[key_1], match_deals[key_2] = min_deal_1, min_deal_2
+
+        # method 2: heuristic method
+        else:
+            match_deals = self._heuristic_match()
+        
+        return match_deals
+
+    def _get_legal_deals(self) -> Dict[IdType, DealType]:
+        """
+        tarder parser
+
+        :return: legal_deals:  dict of legal deals, player ID to deal
         """
 
         legal_deals = {}
-
-        for player in players:
-            main_action, sell_offer, buy_offer = actions[player.id]
+        for player in self.players:
+            main_action, sell_offer, buy_offer = self.actions[player.id]
             primary_action, secondary_action = main_action
 
             # parse offer
             if sell_offer is None or buy_offer is None:
-                player.trade_result = tp.TradeResult.absent
+                player.trade_result = TradeResult.absent
                 continue
 
             sell_item_name, sell_num = sell_offer
             buy_item_name, buy_num = buy_offer
             if sell_item_name == buy_item_name:
-                player.trade_result = tp.TradeResult.illegal
+                player.trade_result = TradeResult.illegal
                 logger.debug(f'Invalid: sell item is the same as buy item {sell_item_name}')
                 continue
             if sell_num >= 0:
-                player.trade_result = tp.TradeResult.illegal
+                player.trade_result = TradeResult.illegal
                 logger.debug(f'Invalid sell_num {sell_num}, should be < 0')
                 continue
             if buy_num <= 0:
-                player.trade_result = tp.TradeResult.illegal
+                player.trade_result = TradeResult.illegal
                 logger.debug(f'Invalid buy_num {buy_num}, should be > 0')
                 continue
             sell_num, buy_num = abs(sell_num), abs(buy_num)
@@ -69,7 +108,7 @@ class Trader(object):
 
             # handle sell and consume same item
             least_amount = sell_num
-            if primary_action == tp.Action.consume:
+            if primary_action == Action.consume:
                 consume_item_name = secondary_action
                 if sell_item_name == consume_item_name:
                     least_amount += sell_item.consume_num
@@ -78,13 +117,13 @@ class Trader(object):
                 logger.debug(
                     f'Insufficient {sell_item_name}:{sell_item.num} sell_num {sell_num}'
                 )
-                player.trade_result = tp.TradeResult.illegal
+                player.trade_result = TradeResult.illegal
                 continue
 
             # check buy
             buy_item_volumne = player.backpack[buy_item_name].capacity * buy_num
             if player.backpack.remain_volume < buy_item_volumne:
-                player.trade_result = tp.TradeResult.illegal
+                player.trade_result = TradeResult.illegal
                 logger.debug(
                     f'Insufficient backpack remain volume:{player.backpack.remain_volume}'
                 )
@@ -94,71 +133,22 @@ class Trader(object):
 
         return legal_deals
 
-    def parse(self, legal_deals: Dict[tp.IdType, tp.DealType]) -> Dict[tp.IdType, tp.DealType]:
+    def _ip_process(self, list_deal: List[DealType]) -> Tuple[List[List[bool]], List[List[int]]]:
         """
-        tarder parser
+        data process for IP model
 
-        :param legal_deals:  dictionary of legal deals
-
-        :return: match_deals:  result of matched deals
-        """
-
-        self.list_deal = list(legal_deals.values())
-
-        # process data and run model
-        self.mat_if_match, self.mat_volume = self._process()
-        self.list_match = self._trade()
-
-        match_deals = {}
-        idx2key = list(legal_deals.keys())
-        self.num_trade = 0
-        self.dict_num_trade, self.dict_amount_trade = {}, {}
-        for match in self.list_match:
-            idx_A, idx_B = match
-            key_A, key_B = idx2key[idx_A], idx2key[idx_B]
-            deal_A, deal_B = legal_deals[key_A], legal_deals[key_B]
-
-            min_deal_A, min_deal_B = self._mini_close(deal_A, deal_B)
-            match_deals[key_A], match_deals[key_B] = min_deal_A, min_deal_B
-        
-        return match_deals
-
-    def _mini_close(self, deal_A: tp.DealType, deal_B: tp.DealType):
-        """
-        get deals tuple with actual trading volume
-
-        :param deal_A:  deal A
-        :param deal_B:  deal B
-
-        :return: min_deal_A:  deal A with actual trading volume
-        :return: min_deal_B:  deal B with actual trading volume
-        """
-
-        pos_A, (sell_name_A, sell_num_A), (buy_name_A, buy_num_A) = deal_A
-        pos_B, (sell_name_B, sell_num_B), (buy_name_B, buy_num_B) = deal_B
-
-        sell_num_A, buy_num_A = -min(abs(sell_num_A), buy_num_B), min(abs(sell_num_B), buy_num_A)
-        sell_num_B, buy_num_B = -buy_num_A, abs(sell_num_A)
-
-        min_deal_A = pos_A, (sell_name_A, sell_num_A), (buy_name_A, buy_num_A)
-        min_deal_B = pos_B, (sell_name_B, sell_num_B), (buy_name_B, buy_num_B)
-
-        return min_deal_A, min_deal_B
-
-    def _process(self) -> Tuple[List[List[bool]], List[List[int]]]:
-        """
-        data process for model
+        :param list_deal:  list of legal deals
 
         :return: mat_if_match:  available matching matrix
         :return: mat_volume:  trading volume matrix
         """
 
-        mat_if_match = [[False for _ in self.list_deal]for _ in self.list_deal]
-        mat_volume = [[0 for _ in self.list_deal] for _ in self.list_deal]
-        for i in range(len(self.list_deal)):
-            for j in range(len(self.list_deal)):
-                ((pos_x_i, pos_y_i), (item_sell_i, num_sell_i), (item_buy_i, num_buy_i)) = self.list_deal[i]
-                ((pos_x_j, pos_y_j), (item_sell_j, num_sell_j), (item_buy_j, num_buy_j)) = self.list_deal[j]
+        mat_if_match = [[False for _ in list_deal]for _ in list_deal]
+        mat_volume = [[0 for _ in list_deal] for _ in list_deal]
+        for i in range(len(list_deal)):
+            for j in range(len(list_deal)):
+                ((pos_x_i, pos_y_i), (item_sell_i, num_sell_i), (item_buy_i, num_buy_i)) = list_deal[i]
+                ((pos_x_j, pos_y_j), (item_sell_j, num_sell_j), (item_buy_j, num_buy_j)) = list_deal[j]
 
                 # jump over same deals
                 if i == j:
@@ -181,17 +171,20 @@ class Trader(object):
 
         return mat_if_match, mat_volume
 
-    def _trade(self) -> List[Tuple[int, int]]:
+    def _ip_model(self, list_deal: List[
+        DealType], mat_if_match: List[List[bool]], mat_volume: List[List[int]]) -> List[Tuple[int, int]]:
         """
-        IP Model for automated trade matching
+        IP model for automated trade matching
+
+        :param list_deal:  list of legal deals
+        :param mat_if_match:  available matching matrix
+        :param mat_volume:  trading volume matrix
 
         :return: list_match:  matching list, (deal index, deal index)
         """
 
         # parameters
-        num_deal = len(self.list_deal)
-        mat_if_match = self.mat_if_match
-        mat_volume = self.mat_volume
+        num_deal = len(list_deal)
 
         solver = pywraplp.Solver(
             name='location',
@@ -253,3 +246,136 @@ class Trader(object):
             raise Exception("Unexpected status: {}!".format(status))
 
         return list_match
+
+    def _mini_close(self, deal_1: DealType, deal_2: DealType):
+        """
+        get deals tuple with actual trading volume
+
+        :param deal_1:  deal 1
+        :param deal_2:  deal 2
+
+        :return: min_deal_1:  deal 1 with actual trading volume
+        :return: min_deal_2:  deal 2 with actual trading volume
+        """
+
+        pos_1, (sell_name_1, sell_num_1), (buy_name_1, buy_num_1) = deal_1
+        pos_2, (sell_name_2, sell_num_2), (buy_name_2, buy_num_2) = deal_2
+
+        sell_num_1, buy_num_1 = -min(abs(sell_num_1), buy_num_2), min(abs(sell_num_2), buy_num_1)
+        sell_num_2, buy_num_2 = -buy_num_1, abs(sell_num_1)
+
+        min_deal_1 = pos_1, (sell_name_1, sell_num_1), (buy_name_1, buy_num_1)
+        min_deal_2 = pos_2, (sell_name_2, sell_num_2), (buy_name_2, buy_num_2)
+
+        return min_deal_1, min_deal_2
+
+    def _heuristic(self) -> Dict[IdType, DealType]:
+        """
+        heuristic method for automated trade matching
+
+        :return: match_deals:  result of matched deals with actual trade amount
+        """
+
+        dict_deal = copy.deepcopy(self.legal_deals)
+        idx_pos, idx_sell, idx_buy = 0, 1, 2
+        idx_item_name, idx_item_num = 1
+
+        for i in dict_deal:
+            (x_i, y_i), (sell_name_i, sell_num_i), (buy_name_i, buy_num_i) = dict_deal[i]
+
+            # deal i already finished
+            if sell_num_i >= 0 or buy_num_i <= 0:
+                continue
+
+            # get deal candidates
+            dict_deal_cur = {}
+            for j in dict_deal:
+                # jump over same deals
+                if j == i:
+                    continue
+
+                (x_j, y_j), (sell_name_j, sell_num_j), (buy_name_j, buy_num_j) = dict_deal[j]
+
+                # deal j already finished
+                if sell_num_j >= 0 or buy_num_j <= 0:
+                    continue
+
+                # too far to trade
+                if abs(x_i - x_j) > self.trade_radius or abs(y_i - y_j) > self.trade_radius:
+                    continue
+
+                # items cannot match
+                if sell_name_i != buy_name_j or buy_name_i != sell_name_j:
+                    continue
+
+                dict_deal_cur[j] = dict_deal[j]
+
+            # matching
+            while sell_num_i < 0 and buy_num_i > 0:
+                ratio_i = abs(sell_num_i) / buy_num_i
+
+                # get best match deal
+                pid_match, match_ratio = None, 0
+                for j in dict_deal_cur:
+                    (x_j, y_j), (sell_name_j, sell_num_j), (buy_name_j, buy_num_j) = dict_deal_cur[j]
+                    ratio_j = abs(sell_num_j) / buy_num_j
+                    if ratio_i * ratio_j >= 1 and ratio_j > match_ratio:
+                        pid_match, match_ratio = j, ratio_j
+                
+                # no matched deals
+                if not pid_match:
+                    break
+
+                # get trade amount
+                actual_sell_num_1, actual_buy_num_1, actual_sell_num_2, actual_buy_num_2 = self._heuristic_match(
+                    deal_1=dict_deal[i], deal_2=dict_deal_cur[pid_match], player_1=self.players[i])
+                dict_deal_cur.pop(pid_match)
+
+                # update deal info
+                dict_deal[i][idx_sell][idx_item_num] += actual_sell_num_1
+                dict_deal[i][idx_buy][idx_item_num] -= actual_buy_num_1
+                dict_deal[pid_match][idx_sell][idx_item_num] += actual_sell_num_2
+                dict_deal[pid_match][idx_buy][idx_item_num] -= actual_buy_num_2
+                sell_num_i, buy_num_i = dict_deal[i][idx_sell][idx_item_num], dict_deal[i][idx_buy][idx_item_num]
+
+        # result info
+        match_deals = {}
+        for i in self.legal_deals:
+            sell_num = dict_deal[i][idx_sell][idx_item_num] - self.legal_deals[i][idx_sell][idx_item_num]
+            buy_num = dict_deal[i][idx_buy][idx_item_num] - self.legal_deals[i][idx_buy][idx_item_num]
+            match_deals[i] = (
+                self.legal_deals[idx_pos], (self.legal_deals[idx_sell][idx_item_name], sell_num), (
+                    self.legal_deals[idx_buy][idx_item_name], buy_num))
+
+        return match_deals
+
+    def _heuristic_match(
+        self, deal_1: DealType, deal_2: DealType, player_1: Player) -> Tuple[int, int, int, int]:
+        """
+        get trade amount of a couple of deals
+
+        :param deal_1:  deal 1
+        :param deal_2:  deal 2
+        :param player_1:  player of deal 1
+
+        :return: actual_sell_num_1:  actual sell item amout of deal 1
+        :return: actual_buy_num_1:  actual buy item amout of deal 1
+        :return: actual_sell_num_2:  actual sell item amout of deal 2
+        :return: actual_buy_num_2:  actual buy item amout of deal 2
+        """
+
+        _, (_, sell_num_1), (_, buy_num_1) = deal_1
+        _, (_, sell_num_2), (_, buy_num_2) = deal_2
+        sell_num_1, sell_num_2 = abs(sell_num_1), abs(sell_num_2)
+
+        # use deal 2 as pivot
+        actual_sell_num_1 = buy_num_2 if sell_num_1 >= buy_num_2 else sell_num_1
+        actual_buy_num_2 = actual_sell_num_1
+        
+        # consider remaining backpack volume of player 1
+        ratio_2 = sell_num_2 / buy_num_2
+        actual_sell_num_2 = math.ceil(actual_buy_num_2 * ratio_2) if math.ceil(
+            actual_buy_num_2 * ratio_2) > player_1.backpack.remain_volume else player_1.backpack.remain_volume
+        actual_buy_num_1 = actual_sell_num_2
+
+        return actual_sell_num_1, actual_buy_num_1, actual_sell_num_2, actual_buy_num_2

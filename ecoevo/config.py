@@ -16,7 +16,7 @@ class EnvConfig:
         *(['stone_picker'] * num_person_type),
         *(['pumpkin_farmer'] * num_person_type),
     ]
-    bag_volume = 1000
+    bag_volume = 10 ** 8
 
 
 class MapConfig:
