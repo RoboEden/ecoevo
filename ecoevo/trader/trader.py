@@ -1,12 +1,12 @@
 from datetime import datetime
 from typing import Dict, List, Tuple
-import copy
+import random
 import math
 
 from loguru import logger
 from ortools.linear_solver import pywraplp
 from ecoevo.entities.player import Player
-from ecoevo.types import Action, TradeResult, IdType, DealType, ActionType
+from ecoevo.types import Action, TradeResult, IdType, OfferType, DealType, ActionType
 
 
 class Trader(object):
@@ -186,13 +186,10 @@ class Trader(object):
         # parameters
         num_deal = len(list_deal)
 
-        solver = pywraplp.Solver(
-            name='location',
-            problem_type=pywraplp.Solver.CBC_MIXED_INTEGER_PROGRAMMING)
+        solver = pywraplp.Solver(name='location', problem_type=pywraplp.Solver.CBC_MIXED_INTEGER_PROGRAMMING)
 
         # variable: if choose a match
-        x = [[solver.BoolVar('x_{}_{}'.format(i, j)) for j in range(num_deal)]
-             for i in range(num_deal)]
+        x = [[solver.BoolVar('x_{}_{}'.format(i, j)) for j in range(num_deal)] for i in range(num_deal)]
 
         # constraint: validation
         for i in range(num_deal):
@@ -209,23 +206,20 @@ class Trader(object):
             solver.Add(sum(x[i][j] for j in range(num_deal)) <= 1)
 
         # objective: maximise the total trading volume
-        solver.Maximize(
-            sum(
-                sum(mat_volume[i][j] * x[i][j] / 2 for j in range(num_deal))
-                for i in range(num_deal)))
+        solver.Maximize(sum(sum(mat_volume[i][j] * x[i][j] / 2 for j in range(num_deal)) for i in range(num_deal)))
 
         # solve
         dts = datetime.now()
         status = solver.Solve()
         dte = datetime.now()
         tm = round((dte - dts).seconds + (dte - dts).microseconds / (10**6), 3)
-        logger.debug(f"trading model solving time:{tm}s")
+        logger.debug(f"trading model solving time: {tm}s")
 
         # case 1: optimal
         list_match = []
         if status == pywraplp.Solver.OPTIMAL:
             obj_ = solver.Objective().Value()
-            logger.debug(f"objective value:{round(obj_)}")
+            logger.debug(f"objective value: {round(obj_)}")
             x_ = [[x[i][j].solution_value() for j in range(num_deal)]
                   for i in range(num_deal)]
 
@@ -269,18 +263,34 @@ class Trader(object):
 
         return min_deal_1, min_deal_2
 
-    def _heuristic(self) -> Dict[IdType, DealType]:
+    def _heuristic(self) -> Tuple[Dict[IdType, DealType], Dict[Tuple[IdType, IdType], Tuple[OfferType, OfferType]]]:
         """
         heuristic method for automated trade matching
 
         :return: match_deals:  result of matched deals with actual trade amount
+        :return: dict_flow:  actual item flows during the trades
         """
 
-        dict_deal = copy.deepcopy(self.legal_deals)
-        idx_pos, idx_sell, idx_buy = 0, 1, 2
-        idx_item_name, idx_item_num = 1
+        dts = datetime.now()
 
-        for i in dict_deal:
+        idx_pos, idx_sell, idx_buy = 0, 1, 2
+        idx_item_name, idx_item_num = 0, 1
+
+        # deal infos during processing
+        dict_deal = {}
+        for i in self.legal_deals:
+            dict_deal[i] = [
+                list(self.legal_deals[i][idx_pos]), 
+                list(self.legal_deals[i][idx_sell]), 
+                list(self.legal_deals[i][idx_buy])]
+
+        # actual item flows during the trades
+        dict_flow = {}
+
+        random.seed(42)
+        list_deal_id = list(dict_deal.keys())
+        random.shuffle(list_deal_id)
+        for i in list_deal_id:
             (x_i, y_i), (sell_name_i, sell_num_i), (buy_name_i, buy_num_i) = dict_deal[i]
 
             # deal i already finished
@@ -288,8 +298,8 @@ class Trader(object):
                 continue
 
             # get deal candidates
-            dict_deal_cur = {}
-            for j in dict_deal:
+            dict_deal_match = {}
+            for j in list_deal_id:
                 # jump over same deals
                 if j == i:
                     continue
@@ -308,49 +318,73 @@ class Trader(object):
                 if sell_name_i != buy_name_j or buy_name_i != sell_name_j:
                     continue
 
-                dict_deal_cur[j] = dict_deal[j]
+                dict_deal_match[j] = dict_deal[j]
 
             # matching
             while sell_num_i < 0 and buy_num_i > 0:
                 ratio_i = abs(sell_num_i) / buy_num_i
 
                 # get best match deal
-                pid_match, match_ratio = None, 0
-                for j in dict_deal_cur:
-                    (x_j, y_j), (sell_name_j, sell_num_j), (buy_name_j, buy_num_j) = dict_deal_cur[j]
+                pid_cur, match_ratio = None, 0
+                for j in dict_deal_match:
+                    (x_j, y_j), (sell_name_j, sell_num_j), (buy_name_j, buy_num_j) = dict_deal_match[j]
                     ratio_j = abs(sell_num_j) / buy_num_j
-                    if ratio_i * ratio_j >= 1 and ratio_j > match_ratio:
-                        pid_match, match_ratio = j, ratio_j
+                    if ratio_i * ratio_j >= 1:
+                        # get a new match deal
+                        if pid_cur is None:
+                            pid_cur, match_ratio = j, ratio_j
+                            
+                        # may update match deal
+                        else:
+                            # if get a bigger supply-demand ratio, update match deal
+                            if ratio_j > match_ratio:
+                                pid_cur, match_ratio = j, ratio_j
+
+                            # if get an equal supply-demand ratio, choose the nearer one
+                            elif ratio_j == match_ratio:
+                                (x_cur, y_cur) = dict_deal[pid_cur][idx_pos]
+                                dist_cur, dist_j = abs(x_i - x_cur) + abs(y_i - y_cur), abs(x_i - x_j) + abs(y_i - y_j)
+                                if dist_j < dist_cur:
+                                    pid_cur, match_ratio = j, ratio_j
                 
                 # no matched deals
-                if not pid_match:
+                if not pid_cur:
                     break
 
                 # get trade amount
-                actual_sell_num_1, actual_buy_num_1, actual_sell_num_2, actual_buy_num_2 = self._heuristic_match(
-                    deal_1=dict_deal[i], deal_2=dict_deal_cur[pid_match], player_1=self.players[i])
-                dict_deal_cur.pop(pid_match)
+                actual_buy_num_1, actual_buy_num_2 = self._heuristic_match(
+                    deal_1=dict_deal[i], deal_2=dict_deal_match[pid_cur], player_1=self.players[i])
+                dict_deal_match.pop(pid_cur)
 
                 # update deal info
-                dict_deal[i][idx_sell][idx_item_num] += actual_sell_num_1
+                dict_deal[i][idx_sell][idx_item_num] += actual_buy_num_2
                 dict_deal[i][idx_buy][idx_item_num] -= actual_buy_num_1
-                dict_deal[pid_match][idx_sell][idx_item_num] += actual_sell_num_2
-                dict_deal[pid_match][idx_buy][idx_item_num] -= actual_buy_num_2
+                dict_deal[pid_cur][idx_sell][idx_item_num] += actual_buy_num_1
+                dict_deal[pid_cur][idx_buy][idx_item_num] -= actual_buy_num_2
+                dict_flow[i, pid_cur] = ((dict_deal[i][idx_sell][idx_item_name], -actual_buy_num_2), (
+                    dict_deal[i][idx_buy][idx_item_name], actual_buy_num_1))
                 sell_num_i, buy_num_i = dict_deal[i][idx_sell][idx_item_num], dict_deal[i][idx_buy][idx_item_num]
 
         # result info
         match_deals = {}
         for i in self.legal_deals:
             sell_num = dict_deal[i][idx_sell][idx_item_num] - self.legal_deals[i][idx_sell][idx_item_num]
-            buy_num = dict_deal[i][idx_buy][idx_item_num] - self.legal_deals[i][idx_buy][idx_item_num]
-            match_deals[i] = (
-                self.legal_deals[idx_pos], (self.legal_deals[idx_sell][idx_item_name], sell_num), (
-                    self.legal_deals[idx_buy][idx_item_name], buy_num))
+            buy_num = self.legal_deals[i][idx_buy][idx_item_num] - dict_deal[i][idx_buy][idx_item_num]
+            if sell_num == 0 or buy_num == 0:
+                continue
 
-        return match_deals
+            match_deals[i] = (
+                self.legal_deals[i][idx_pos], (self.legal_deals[i][idx_sell][idx_item_name], -sell_num), (
+                    self.legal_deals[i][idx_buy][idx_item_name], buy_num))
+
+        dte = datetime.now()
+        tm = round((dte - dts).seconds + (dte - dts).microseconds / (10 ** 6), 3)
+        logger.debug(f"heuristic processing time: {tm} s")
+        
+        return match_deals, dict_flow
 
     def _heuristic_match(
-        self, deal_1: DealType, deal_2: DealType, player_1: Player) -> Tuple[int, int, int, int]:
+        self, deal_1: DealType, deal_2: DealType, player_1: Player) -> Tuple[int, int]:
         """
         get trade amount of a couple of deals
 
@@ -358,10 +392,8 @@ class Trader(object):
         :param deal_2:  deal 2
         :param player_1:  player of deal 1
 
-        :return: actual_sell_num_1:  actual sell item amout of deal 1
-        :return: actual_buy_num_1:  actual buy item amout of deal 1
-        :return: actual_sell_num_2:  actual sell item amout of deal 2
-        :return: actual_buy_num_2:  actual buy item amout of deal 2
+        :return: actual_buy_num_1:  actual buy item amout of deal 1, equals to sell item amout of deal 2
+        :return: actual_buy_num_2:  actual buy item amout of deal 2, equals to sell item amout of deal 1
         """
 
         _, (_, sell_num_1), (_, buy_num_1) = deal_1
@@ -369,13 +401,11 @@ class Trader(object):
         sell_num_1, sell_num_2 = abs(sell_num_1), abs(sell_num_2)
 
         # use deal 2 as pivot
-        actual_sell_num_1 = buy_num_2 if sell_num_1 >= buy_num_2 else sell_num_1
-        actual_buy_num_2 = actual_sell_num_1
+        actual_buy_num_2 = buy_num_2 if sell_num_1 >= buy_num_2 else sell_num_1
         
         # consider remaining backpack volume of player 1
         ratio_2 = sell_num_2 / buy_num_2
-        actual_sell_num_2 = math.ceil(actual_buy_num_2 * ratio_2) if math.ceil(
-            actual_buy_num_2 * ratio_2) > player_1.backpack.remain_volume else player_1.backpack.remain_volume
-        actual_buy_num_1 = actual_sell_num_2
+        actual_buy_num_1 = math.ceil(actual_buy_num_2 * ratio_2) if math.ceil(
+            actual_buy_num_2 * ratio_2) <= player_1.backpack.remain_volume else player_1.backpack.remain_volume
 
-        return actual_sell_num_1, actual_buy_num_1, actual_sell_num_2, actual_buy_num_2
+        return actual_buy_num_1, actual_buy_num_2
