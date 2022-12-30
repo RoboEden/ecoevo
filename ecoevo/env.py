@@ -59,24 +59,16 @@ class EcoEvo:
         self.entity_manager.reset_map(self.players)
 
         obs = {player.id: self.get_obs(player) for player in self.players}
-        infos = {}
+        info = {}
 
         self.ids = [player.id for player in self.players]
 
-        return obs, infos
+        return obs, info
 
     def step(
         self, actions: List[ActionType]
     ) -> Tuple[Dict[IdType, Dict[PosType, Tile]], Dict[IdType, float], bool,
                Dict[IdType, dict]]:
-        """
-        tarder parser
-
-        :param actions:  all players actions
-
-        :return: match_deals:  result of matched deals
-        """
-
         self.curr_step += 1
 
         # trader

@@ -194,12 +194,35 @@ The gamecore outputs `obs`, `rewards`, `done`, `infos` when step. See details be
     }
     ```
 ## Render
-**WIP**
+See the example below:
 
-To render, run 
+> **_NOTE:_** 
+> 
+> - `self.env` must be an `EcoEvo` object 
+> - Implement your own `self.get_actions()`.  You can get current `obs` by calling `self.get_current_obs()` method.
+```python
+import ecoevo
+
+
+class MyRollOut(ecoevo.RollOut):
+
+    def __init__(self):
+        super().__init__()
+        self.env = ecoevo.EcoEvo()
+
+    def get_actions(self):
+        obs = self.get_current_obs()
+        return [(('idle', None), None, None)
+                for i in range(self.env.num_player)]
+
+if __name__ == '__main__':
+    my_rollout = MyRollOut()
+    web_app = ecoevo.WebApp(my_rollout)
+    web_app.run_server()
 ```
-streamlit run ecoevo/render/app.py
-```
+
+Run the python code above and open the render web from your browser on `http://127.0.0.1:8050/`
+
 
 ## FAQ
 - Can agent execute more than 1 action per step?
