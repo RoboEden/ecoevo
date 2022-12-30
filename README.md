@@ -197,11 +197,12 @@ The gamecore outputs `obs`, `rewards`, `done`, `infos` when step. See details be
 See the example below:
 
 > **_NOTE:_** 
-> 
+> For a `RollOut` object
 > - `self.env` must be an `EcoEvo` object 
 > - Implement your own `self.get_actions()`.  You can get current `obs` by calling `self.get_current_obs()` method.
 ```python
 import ecoevo
+from ecoevo.render import WebApp
 
 
 class MyRollOut(ecoevo.RollOut):
@@ -215,9 +216,11 @@ class MyRollOut(ecoevo.RollOut):
         return [(('idle', None), None, None)
                 for i in range(self.env.num_player)]
 
+
+my_rollout = MyRollOut()
+web_app = WebApp(my_rollout)
+
 if __name__ == '__main__':
-    my_rollout = MyRollOut()
-    web_app = ecoevo.WebApp(my_rollout)
     web_app.run_server()
 ```
 
