@@ -1,22 +1,20 @@
 import ecoevo
-from ecoevo.config import EnvConfig
 
 
-class MyWrapper(ecoevo.EcoEvo):
+class MyRollOut(ecoevo.RollOut):
 
-    def __init__(self,
-                 render_mode=None,
-                 config=EnvConfig,
-                 logging_level="WARNING",
-                 logging_path="out.log"):
-        super().__init__(render_mode, config, logging_level, logging_path)
+    def __init__(self):
+        super().__init__()
+        self.env = ecoevo.EcoEvo()
 
-    def get_action(self):
-        return [(('idle', None), None, None) for i in range(self.num_player)]
+    def get_actions(self):
+        obs = self.get_current_obs()
+        return [(('idle', None), None, None)
+                for i in range(self.env.num_player)]
 
 
-wrapped_env = MyWrapper()
-web_app = ecoevo.WebApp(wrapped_env)
+my_rollout = MyRollOut()
+web_app = ecoevo.WebApp(my_rollout)
 
 if __name__ == '__main__':
     web_app.run_server()

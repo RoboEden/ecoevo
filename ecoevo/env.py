@@ -69,14 +69,6 @@ class EcoEvo:
         self, actions: List[ActionType]
     ) -> Tuple[Dict[IdType, Dict[PosType, Tile]], Dict[IdType, float], bool,
                Dict[IdType, dict]]:
-        """
-        tarder parser
-
-        :param actions:  all players actions
-
-        :return: match_deals:  result of matched deals
-        """
-
         self.curr_step += 1
 
         # trader

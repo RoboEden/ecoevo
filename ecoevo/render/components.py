@@ -4,7 +4,6 @@ from ecoevo.render import dash_table, html, dcc
 from ecoevo.render import graph_objects as go
 from ecoevo.render import dash_bootstrap_components as dbc
 
-
 reset_button = dcc.ConfirmDialogProvider(children=html.Button(
     'Reset game', className="btn btn-danger"),
                                          id='reset-danger-button',
@@ -15,6 +14,9 @@ step_button = html.Button('Step',
 write_button = html.Button('Write',
                            id='write-button-state',
                            className="btn btn-primary")
+clear_button = html.Button('Clear',
+                           id='clear-button-state',
+                           className="btn btn-warning")
 
 item_to_color = {
     'gold': '#f9c23c',
@@ -134,7 +136,10 @@ control_panel = html.Div([
         value=0,
         step=1,
         id='sell-num-state'),
-    write_button,
+    dbc.Row([
+        dbc.Col(write_button),
+        dbc.Col(clear_button),
+    ])
 ],
                          className='dbc card border-dark mb-3',
                          style={
@@ -142,8 +147,7 @@ control_panel = html.Div([
                              'flex': 1
                          })
 game_screen = html.Center([
-    dcc.Graph(
-        id='game-screen', config={'displaylogo': False}),
+    dcc.Graph(id='game-screen', config={'displaylogo': False}),
     html.Br(),
     html.Div(id='output-provider'),
     html.Br(),
@@ -255,7 +259,7 @@ def update_player_info(player: Player):
     ])
     # obs_render.update(obs[id])
     # local_obs = dcc.Graph(obs_render.fig)
-    myreward = None#rewards[id]
-    myinfo = None#html.Pre(json.dumps(info[id], indent=2))
+    myreward = None  #rewards[id]
+    myinfo = None  #html.Pre(json.dumps(info[id], indent=2))
 
     return basic, preference, progress, myreward, myinfo

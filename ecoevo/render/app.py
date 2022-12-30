@@ -1,7 +1,8 @@
 import json
+import copy
 import ecoevo.render.components as erc
-from ecoevo import EcoEvo
 from typing import Optional
+from ecoevo.rollout import RollOut
 from ecoevo.config import MapConfig
 from ecoevo.render.game_screen import GameScreen
 from ecoevo.render import Dash, html, Output, Input, State
@@ -10,14 +11,15 @@ from ecoevo.render import dash_bootstrap_components as dbc
 
 class WebApp:
 
-    def __init__(self, env: EcoEvo):
-        self.env = env
+    def __init__(self, rollout: RollOut):
+        self.rollout = rollout
+        self.env = rollout.env
         self.env.reset()
         self.gs_render = GameScreen(MapConfig.width, MapConfig.height)
         self.gs_render.update(self.env.entity_manager.map)
-
-        self.current_actions = [(('idle', None), None, None)
-                                for i in range(self.env.num_player)]
+        self.next_actions = self.rollout.get_actions()
+        self.old_actions = copy.deepcopy(self.next_actions)
+        self.writed_actions = {}
 
         dbc_css = "https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates/dbc.min.css"
 
@@ -47,8 +49,10 @@ class WebApp:
         self.app.callback(
             Output('datatable-interactivity', 'data'),
             Output('write-button-state', 'n_clicks'),
+            Output('clear-button-state', 'n_clicks'),
             Input('game-screen', 'selectedData'),
             Input('write-button-state', 'n_clicks'),
+            Input('clear-button-state', 'n_clicks'),
             State('primary-action-state', 'value'),
             State('secondary-action-state', 'value'),
         )(self._callback_control_panel)
@@ -96,9 +100,14 @@ class WebApp:
                 'title': 'secondary action'
             } for item_name in erc.all_item_list], erc.all_item_list[0]
 
-    def _callback_control_panel(self, selectedData, write_n_clicks,
-                                primary_action: Optional[str],
-                                secondary_action: Optional[str]):
+    def _callback_control_panel(
+        self,
+        selectedData,
+        write_n_clicks,
+        clear_n_clicks,
+        primary_action: Optional[str],
+        secondary_action: Optional[str],
+    ):
         ids = []
         selected_actions = []
         _data = json.loads(json.dumps(selectedData))
@@ -116,11 +125,18 @@ class WebApp:
                 action_to_write = ((primary_action, secondary_action), None,
                                    None)
                 for id in ids:
-                    self.current_actions[id] = action_to_write
-            # display from self.current_actions
+                    self.writed_actions[id] = action_to_write
+                    self.next_actions[id] = action_to_write
+                write_n_clicks = 0
 
+            if clear_n_clicks:
+                self.next_actions = self.old_actions
+                self.writed_actions = {}
+                clear_n_clicks = 0
+
+            # display from self.next_actions
             for id in ids:
-                _action = self.current_actions[id]
+                _action = self.next_actions[id]
                 main_action, sell_offer, buy_offer = _action
                 primary_action, secondary_action = main_action
                 selected_actions.append({
@@ -131,7 +147,7 @@ class WebApp:
                     'buy offer': buy_offer,
                 })
 
-        return selected_actions, 0
+        return selected_actions, write_n_clicks, clear_n_clicks
 
     def _callback_info_panel(self, clickData, step_n_clicks, reset_n_clicks):
         # update clickData
@@ -154,16 +170,21 @@ class WebApp:
         return basic, preference, bac_sto_fig, myreward, myinfo
 
     def _callback_game_screen(self, step_n_clicks, reset_n_clicks):
-        global obs, rewards, infos
         reset_msg = u'Ready to play!'
         step_msg = u'Current Step {}'.format(step_n_clicks)
         if reset_n_clicks:  # 0 or 1
             obs, infos = self.env.reset()
             msg = reset_msg
         elif step_n_clicks:  # 0 or 1,2,3...
-            # parse main action
-            self.current_actions = self.env.get_actions()
-            obs, rewards, done, infos = self.env.step(self.current_actions)
+
+            # change self.next_actions
+            for id, action in self.writed_actions.items():
+                self.next_actions[id] = action
+
+            obs, rewards, done, infos = self.env.step(self.next_actions)
+            self.next_actions = self.rollout.get_actions()
+            self.old_actions = copy.deepcopy(self.next_actions)
+
             msg = step_msg if not done else u'Game Over!'
         else:
             msg = reset_msg
