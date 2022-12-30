@@ -224,7 +224,6 @@ def update_player_info(player: Player):
                              color=item_to_color[item.name],
                              label=item.name.capitalize(),
                              id=f'{item.name}-{where}-bar',
-                             max=PlayerConfig.bag_volume,
                              bar=True) for item in items_in_bag
             ]),
             html.Div([
