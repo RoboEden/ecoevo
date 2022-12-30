@@ -5,7 +5,7 @@ from typing import Optional
 from ecoevo.rollout import RollOut
 from ecoevo.config import MapConfig
 from ecoevo.render.game_screen import GameScreen
-from ecoevo.render import Dash, html, Output, Input, State
+from ecoevo.render import Dash, dcc, html, Output, Input, State
 from ecoevo.render import dash_bootstrap_components as dbc
 
 
@@ -20,13 +20,9 @@ class WebApp:
         self.next_actions = self.rollout.get_actions()
         self.old_actions = copy.deepcopy(self.next_actions)
         self.writed_actions = {}
+        self.app = Dash(__name__, external_stylesheets=[dbc.themes.DARKLY])
 
-        dbc_css = "https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates/dbc.min.css"
-
-        self.app = Dash(__name__,
-                        external_stylesheets=[dbc.themes.DARKLY, dbc_css])
-
-        self.app.layout = html.Div(
+        self.app.layout = html.Div([
             dbc.Row([
                 dbc.Col(erc.info_panel),
                 dbc.Col(dbc.Row([
@@ -39,7 +35,10 @@ class WebApp:
                             "order": 'first',
                         }),
                 dbc.Col(erc.control_panel),
-            ]))
+            ]),
+            dcc.Store(id='selected-data'),
+            dcc.Store(id='next-actions'),
+        ])
         self.app.callback(
             Output('secondary-action-state', 'options'),
             Output('secondary-action-state', 'value'),
