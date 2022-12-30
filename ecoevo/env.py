@@ -72,8 +72,7 @@ class EcoEvo:
         self.curr_step += 1
 
         # trader
-        legal_deals = self.trader.filter_legal_deals(self.players, actions)
-        matched_deals = self.trader.parse(legal_deals)
+        matched_deals = self.trader.parse(players=self.players, actions=actions)
 
         # execute
         random.shuffle(self.ids)
@@ -86,7 +85,7 @@ class EcoEvo:
                 _, sell_offer, buy_offer = matched_deals[player.id]
                 action = (main_action, sell_offer, buy_offer)
             else:
-                if player.id in legal_deals:
+                if player.id in self.trader.legal_deals:
                     player.trade_result = TradeResult.failed
                 action = (main_action, None, None)
 

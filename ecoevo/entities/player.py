@@ -1,4 +1,5 @@
 import yaml
+from typing import Optional
 
 from pydantic import BaseModel, Field
 from yaml.loader import SafeLoader
@@ -14,8 +15,8 @@ with open(DataPath.player_yaml) as file:
 
 class Player(BaseModel):
     persona:str
-    id:IdType
-    pos:PosType
+    id: IdType
+    pos: PosType
     backpack:Bag=Field(default_factory=Bag)
     stomach:Bag=Field(default_factory=Bag)
     health:int = Field(default=PlayerConfig.max_health)
