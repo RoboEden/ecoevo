@@ -66,7 +66,7 @@ class Trader(object):
 
         # method 2: heuristic method
         else:
-            match_deals = self._heuristic_match()
+            match_deals, _ = self._heuristic()
         
         return match_deals
 
