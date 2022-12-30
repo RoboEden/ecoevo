@@ -16,7 +16,6 @@ class EnvConfig:
         *(['stone_picker'] * num_person_type),
         *(['pumpkin_farmer'] * num_person_type),
     ]
-    bag_volume = 10 ** 8
 
 
 class MapConfig:
@@ -25,6 +24,7 @@ class MapConfig:
 
 
 class PlayerConfig:
+    bag_volume = 1000
     max_health = 100
     comsumption_per_step = 1
 

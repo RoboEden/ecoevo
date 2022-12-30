@@ -1,4 +1,3 @@
-from ecoevo.config import EnvConfig
 from ecoevo import EcoEvo
 from rich import print
 
@@ -13,7 +12,7 @@ if __name__ == "__main__":
     # Step teset
     actions = [(('consume', 'peanut'), ('gold', -5),
                 ('peanut', 20))] * env.num_player
-    for _ in range(EnvConfig.total_step):
+    for _ in range(env.cfg.total_step):
         obs, reward, done, infos = env.step(actions)
         if input('show obs? y/n\n') == 'y':
             print(obs)

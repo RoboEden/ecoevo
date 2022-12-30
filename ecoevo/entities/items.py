@@ -2,7 +2,7 @@ import yaml
 from yaml.loader import SafeLoader
 from pydantic import BaseModel
 from typing import Dict, Optional
-from ecoevo.config import EnvConfig, DataPath
+from ecoevo.config import PlayerConfig, DataPath
 
 with open(DataPath.item_yaml) as file:
     ALL_ITEM_DATA = dict(yaml.load(file, Loader=SafeLoader))
@@ -94,7 +94,7 @@ class Bag(BaseModel):
 
     @property
     def remain_volume(self) -> float:
-        return EnvConfig.bag_volume - self.used_volume
+        return PlayerConfig.bag_volume - self.used_volume
 
 
 class ScoreForEachItem(BaseModel):
