@@ -49,3 +49,7 @@ render = [
 
 [tool.setuptools]
 include-package-data = true
+
+[tool.yapf]
+    column_limit = 120
+    indent_width = 4
