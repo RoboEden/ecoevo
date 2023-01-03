@@ -4,6 +4,7 @@ from ecoevo.render import dash_table, html, dcc
 from ecoevo.render import graph_objects as go
 from ecoevo.render import dash_bootstrap_components as dbc
 
+dbc_css = "https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates/dbc.min.css"
 reset_button = dcc.ConfirmDialogProvider(children=html.Button(
     'Reset game', className="btn btn-danger"),
                                          id='reset-danger-button',
