@@ -26,18 +26,22 @@ if __name__ == "__main__":
     rw = reward_parser.parse(player)
     print(f"Initial reward: {rw}")
 
-    # consume each item once
-    for itm_name in player.stomach.dict():
-        player.stomach[itm_name].num += player.stomach[itm_name].harvest_num
-        print(f"Consume a {itm_name}:", get_info(player, reward_parser))
-        player.stomach[itm_name].num = 0
+    # # consume each item once
+    # reward_parser.last_utilities[player.id] = 0
+    # for item_name in player.stomach.dict():
+    #     player.stomach[item_name].num += player.stomach[item_name].harvest_num
+    #     print(f"Consume a {item_name}:", get_info(player, reward_parser))
+    #     player.stomach[item_name].num = 0
+    #     reward_parser.last_utilities[player.id] = 0
 
     # consume same item multiple times
-    player.stomach[itm_name].num = 0
-    for _ in range(20):
-        itm_name = "hazelnut"
-        player.stomach[itm_name].num += player.stomach[itm_name].harvest_num
-        print(f"Consume a {itm_name}:", get_info(player, reward_parser))
+    item_name = "gold"
+    player.stomach[item_name].num = 0
+    reward_parser.last_utilities[player.id] = 0
+    for i in range(20):
+        player.stomach[item_name].num += player.stomach[item_name].harvest_num
+        suffix = "st" if i + 1 == 1 else "nd" if i + 1 == 2 else "rd" if i + 1 == 3 else "th"
+        print(f"Consume the {i + 1}{suffix} {item_name}:", get_info(player, reward_parser))
 
     # health
     while player.health > 0:

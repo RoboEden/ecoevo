@@ -15,6 +15,7 @@ def cal_utility(cnts: Dict[str, int]) -> float:
     :return: utility:  total utility
     """
 
+    # lists of different type of items
     list_dis_nec = [item for item in ALL_ITEM_DATA if ALL_ITEM_DATA[
         item]['disposable'] and not ALL_ITEM_DATA[item]['luxury']]
     list_dis_lux = [item for item in ALL_ITEM_DATA if ALL_ITEM_DATA[
@@ -24,11 +25,10 @@ def cal_utility(cnts: Dict[str, int]) -> float:
     list_dur_lux = [item for item in ALL_ITEM_DATA if not ALL_ITEM_DATA[
         item]['disposable'] and ALL_ITEM_DATA[item]['luxury']]
 
-    utility = sum(
-        cnts[item] ** rc.rho_nec * rc.alpha_nec for item in list_dis_nec) ** (rc.eta_dis_nec / rc.rho_nec) + sum(
-            cnts[item] ** rc.rho_lux * rc.alpha_lux for item in list_dis_lux) ** (rc.eta_dis_lux / rc.rho_lux) + sum(
-                cnts[item] ** rc.eta_dur_nec * rc.lambda_nec for item in list_dur_nec) + sum(
-                    cnts[item] ** rc.eta_dur_lux * rc.lambda_lux for item in list_dur_lux)
+    utility = (sum(cnts[item] ** rc.rho_nec * rc.alpha_nec for item in list_dis_nec) + rc.c_dis_nec) ** (rc.eta_dis_nec / rc.rho_nec)
+    utility += (sum(cnts[item] ** rc.rho_lux * rc.alpha_lux for item in list_dis_lux) + rc.c_dis_lux) ** (rc.eta_dis_lux / rc.rho_lux)
+    utility += (sum(cnts[item] for item in list_dur_nec) + rc.c_dur_nec) ** rc.eta_dur_nec * rc.lambda_nec
+    utility += (sum(cnts[item] for item in list_dur_lux) + rc.c_dur_lux) ** rc.eta_dur_lux * rc.lambda_lux
 
     return utility
 
@@ -53,7 +53,10 @@ class RewardParser:
         for _, item_name in enumerate(self.item_names):
             cnts[item_name] = player.stomach[item_name].num * player.stomach[item_name].capacity
 
-        return cal_utility(cnts=cnts)
+        utility_base = cal_utility(cnts={item_name: 0 for _, item_name in enumerate(self.item_names)})
+        utility = cal_utility(cnts=cnts) - utility_base
+        
+        return utility
 
     def cost(self, player: Player) -> float:
         penalty_flag = player.health <= rc.threshold

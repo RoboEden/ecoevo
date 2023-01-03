@@ -40,6 +40,7 @@ class RewardConfig:
     eta_dis_nec, eta_dis_lux = 0.53, 0.87
     lambda_nec, lambda_lux = 48, 46
     eta_dur_nec, eta_dur_lux = 0.1, 0.16
+    c_dis_nec, c_dis_lux, c_dur_nec, c_dur_lux = 3.58, 3.98, 100, 100
 
 
 class DataPath:
