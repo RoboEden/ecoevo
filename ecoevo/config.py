@@ -33,7 +33,14 @@ class RewardConfig:
     threshold = 0
     weight_coef = 0
     penalty = 1
-    rho = 0.5
+    
+    # dis for disposable, dur for durable; nec for necessity, lux for luxury
+    alpha_nec, alpha_lux = 0.53, 0.3
+    rho_nec, rho_lux = 0.2, 0.3
+    eta_dis_nec, eta_dis_lux = 0.53, 0.87
+    lambda_nec, lambda_lux = 48, 46
+    eta_dur_nec, eta_dur_lux = 0.1, 0.16
+    c_dis_nec, c_dis_lux, c_dur_nec, c_dur_lux = 3.58, 3.98, 100, 100
 
 
 class DataPath:
