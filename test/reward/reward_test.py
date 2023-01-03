@@ -26,23 +26,20 @@ if __name__ == "__main__":
     rw = reward_parser.parse(player)
     print(f"Initial reward: {rw}")
 
-    # Consume
+    # consume each item once
     for itm_name in player.stomach.dict():
         player.stomach[itm_name].num += player.stomach[itm_name].harvest_num
         print(f"Consume a {itm_name}:", get_info(player, reward_parser))
+        player.stomach[itm_name].num = 0
 
-    # Consume the same item multiple times
-    for _ in range(10):
-        itm_name = "gold"
+    # consume same item multiple times
+    player.stomach[itm_name].num = 0
+    for _ in range(20):
+        itm_name = "hazelnut"
         player.stomach[itm_name].num += player.stomach[itm_name].harvest_num
         print(f"Consume a {itm_name}:", get_info(player, reward_parser))
 
-    # Weight
-    for itm_name in player.backpack.dict():
-        player.backpack[itm_name].num += player.stomach[itm_name].harvest_num
-        print(f"Add a {itm_name}:", get_info(player, reward_parser))
-
-    # Health
+    # health
     while player.health > 0:
         player.health -= 20
         if player.health >= 0:
