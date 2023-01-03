@@ -29,6 +29,7 @@ def cal_utility(cnts: Dict[str, int]) -> float:
     utility += (sum(cnts[item] ** rc.rho_lux * rc.alpha_lux for item in list_dis_lux) + rc.c_dis_lux) ** (rc.eta_dis_lux / rc.rho_lux)
     utility += (sum(cnts[item] for item in list_dur_nec) + rc.c_dur_nec) ** rc.eta_dur_nec * rc.lambda_nec
     utility += (sum(cnts[item] for item in list_dur_lux) + rc.c_dur_lux) ** rc.eta_dur_lux * rc.lambda_lux
+    utility - rc.c_base
 
     return utility
 
@@ -52,11 +53,8 @@ class RewardParser:
         cnts = {}
         for _, item_name in enumerate(self.item_names):
             cnts[item_name] = player.stomach[item_name].num * player.stomach[item_name].capacity
-
-        utility_base = cal_utility(cnts={item_name: 0 for _, item_name in enumerate(self.item_names)})
-        utility = cal_utility(cnts=cnts) - utility_base
         
-        return utility
+        return cal_utility(cnts=cnts)
 
     def cost(self, player: Player) -> float:
         penalty_flag = player.health <= rc.threshold
