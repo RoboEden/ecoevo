@@ -1,5 +1,4 @@
 from ecoevo.entities import Player
-from ecoevo.config import PlayerConfig
 from ecoevo.render import dash_table, html, dcc
 from ecoevo.render import graph_objects as go
 from ecoevo.render import dash_bootstrap_components as dbc
@@ -193,14 +192,15 @@ def update_player_info(player: Player):
     fig = go.Figure()
     fig.add_trace(
         go.Scatterpolar(r=list(player.ability.values()),
-                        theta=categories,
-                        fill='toself',
-                        name='ability'))
+                                       theta=categories,
+                                       fill='toself',
+                                       name='ability'))
     fig.add_trace(
-        go.Scatterpolar(r=[v * 1e2 for v in player.preference.values()],
-                        theta=categories,
-                        fill='toself',
-                        name='preference'))
+        go.Scatterpolar(
+            r=[v * 1e2 for v in player.preference.values()],
+            theta=categories,
+            fill='toself',
+            name='preference'))
     fig.update_layout(
         width=400,
         height=300,
