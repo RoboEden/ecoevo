@@ -35,7 +35,7 @@ if __name__ == "__main__":
     #     reward_parser.last_utilities[player.id] = 0
 
     # consume same item multiple times
-    item_name = "gold"
+    item_name = "hazelnut"
     player.stomach[item_name].num = 0
     reward_parser.last_utilities[player.id] = 0
     for i in range(20):
