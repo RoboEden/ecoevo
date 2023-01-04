@@ -6,7 +6,7 @@ from typing import Optional
 from ecoevo.rollout import RollOut
 from ecoevo.config import MapConfig
 
-from ecoevo.render import Dash, Input, Output, State
+from ecoevo.render import Dash, Input, Output, State, ClientsideFunction
 from ecoevo.render import dcc, html, ctx, exceptions
 from ecoevo.render import dash_bootstrap_components as dbc
 from ecoevo.render.game_screen import GameScreen
@@ -20,8 +20,8 @@ class WebApp:
         self.gs_render = GameScreen(MapConfig.width, MapConfig.height)
         self.ctrl_policy = {}
 
-        self.app = Dash(
-            __name__, external_stylesheets=[dbc.themes.DARKLY, erc.dbc_css])
+        self.app = Dash(__name__,
+                        external_stylesheets=[dbc.themes.DARKLY, erc.dbc_css])
 
         self.app.layout = html.Div([
             dbc.Row([
@@ -49,32 +49,12 @@ class WebApp:
         self.app.run_server(debug=True)
 
     def register_output_callbacks(self):
-
-        @self.app.callback(
+        self.app.clientside_callback(
+            ClientsideFunction('clientside', 'actionBinding'),
             Output('secondary-action-state', 'options'),
             Output('secondary-action-state', 'value'),
             Input('primary-action-state', 'value'),
         )
-        def _output_action_binding(primary_action):
-            if primary_action in ['idle', 'collect']:
-                return [{
-                    'label': 'None',
-                    'value': 'none',
-                    'title': 'secondary action'
-                }], 'none'
-            elif primary_action == 'move':
-                all_directions = ['up', 'down', 'left', 'right']
-                return [{
-                    'label': direction.capitalize(),
-                    'value': direction,
-                    'title': 'secondary action'
-                } for direction in all_directions], 'up'
-            elif primary_action == 'consume':
-                return [{
-                    'label': item_name.capitalize(),
-                    'value': item_name,
-                    'title': 'secondary action'
-                } for item_name in erc.all_item_list], erc.all_item_list[0]
 
         @self.app.callback(
             Output('datatable-interactivity', 'data'),
