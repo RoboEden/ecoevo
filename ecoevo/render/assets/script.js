@@ -43,7 +43,7 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
             var buy_offer, main_action, primary_action, secondary_action, sell_offer;
 
             if (jsonified_selected_ids === undefined || jsonified_ctrl_next_actions === undefined) {
-                return [];
+                throw window.dash_clientside.PreventUpdate;
             }
             console.log(jsonified_selected_ids)
 
@@ -65,6 +65,29 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
                 });
             }
             return data_table;
-        }
+        },
+        updateSelectedIds: function (selectedData) {
+            if (selectedData === undefined) {
+                throw window.dash_clientside.PreventUpdate;
+            }
+            const player_list = ['gold_digger',
+                'hazelnut_farmer',
+                'coral_collector',
+                'sand_picker',
+                'pineapple_farmer',
+                'peanut_farmer',
+                'stone_picker',
+                'pumpkin_farmer',];
+            var selected_ids = [];
+            console.log(selectedData)
+            var points = selectedData.points;
+            for (var i = 0; i < points.length; i++) {
+                var custom_data = points[i]['customdata'];
+                if (player_list.includes(custom_data[0])) {
+                    selected_ids.push(custom_data[1]);
+                }
+            }
+            return JSON.stringify(selected_ids);
+        },
     }
 });

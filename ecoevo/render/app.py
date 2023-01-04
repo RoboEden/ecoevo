@@ -55,32 +55,15 @@ class WebApp:
             Output('secondary-action-state', 'value'),
             Input('primary-action-state', 'value'),
         )
-        self.app.clientside_callback(ClientsideFunction(
-            'clientside', 'selectedPlayerActions'),
-                                     Output('datatable-interactivity', 'data'),
-                                     [
-                                         Input('selected-ids', 'data'),
-                                         Input('ctrl-next-actions', 'data')
-                                     ],
-                                     prevent_initial_callbacks=True)
-
-        @self.app.callback(
+        self.app.clientside_callback(
+            ClientsideFunction('clientside', 'selectedPlayerActions'),
+            Output('datatable-interactivity', 'data'),
+            Input('selected-ids', 'data'), Input('ctrl-next-actions', 'data'))
+        self.app.clientside_callback(
+            ClientsideFunction('clientside', 'updateSelectedIds'),
             Output('selected-ids', 'data'),
             Input('game-screen', 'selectedData'),
         )
-        def _callback_select_players(selectedData):
-            _data = json.loads(json.dumps(selectedData))
-            if _data is None:
-                raise exceptions.PreventUpdate
-            else:
-                ids = []
-                _data = _data['points']
-                for d in _data:
-                    custom_data = d['customdata']
-                    if custom_data[0] in self.gs_render.player_to_emoji.keys():
-                        id = custom_data[1]
-                        ids.append(id)
-                return json.dumps(ids)
 
     def register_serverside_callbacks(self):
 
