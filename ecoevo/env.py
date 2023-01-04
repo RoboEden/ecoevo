@@ -25,6 +25,8 @@ class EcoEvo:
         self.reward_parser = RewardParser()
         self.players: List[Player] = []
 
+        self.info = {}
+
         # Logging
         logger.remove()
         logger.add(sys.stderr, level=logging_level)
@@ -59,11 +61,11 @@ class EcoEvo:
         self.entity_manager.reset_map(self.players)
 
         obs = {player.id: self.get_obs(player) for player in self.players}
-        info = {}
+        self.info = {}
 
         self.ids = [player.id for player in self.players]
 
-        return obs, info
+        return obs, self.info
 
     def step(
         self, actions: List[ActionType]
@@ -117,13 +119,11 @@ class EcoEvo:
             }
             for player in self.players
         }
-        info = Analyser.get_info(done=done,
-                                 players=self.players,
-                                 dict_reward_info=dict_reward_info,
-                                 matched_deals=matched_deals,
-                                 actions_valid=actions_valid)
+        self.info = Analyser.get_info(
+            done=done, info=self.info, players=self.players, 
+            matched_deals=matched_deals, actions_valid=actions_valid, dict_reward_info=dict_reward_info)
 
-        return obs, rewards, done, info
+        return obs, rewards, done, self.info
 
     def get_obs(self, player: Player) -> Dict[PosType, Tile]:
         player_x, player_y = player.pos

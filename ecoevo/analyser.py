@@ -11,69 +11,58 @@ class Analyser(object):
 
     @staticmethod
     def get_info(
-            done: bool, players: List[Player],
-            dict_reward_info: Dict[int, Dict], matched_deals: Dict[IdType,
-                                                                   DealType],
-            actions_valid: Dict[int, Tuple[str,
-                                           str]]) -> Dict[str, int or float]:
+            done: bool, info: Dict[str, int or float], players: List[Player], 
+            matched_deals: Dict[IdType, DealType], actions_valid: Dict[int, Tuple[str, str]], 
+            dict_reward_info: Dict[int, Dict]) -> Dict[str, int or float]:
         """
         tarder parser
 
         :param done:  if episode done
+        :param info:  info of last step
         :param players:  list of all players
-        :param dict_reward_info:  reward info dictionary: rewards, utilities and costs
         :param matched_deals:  matched deals
         :param actions_valid:  validated actions dictionary, player id to action tuple
+        :param dict_reward_info:  reward info dictionary: rewards, utilities and costs
 
         :return: info:  info of current step
         """
 
-        rewards = {
-            pid: dict_reward_info[pid]['reward']
-            for pid in dict_reward_info
-        }
-        utilities = {
-            pid: dict_reward_info[pid]['utility']
-            for pid in dict_reward_info
-        }
-        costs = {
-            pid: dict_reward_info[pid]['cost']
-            for pid in dict_reward_info
-        }
+        # check keys
+        list_keys = ['trade_times'] + ['{}_trade_times'.format(item) for item in ALL_ITEM_DATA.keys()] + [
+            '{}_trade_amount'.format(item) for item in ALL_ITEM_DATA.keys()] + [
+                '{}_consume_times'.format(item) for item in ALL_ITEM_DATA.keys()] + [
+                    '{}_final_consume_amount'.format(item) for item in ALL_ITEM_DATA.keys()] + [
+                        'final_avr_utility', 'final_max_utility', 'final_min_utility'] + [
+                            'final_avr_cost', 'final_max_cost', 'final_min_cost']
+        for key in list_keys:
+            if key not in info:
+                info[key] = 0
 
-        info = {}
-
+        num_player = len(players)
+        
         # trade info
-        trade_times, item_trade_times, item_trade_amount = Analyser.get_trade_data(
-            matched_deals=matched_deals)
-        info['trade_times'] = trade_times
+        trade_times, item_trade_times, item_trade_amount = Analyser.get_trade_data(matched_deals=matched_deals)
+        info['trade_times'] += trade_times / num_player
         for item in ALL_ITEM_DATA.keys():
-            info['{}_trade_times'.format(item)] = item_trade_times[item]
+            info['{}_trade_times'.format(item)] += item_trade_times[item] / num_player
         for item in ALL_ITEM_DATA.keys():
-            info['{}_trade_amount'.format(item)] = item_trade_amount[item]
+            info['{}_trade_amount'.format(item)] += item_trade_amount[item] / num_player
 
         # consume times
-        for item in ALL_ITEM_DATA.keys():
-            info['{}_consume_times'.format(item)] = 0
         for pid in actions_valid:
             (action_type, action_item) = actions_valid[pid]
             if action_type == Action.consume:
-                info['{}_consume_times'.format(action_item)] += 1
+                info['{}_consume_times'.format(action_item)] += 1 / num_player
 
         # final consume amount
-        for item in ALL_ITEM_DATA.keys():
-            info['{}_final_consume_amount'.format(item)] = 0
         if done:
             for player in players:
                 for item in ALL_ITEM_DATA.keys():
-                    info['{}_final_consume_amount'.format(
-                        item)] += player.stomach[item].num
+                    info['{}_final_consume_amount'.format(item)] += player.stomach[item].num / num_player
 
         # final utility
-        info['final_avr_utility'], info['final_max_utility'], info[
-            'final_min_utility'] = 0, 0, 0
-        info['final_avr_cost'], info['final_max_cost'], info[
-            'final_min_cost'] = 0, 0, 0
+        utilities = {pid: dict_reward_info[pid]['utility'] for pid in dict_reward_info}
+        costs = {pid: dict_reward_info[pid]['cost'] for pid in dict_reward_info}
         if done:
             info['final_avr_utility'] = sum(utilities.values()) / len(players)
             info['final_max_utility'] = max(utilities.values())
