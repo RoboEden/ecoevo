@@ -33,7 +33,7 @@ class RewardConfig:
     threshold = 0
     weight_coef = 0
     penalty = 1
-    
+
     # dis for disposable, dur for durable; nec for necessity, lux for luxury
     alpha_nec, alpha_lux = 0.62, 0.3
     rho_nec, rho_lux = 0.2, 0.3
@@ -45,6 +45,6 @@ class RewardConfig:
 
 
 class DataPath:
-    item_yaml = pathlib.Path(__file__).parent / "entities" / "items.yaml"
-    player_yaml = pathlib.Path(__file__).parent / "entities" / "player.yaml"
-    map_json = pathlib.Path(__file__).parent / "maps" / "data" / "base.json"
+    item_yaml = pathlib.Path(__file__).parent / "data" / "items.yaml"
+    player_yaml = pathlib.Path(__file__).parent / "data" / "player.yaml"
+    map_json = pathlib.Path(__file__).parent / "data" / "base.json"
