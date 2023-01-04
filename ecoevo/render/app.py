@@ -42,79 +42,33 @@ class WebApp:
             dcc.Store(id='ctrl-next-actions'),
             dcc.Store(id='obs-rewards-info'),
         ])
-        self.register_output_callbacks()
-        self.register_input_callbacks()
+        self.register_clientside_callbacks()
+        self.register_serverside_callbacks()
 
     def run_server(self):
         self.app.run_server(debug=True)
 
-    def register_output_callbacks(self):
+    def register_clientside_callbacks(self):
         self.app.clientside_callback(
             ClientsideFunction('clientside', 'actionBinding'),
             Output('secondary-action-state', 'options'),
             Output('secondary-action-state', 'value'),
             Input('primary-action-state', 'value'),
         )
-
-        @self.app.callback(
-            Output('datatable-interactivity', 'data'),
-            Input('selected-ids', 'data'),
-            Input('ctrl-next-actions', 'data'),
-        )
-        def _output_control_panel(
-            jsonified_selected_ids,
-            jsonified_next_actions,
-        ):
-            if jsonified_selected_ids is None or jsonified_next_actions is None:
-                raise exceptions.PreventUpdate
-
-            selected_ids = json.loads(jsonified_selected_ids)
-            next_actions = json.loads(jsonified_next_actions)
-
-            data_table = []
-            for id in selected_ids:
-                _action = next_actions[id]
-                main_action, sell_offer, buy_offer = _action
-                primary_action, secondary_action = main_action
-                data_table.append({
-                    'id': id,
-                    'primary action': primary_action,
-                    'secondary action': secondary_action,
-                    'sell offer': str(sell_offer),
-                    'buy offer': str(buy_offer),
-                })
-
-            return data_table
-
-        @self.app.callback(
-            Output('basic-provider', 'children'),
-            Output('preference-provider', 'children'),
-            Output('backpack-stomach-provider', 'children'),
-            # Output('obs-provider', 'children'),
-            Output('reward-provider', 'children'),
-            Output('info-provider', 'children'),
-            Input('selected-ids', 'data'),
-        )
-        def _output_info_panel(jsonified_selected_ids):
-            if jsonified_selected_ids is None:
-                raise exceptions.PreventUpdate
-            selected_ids = json.loads(jsonified_selected_ids)
-            # update clickData
-            basic, preference, bac_sto_fig, myreward, myinfo = None, None, None, None, None
-            if len(selected_ids):
-                id = selected_ids[0]
-                player = self.env.players[id]
-                basic, preference, bac_sto_fig, myreward, myinfo = erc.update_player_info(
-                    player)
-            return basic, preference, bac_sto_fig, myreward, myinfo
-
-    def register_input_callbacks(self):
+        self.app.clientside_callback(ClientsideFunction(
+            'clientside', 'selectedPlayerActions'),
+                                     Output('datatable-interactivity', 'data'),
+                                     [
+                                         Input('selected-ids', 'data'),
+                                         Input('ctrl-next-actions', 'data')
+                                     ],
+                                     prevent_initial_callbacks=True)
 
         @self.app.callback(
             Output('selected-ids', 'data'),
             Input('game-screen', 'selectedData'),
         )
-        def _input_select_players(selectedData):
+        def _callback_select_players(selectedData):
             _data = json.loads(json.dumps(selectedData))
             if _data is None:
                 raise exceptions.PreventUpdate
@@ -128,6 +82,30 @@ class WebApp:
                         ids.append(id)
                 return json.dumps(ids)
 
+    def register_serverside_callbacks(self):
+
+        @self.app.callback(
+            Output('basic-provider', 'children'),
+            Output('preference-provider', 'children'),
+            Output('backpack-stomach-provider', 'children'),
+            # Output('obs-provider', 'children'),
+            Output('reward-provider', 'children'),
+            Output('info-provider', 'children'),
+            Input('selected-ids', 'data'),
+        )
+        def _callback_info_panel(jsonified_selected_ids):
+            if jsonified_selected_ids is None:
+                raise exceptions.PreventUpdate
+            selected_ids = json.loads(jsonified_selected_ids)
+            # update clickData
+            basic, preference, bac_sto_fig, myreward, myinfo = None, None, None, None, None
+            if len(selected_ids):
+                id = selected_ids[0]
+                player = self.env.players[id]
+                basic, preference, bac_sto_fig, myreward, myinfo = erc.update_player_info(
+                    player)
+            return basic, preference, bac_sto_fig, myreward, myinfo
+
         @self.app.callback(
             Output('game-screen', 'figure'),
             Output('output-provider', 'children'),
@@ -137,7 +115,7 @@ class WebApp:
             Input('reset-danger-button', 'submit_n_clicks'),
             State('ctrl-next-actions', 'data'),
         )
-        def _input_game_screen(
+        def _callback_game_screen(
             step_n_clicks,
             reset_n_clicks,
             jsonified_ctrl_next_actions,
@@ -179,7 +157,7 @@ class WebApp:
             State('primary-action-state', 'value'),
             State('secondary-action-state', 'value'),
         )
-        def _input_game_screen(
+        def _callback_control_panel(
             write_n_clicks,
             clear_n_clicks,
             jsonified_raw_next_actions,
