@@ -92,7 +92,7 @@ pineapple_farmer:
     pineapple: 3
     peanut: 3
     stone: 3
-    pumpkin: 3 
+    pumpkin: 3
 peanut_farmer:
   preference:
     gold: 0.05
