@@ -3,11 +3,11 @@ function capitalize(string) {
 }
 
 function toOption(array) {
-    var options = [];
-    for (var i = 0; i < array.length; i++) {
+    let options = [];
+    for (const item of Object.values(array)) {
         options.push({
-            'label': capitalize(array[i]),
-            'value': array[i].toLowerCase(),
+            'label': capitalize(item),
+            'value': item.toLowerCase(),
             'title': 'secondary action'
         });
     }
@@ -18,8 +18,7 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
     clientside: {
         actionBinding: function (primaryAction) {
             if (primaryAction === "idle" || primaryAction === "collect") {
-                let options = toOption(['none'])
-                return [options, options[0].value];
+                return [[], undefined];
             }
             else if (primaryAction === "move") {
                 let options = toOption(['up', 'down', 'left', 'right'])
@@ -39,21 +38,17 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
                 return [options, options[0].value];
             }
         },
-        selectedPlayerActions: function (jsonified_selected_ids, jsonified_ctrl_next_actions) {
-            var buy_offer, main_action, primary_action, secondary_action, sell_offer;
-
-            if (jsonified_selected_ids === undefined || jsonified_ctrl_next_actions === undefined) {
+        selectedPlayerActions: function (json_selected_ids, json_ctrl_next_actions) {
+            let buy_offer, main_action, primary_action, secondary_action, sell_offer;
+            if (json_selected_ids === undefined) {
                 throw window.dash_clientside.PreventUpdate;
             }
-            console.log(jsonified_selected_ids)
+            let selected_ids = JSON.parse(json_selected_ids);
+            let ctrl_next_actions = JSON.parse(json_ctrl_next_actions);
+            let data_table = [];
 
-            var selected_ids = JSON.parse(jsonified_selected_ids);
-            var ctrl_next_actions = JSON.parse(jsonified_ctrl_next_actions);
-            var data_table = [];
-
-            for (var i = 0; i < selected_ids.length; i += 1) {
-                var id = selected_ids[i];
-                var _action = ctrl_next_actions[id];
+            for (const id of Object.values(selected_ids)) {
+                let _action = ctrl_next_actions[id];
                 [main_action, sell_offer, buy_offer] = _action;
                 [primary_action, secondary_action] = main_action;
                 data_table.push({
@@ -67,7 +62,7 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
             return data_table;
         },
         updateSelectedIds: function (selectedData) {
-            if (selectedData === undefined) {
+            if (selectedData === undefined || !('points' in selectedData)) {
                 throw window.dash_clientside.PreventUpdate;
             }
             const player_list = ['gold_digger',
@@ -78,16 +73,40 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
                 'peanut_farmer',
                 'stone_picker',
                 'pumpkin_farmer',];
-            var selected_ids = [];
-            console.log(selectedData)
-            var points = selectedData.points;
-            for (var i = 0; i < points.length; i++) {
-                var custom_data = points[i]['customdata'];
-                if (player_list.includes(custom_data[0])) {
-                    selected_ids.push(custom_data[1]);
+            let selected_ids = [];
+            for (const points of Object.values(selectedData.points)) {
+                if (player_list.includes(points['customdata'][0])) {
+                    selected_ids.push(points['customdata'][1]);
                 }
             }
             return JSON.stringify(selected_ids);
         },
+        controlActions: function (
+            write_n_clicks, //Input
+            clear_n_clicks,//Input
+            json_raw_next_actions,//Input
+            json_selected_ids,//State
+            primary_action,//State
+            secondary_action,//State
+            json_written_actions,//State
+        ) {
+            const triggered_id = window.dash_clientside.callback_context.triggered[0].prop_id.split(".")[0];
+            if (triggered_id === 'clear-button-state') {
+                return [json_raw_next_actions, JSON.stringify({})]
+            }
+            else {
+                const raw_next_actions = JSON.parse(json_raw_next_actions);
+                let written_actions = (json_written_actions !== undefined) ? JSON.parse(json_written_actions) : {};
+                if (triggered_id === 'write-button-state' && json_selected_ids !== undefined) {
+                    const selected_ids = JSON.parse(json_selected_ids);
+                    for (const id of Object.values(selected_ids)) {
+                        written_actions[id] = [[primary_action,
+                            secondary_action], undefined, undefined]
+                    }
+                }
+                let ctrl_next_actions = Object.assign(raw_next_actions, written_actions);
+                return [JSON.stringify(ctrl_next_actions), JSON.stringify(written_actions)]
+            }
+        }
     }
 });

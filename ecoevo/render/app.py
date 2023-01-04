@@ -40,15 +40,9 @@ class WebApp:
             dcc.Store(id='selected-ids'),
             dcc.Store(id='raw-next-actions'),
             dcc.Store(id='ctrl-next-actions'),
+            dcc.Store(id='written-actions'),
             dcc.Store(id='obs-rewards-info'),
         ])
-        self.register_clientside_callbacks()
-        self.register_serverside_callbacks()
-
-    def run_server(self):
-        self.app.run_server(debug=True)
-
-    def register_clientside_callbacks(self):
         self.app.clientside_callback(
             ClientsideFunction('clientside', 'actionBinding'),
             Output('secondary-action-state', 'options'),
@@ -64,6 +58,23 @@ class WebApp:
             Output('selected-ids', 'data'),
             Input('game-screen', 'selectedData'),
         )
+        self.app.clientside_callback(
+            ClientsideFunction('clientside', 'controlActions'),
+            Output('ctrl-next-actions', 'data'),
+            Output('written-actions', 'data'),
+            Input('write-button-state', 'n_clicks'),
+            Input('clear-button-state', 'n_clicks'),
+            Input('raw-next-actions', 'data'),
+            State('selected-ids', 'data'),
+            State('primary-action-state', 'value'),
+            State('secondary-action-state', 'value'),
+            State('written-actions', 'data'),
+        )
+
+        self.register_serverside_callbacks()
+
+    def run_server(self):
+        self.app.run_server(debug=True)
 
     def register_serverside_callbacks(self):
 
@@ -130,39 +141,3 @@ class WebApp:
             self.gs_render.update(self.env.entity_manager.map)
             return self.gs_render.fig, msg, json.dumps(
                 obs_rewards_info), json.dumps(raw_next_actions)
-
-        @self.app.callback(
-            Output('ctrl-next-actions', 'data'),
-            Input('write-button-state', 'n_clicks'),
-            Input('clear-button-state', 'n_clicks'),
-            Input('raw-next-actions', 'data'),
-            State('selected-ids', 'data'),
-            State('primary-action-state', 'value'),
-            State('secondary-action-state', 'value'),
-        )
-        def _callback_control_panel(
-            write_n_clicks,
-            clear_n_clicks,
-            jsonified_raw_next_actions,
-            jsonified_selected_ids,
-            primary_action: Optional[str],
-            secondary_action: Optional[str],
-        ):
-
-            if ctx.triggered_id == 'write-button-state':
-                if jsonified_selected_ids is None:
-                    pass
-                else:
-                    selected_ids = json.loads(jsonified_selected_ids)
-                    if secondary_action == 'none': secondary_action = None
-                    for id in selected_ids:
-                        self.ctrl_policy[id] = ((primary_action,
-                                                 secondary_action), None, None)
-            elif ctx.triggered_id == 'clear-button-state':
-                self.ctrl_policy = {}
-
-            ctrl_next_actions = json.loads(jsonified_raw_next_actions)
-            for id, action in self.ctrl_policy.items():
-                ctrl_next_actions[id] = action
-
-            return json.dumps(ctrl_next_actions)
