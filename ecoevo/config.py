@@ -43,6 +43,8 @@ class RewardConfig:
     c_dis_nec, c_dis_lux, c_dur_nec, c_dur_lux = 6.46, 5.05, 100, 100
     c_base = 429.293
 
+    trade_reward = 0.1
+
 
 class DataPath:
     item_yaml = pathlib.Path(__file__).parent / "data" / "items.yaml"

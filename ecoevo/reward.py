@@ -4,6 +4,7 @@ import numpy as np
 
 from ecoevo.config import RewardConfig as rc
 from ecoevo.entities import ALL_ITEM_DATA, ALL_PERSONAE, Player
+from ecoevo.types import TradeResult
 
 
 def cal_utility(volumes: Dict[str, int]) -> float:
@@ -92,7 +93,10 @@ class RewardParser:
         self.last_costs[player.id] = cost
         self.total_costs[player.id] = self.total_costs[player.id] + cost if player.id in self.total_costs else cost
 
+        # trade reward
+        reward_trade = rc.trade_reward if player.trade_result == TradeResult.success else 0
+
         # reward
-        reward = du - cost
+        reward = du - cost + reward_trade
 
         return reward
