@@ -36,6 +36,23 @@ def cal_utility(volumes: Dict[str, int]) -> float:
     return utility
 
 
+def cal_utility_log(volumes: Dict[str, int], den: int = 10) -> float:
+    """
+    calculate total utility, log method
+
+    :param volumes:  count dict based on item names
+
+    :return: utility:  total utility
+    """
+
+    utility = 0
+    for item, vol in volumes.items():
+        vol /= den
+        utility += np.log(vol + 1)
+
+    return utility
+
+
 class RewardParser:
 
     def __init__(self) -> None:
@@ -56,7 +73,7 @@ class RewardParser:
         for _, item_name in enumerate(self.item_names):
             volumes[item_name] = player.stomach[item_name].num * player.stomach[item_name].capacity
 
-        return cal_utility(volumes=volumes)
+        return cal_utility_log(volumes=volumes)
 
     def cost(self, player: Player) -> float:
         penalty_flag = player.health <= rc.threshold

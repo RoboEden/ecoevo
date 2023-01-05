@@ -5,7 +5,7 @@ class EnvConfig:
     total_step = 1000
     trade_radius = 4
     visual_radius = 7
-    num_person_type = 16
+    num_person_type = 4
     personae = [
         *(['gold_digger'] * num_person_type),
         *(['hazelnut_farmer'] * num_person_type),
@@ -26,7 +26,7 @@ class MapConfig:
 class PlayerConfig:
     bag_volume = 1e8
     max_health = 100
-    comsumption_per_step = 1
+    comsumption_per_step = 5
 
 
 class RewardConfig:
