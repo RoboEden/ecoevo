@@ -32,7 +32,7 @@ class PlayerConfig:
 class RewardConfig:
     threshold = 0
     weight_coef = 0
-    penalty = 1
+    penalty = 0.01
 
     # dis for disposable, dur for durable; nec for necessity, lux for luxury
     alpha_nec, alpha_lux = 0.62, 0.3
