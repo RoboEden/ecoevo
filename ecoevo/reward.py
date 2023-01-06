@@ -7,13 +7,13 @@ from ecoevo.entities import ALL_ITEM_DATA, ALL_PERSONAE, Player
 from ecoevo.types import TradeResult
 
 
-def cal_utility(volumes: Dict[str, int], den: int = 10, coe_disposable: int = 3) -> float:
+def cal_utility(volumes: Dict[str, int], den: int = 10, coef_disposable: int = 3) -> float:
     """
     calculate total utility, log method
 
     :param volumes:  count dict based on item names
     :param den:  denominator of volumes
-    :param coe_disposable:  magnification times of disposable items
+    :param coef_disposable:  magnification times of disposable items
 
     :return: utility:  total utility
     """
@@ -21,7 +21,7 @@ def cal_utility(volumes: Dict[str, int], den: int = 10, coe_disposable: int = 3)
     utility = 0
     for item, vol in volumes.items():
         vol /= den
-        u = np.log(vol + 1) * coe_disposable if ALL_ITEM_DATA[item]['disposable'] else np.log(vol + 1)
+        u = np.log(vol + 1) * coef_disposable if ALL_ITEM_DATA[item]['disposable'] else np.log(vol + 1)
         utility += u
 
     return utility
