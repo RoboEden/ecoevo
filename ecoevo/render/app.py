@@ -142,8 +142,8 @@ class WebApp:
                     'id': id,
                     'primary action': primary_action,
                     'secondary action': secondary_action,
-                    'sell offer': sell_offer,
-                    'buy offer': buy_offer,
+                    'sell offer': str(sell_offer) if sell_offer else 'None',
+                    'buy offer': str(buy_offer) if buy_offer else 'None',
                 })
 
         return selected_actions, write_n_clicks, clear_n_clicks
