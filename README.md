@@ -2,6 +2,10 @@
 
 Economy Evolution Environment for Currency Emergence Research
 
+## Ghange log
+- Add sanity check for `Player`
+- Fix bug when render sell offer
+
 ## Development
 Make sure `pip` is the latest version.
 ```
