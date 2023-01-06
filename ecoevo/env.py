@@ -47,9 +47,7 @@ class EcoEvo:
         else:
             return None
 
-    def reset(
-            self
-    ) -> Tuple[Dict[IdType, Dict[PosType, Tile]], Dict[IdType, dict]]:
+    def reset(self) -> Tuple[Dict[IdType, Dict[PosType, Tile]], Dict[IdType, dict]]:
         self.players = []
         self.curr_step = 0
         self.reward_parser.reset()
@@ -69,8 +67,8 @@ class EcoEvo:
 
     def step(
         self, actions: List[ActionType]
-    ) -> Tuple[Dict[IdType, Dict[PosType, Tile]], Dict[IdType, float], bool,
-               Dict[IdType, dict]]:
+    ) -> Tuple[Dict[IdType, Dict[PosType, Tile]], Dict[IdType, float], bool, Dict[IdType, dict]]:
+        actions_valid = {}
         self.curr_step += 1
 
         # trader
@@ -78,50 +76,43 @@ class EcoEvo:
 
         # execute
         random.shuffle(self.ids)
-        actions_valid = {}
         for id in self.ids:
             player = self.players[id]
             main_action, sell_offer, buy_offer = actions[player.id]
             if player.id in matched_deals:
-                player.trade_result = TradeResult.success
                 _, sell_offer, buy_offer = matched_deals[player.id]
                 action = (main_action, sell_offer, buy_offer)
             else:
-                if player.id in self.trader.legal_deals:
-                    player.trade_result = TradeResult.failed
                 action = (main_action, None, None)
 
-            player.health = max(
-                0, player.health - PlayerConfig.comsumption_per_step)
             if self.is_action_valid(player, actions[player.id]):
                 self.entity_manager.execute(player, action)
+                if player.id in self.trader.legal_deals:
+                    if player.trade_result != TradeResult.success:
+                        player.trade_result = TradeResult.failed
+                actions_valid[player.id] = action[0]
+            # consumption
+            player.health = max(0, player.health - PlayerConfig.comsumption_per_step)
 
-                # validated actions
-                action_, _, _ = action
-                actions_valid[player.id] = action_
+        obs = {player.id: self.get_obs(player) for player in self.players}
+        rewards = {player.id: self.reward_parser.parse(player) for player in self.players}
+        done = True if self.curr_step > self.cfg.total_step else False
+        self.info = Analyser.get_info(done=done,
+                                      info=self.info,
+                                      players=self.players,
+                                      matched_deals=matched_deals,
+                                      actions_valid=actions_valid,
+                                      dict_reward_info={
+                                          player.id: {
+                                              'reward': rewards[player.id],
+                                              'utility': self.reward_parser.last_utilities[player.id],
+                                              'cost': self.reward_parser.total_costs[player.id]
+                                          }
+                                          for player in self.players
+                                      })
 
         # refresh items
         self.entity_manager.refresh_item()
-
-        obs = {player.id: self.get_obs(player) for player in self.players}
-        rewards = {
-            player.id: self.reward_parser.parse(player)
-            for player in self.players
-        }
-        done = True if self.curr_step > self.cfg.total_step else False
-
-        # get info
-        dict_reward_info = {
-            player.id: {
-                'reward': rewards[player.id],
-                'utility': self.reward_parser.last_utilities[player.id],
-                'cost': self.reward_parser.total_costs[player.id]
-            }
-            for player in self.players
-        }
-        self.info = Analyser.get_info(
-            done=done, info=self.info, players=self.players, 
-            matched_deals=matched_deals, actions_valid=actions_valid, dict_reward_info=dict_reward_info)
 
         return obs, rewards, done, self.info
 
@@ -170,21 +161,21 @@ class EcoEvo:
                 # no item to collect or the amount of item not enough
                 if item.num < item.harvest_num:
                     is_valid = False
-                    logger.warning(
-                        f'No resource! Player {player.id} cannot collect {item} at {player.pos}'
-                    )
+                    logger.warning(f'No resource! Player {player.id} cannot collect {item} at {player.pos}')
+
                 # bagpack volume not enough
-                if player.backpack.remain_volume < item.harvest_num * item.capacity:
+                least_volume = item.harvest_num * item.capacity
+                if sell_offer is not None and buy_offer is not None:
+                    buy_item_name, buy_num = buy_offer
+                    least_volume += buy_num * player.backpack[buy_item_name].capacity
+
+                if player.backpack.remain_volume < least_volume:
                     is_valid = False
 
-                    logger.warning(
-                        f'Bag full! Player {player.id} cannot collect {item} at {player.pos}'
-                    )
+                    logger.warning(f'Bag full! Player {player.id} cannot collect {item} at {player.pos}')
             else:
                 is_valid = False
-                logger.warning(
-                    f'No item exists! Player {player.id} cannot collect {player.pos}'
-                )
+                logger.warning(f'No item exists! Player {player.id} cannot collect {player.pos}')
 
         # check consume
         elif primary_action == Action.consume:
@@ -200,11 +191,8 @@ class EcoEvo:
             if player.backpack[consume_item_name].num < least_amount:
                 is_valid = False
                 logger.debug(
-                    f'Player {player.id} cannot consume "{consume_item_name}" since num no more than {least_amount}.'
-                )
+                    f'Player {player.id} cannot consume "{consume_item_name}" since num no more than {least_amount}.')
         else:
-            logger.debug(
-                f'Failed to parse primary action. Player {player.id}: {primary_action} '
-            )
+            logger.debug(f'Failed to parse primary action. Player {player.id}: {primary_action} ')
 
         return is_valid
