@@ -66,10 +66,7 @@ class RewardParser:
         self.last_costs[player.id] = cost
         self.total_costs[player.id] = self.total_costs[player.id] + cost if player.id in self.total_costs else cost
 
-        # trade reward
-        reward_trade = 0.1 if player.trade_result == TradeResult.success else 0
-
         # reward
-        reward = du - cost + reward_trade
+        reward = du - cost
 
         return reward
