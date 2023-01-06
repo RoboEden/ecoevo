@@ -1,23 +1,21 @@
-import sys
 import random
-from loguru import logger
-from typing import Dict, List, Tuple, Optional
+import sys
+from copy import deepcopy
+from typing import Dict, List, Optional, Tuple
 
-from ecoevo.config import EnvConfig, MapConfig, PlayerConfig
-from ecoevo.trader import Trader
-from ecoevo.reward import RewardParser
+from loguru import logger
+
 from ecoevo.analyser import Analyser
-from ecoevo.entities import EntityManager, Tile, Player, ALL_ITEM_DATA
-from ecoevo.types import IdType, PosType, ActionType, Action, TradeResult
+from ecoevo.config import EnvConfig, MapConfig, PlayerConfig
+from ecoevo.entities import ALL_ITEM_DATA, EntityManager, Player, Tile
+from ecoevo.reward import RewardParser
+from ecoevo.trader import Trader
+from ecoevo.types import Action, ActionType, IdType, PosType, TradeResult
 
 
 class EcoEvo:
 
-    def __init__(self,
-                 render_mode=None,
-                 config=EnvConfig,
-                 logging_level="WARNING",
-                 logging_path="out.log"):
+    def __init__(self, render_mode=None, config=EnvConfig, logging_level="WARNING", logging_path="out.log"):
         self.cfg = config
         self.render_mode = render_mode
         self.entity_manager = EntityManager()
@@ -47,9 +45,7 @@ class EcoEvo:
         else:
             return None
 
-    def reset(
-            self
-    ) -> Tuple[Dict[IdType, Dict[PosType, Tile]], Dict[IdType, dict]]:
+    def reset(self) -> Tuple[Dict[IdType, Dict[PosType, Tile]], Dict[IdType, dict]]:
         self.players = []
         self.curr_step = 0
         self.reward_parser.reset()
@@ -65,12 +61,11 @@ class EcoEvo:
 
         self.ids = [player.id for player in self.players]
 
-        return obs, self.info
+        return obs, deepcopy(self.info)
 
     def step(
         self, actions: List[ActionType]
-    ) -> Tuple[Dict[IdType, Dict[PosType, Tile]], Dict[IdType, float], bool,
-               Dict[IdType, dict]]:
+    ) -> Tuple[Dict[IdType, Dict[PosType, Tile]], Dict[IdType, float], bool, Dict[IdType, dict]]:
         self.curr_step += 1
 
         # trader
@@ -91,8 +86,7 @@ class EcoEvo:
                     player.trade_result = TradeResult.failed
                 action = (main_action, None, None)
 
-            player.health = max(
-                0, player.health - PlayerConfig.comsumption_per_step)
+            player.health = max(0, player.health - PlayerConfig.comsumption_per_step)
             if self.is_action_valid(player, actions[player.id]):
                 self.entity_manager.execute(player, action)
 
@@ -104,14 +98,11 @@ class EcoEvo:
         self.entity_manager.refresh_item()
 
         obs = {player.id: self.get_obs(player) for player in self.players}
-        rewards = {
-            player.id: self.reward_parser.parse(player)
-            for player in self.players
-        }
+        rewards = {player.id: self.reward_parser.parse(player) for player in self.players}
         done = True if self.curr_step > self.cfg.total_step else False
 
-        # get info
-        dict_reward_info = {
+        # update info
+        reward_info = {
             player.id: {
                 'reward': rewards[player.id],
                 'utility': self.reward_parser.last_utilities[player.id],
@@ -119,11 +110,14 @@ class EcoEvo:
             }
             for player in self.players
         }
-        self.info = Analyser.get_info(
-            done=done, info=self.info, players=self.players, 
-            matched_deals=matched_deals, actions_valid=actions_valid, dict_reward_info=dict_reward_info)
+        self.info = Analyser.get_info(done=done,
+                                      info=self.info,
+                                      players=self.players,
+                                      matched_deals=matched_deals,
+                                      actions_valid=actions_valid,
+                                      reward_info=reward_info)
 
-        return obs, rewards, done, self.info
+        return obs, rewards, done, deepcopy(self.info)
 
     def get_obs(self, player: Player) -> Dict[PosType, Tile]:
         player_x, player_y = player.pos
@@ -170,21 +164,15 @@ class EcoEvo:
                 # no item to collect or the amount of item not enough
                 if item.num < item.harvest_num:
                     is_valid = False
-                    logger.warning(
-                        f'No resource! Player {player.id} cannot collect {item} at {player.pos}'
-                    )
+                    logger.warning(f'No resource! Player {player.id} cannot collect {item} at {player.pos}')
                 # bagpack volume not enough
                 if player.backpack.remain_volume < item.harvest_num * item.capacity:
                     is_valid = False
 
-                    logger.warning(
-                        f'Bag full! Player {player.id} cannot collect {item} at {player.pos}'
-                    )
+                    logger.warning(f'Bag full! Player {player.id} cannot collect {item} at {player.pos}')
             else:
                 is_valid = False
-                logger.warning(
-                    f'No item exists! Player {player.id} cannot collect {player.pos}'
-                )
+                logger.warning(f'No item exists! Player {player.id} cannot collect {player.pos}')
 
         # check consume
         elif primary_action == Action.consume:
@@ -200,11 +188,8 @@ class EcoEvo:
             if player.backpack[consume_item_name].num < least_amount:
                 is_valid = False
                 logger.debug(
-                    f'Player {player.id} cannot consume "{consume_item_name}" since num no more than {least_amount}.'
-                )
+                    f'Player {player.id} cannot consume "{consume_item_name}" since num no more than {least_amount}.')
         else:
-            logger.debug(
-                f'Failed to parse primary action. Player {player.id}: {primary_action} '
-            )
+            logger.debug(f'Failed to parse primary action. Player {player.id}: {primary_action} ')
 
         return is_valid
