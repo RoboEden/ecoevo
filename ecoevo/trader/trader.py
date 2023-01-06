@@ -7,6 +7,7 @@ from loguru import logger
 from ortools.linear_solver import pywraplp
 from ecoevo.entities.player import Player
 from ecoevo.types import Action, TradeResult, IdType, OfferType, DealType, ActionType
+from ecoevo.entities import ALL_ITEM_DATA
 
 
 class Trader(object):
@@ -114,9 +115,7 @@ class Trader(object):
                     least_amount += sell_item.consume_num
 
             if sell_item.num < least_amount:
-                logger.debug(
-                    f'Insufficient {sell_item_name}:{sell_item.num} sell_num {sell_num}'
-                )
+                logger.debug(f'Insufficient {sell_item_name}:{sell_item.num} sell_num {sell_num}')
                 player.trade_result = TradeResult.illegal
                 continue
 
@@ -124,9 +123,7 @@ class Trader(object):
             buy_item_volumne = player.backpack[buy_item_name].capacity * buy_num
             if player.backpack.remain_volume < buy_item_volumne:
                 player.trade_result = TradeResult.illegal
-                logger.debug(
-                    f'Insufficient backpack remain volume:{player.backpack.remain_volume}'
-                )
+                logger.debug(f'Insufficient backpack remain volume:{player.backpack.remain_volume}')
                 continue
 
             legal_deals[player.id] = (player.pos, sell_offer, buy_offer)
@@ -220,8 +217,7 @@ class Trader(object):
         if status == pywraplp.Solver.OPTIMAL:
             obj_ = solver.Objective().Value()
             logger.debug(f"objective value: {round(obj_)}")
-            x_ = [[x[i][j].solution_value() for j in range(num_deal)]
-                  for i in range(num_deal)]
+            x_ = [[x[i][j].solution_value() for j in range(num_deal)] for i in range(num_deal)]
 
             # result
             for i in range(num_deal):
@@ -289,6 +285,7 @@ class Trader(object):
 
         random.seed(42)
         list_deal_id = list(dict_deal.keys())
+        list_remain_volume = [player.backpack.remain_volume for player in self.players]
         random.shuffle(list_deal_id)
         for i in list_deal_id:
             (x_i, y_i), (sell_name_i, sell_num_i), (buy_name_i, buy_num_i) = dict_deal[i]
@@ -352,18 +349,24 @@ class Trader(object):
                     break
 
                 # get trade amount
-                actual_buy_num_1, actual_buy_num_2 = self._heuristic_match(
-                    deal_1=dict_deal[i], deal_2=dict_deal_match[pid_cur], player_1=self.players[i])
+                actual_buy_num_i, actual_buy_num_cur = self._heuristic_match(
+                    deal_1=dict_deal[i], deal_2=dict_deal_match[pid_cur], remain_volume_1=list_remain_volume[i])
                 dict_deal_match.pop(pid_cur)
 
                 # update deal info
-                dict_deal[i][idx_sell][idx_item_num] += actual_buy_num_2
-                dict_deal[i][idx_buy][idx_item_num] -= actual_buy_num_1
-                dict_deal[pid_cur][idx_sell][idx_item_num] += actual_buy_num_1
-                dict_deal[pid_cur][idx_buy][idx_item_num] -= actual_buy_num_2
-                dict_flow[i, pid_cur] = ((dict_deal[i][idx_sell][idx_item_name], -actual_buy_num_2), (
-                    dict_deal[i][idx_buy][idx_item_name], actual_buy_num_1))
+                dict_deal[i][idx_sell][idx_item_num] += actual_buy_num_cur
+                dict_deal[i][idx_buy][idx_item_num] -= actual_buy_num_i
+                dict_deal[pid_cur][idx_sell][idx_item_num] += actual_buy_num_i
+                dict_deal[pid_cur][idx_buy][idx_item_num] -= actual_buy_num_cur
+                dict_flow[i, pid_cur] = ((dict_deal[i][idx_sell][idx_item_name], -actual_buy_num_cur), (
+                    dict_deal[i][idx_buy][idx_item_name], actual_buy_num_i))
                 sell_num_i, buy_num_i = dict_deal[i][idx_sell][idx_item_num], dict_deal[i][idx_buy][idx_item_num]
+
+                # update remain volumes
+                capacity_i = ALL_ITEM_DATA[dict_deal[i][idx_buy][idx_item_name]]['capacity']
+                capacity_cur = ALL_ITEM_DATA[dict_deal[pid_cur][idx_buy][idx_item_name]]['capacity']
+                list_remain_volume[i] -= actual_buy_num_i * capacity_i
+                list_remain_volume[pid_cur] -= actual_buy_num_cur * capacity_cur
 
         # result info
         match_deals = {}
@@ -384,20 +387,20 @@ class Trader(object):
         return match_deals, dict_flow
 
     def _heuristic_match(
-        self, deal_1: DealType, deal_2: DealType, player_1: Player) -> Tuple[int, int]:
+        self, deal_1: DealType, deal_2: DealType, remain_volume_1: int) -> Tuple[int, int]:
         """
         get trade amount of a couple of deals
 
         :param deal_1:  deal 1
         :param deal_2:  deal 2
-        :param player_1:  player of deal 1
+        :param remain_volume_1:  backpack remain volume of player 1
 
         :return: actual_buy_num_1:  actual buy item amout of deal 1, equals to sell item amout of deal 2
         :return: actual_buy_num_2:  actual buy item amout of deal 2, equals to sell item amout of deal 1
         """
 
-        _, (_, sell_num_1), (_, buy_num_1) = deal_1
-        _, (_, sell_num_2), (_, buy_num_2) = deal_2
+        _, (_, sell_num_1), (buy_item_1, buy_num_1) = deal_1
+        _, (_, sell_num_2), (buy_item_2, buy_num_2) = deal_2
         sell_num_1, sell_num_2 = abs(sell_num_1), abs(sell_num_2)
 
         # use deal 2 as pivot
@@ -405,7 +408,8 @@ class Trader(object):
         
         # consider remaining backpack volume of player 1
         ratio_2 = sell_num_2 / buy_num_2
+        capacity_1 = ALL_ITEM_DATA[buy_item_1]['capacity']
         actual_buy_num_1 = math.ceil(actual_buy_num_2 * ratio_2) if math.ceil(
-            actual_buy_num_2 * ratio_2) <= player_1.backpack.remain_volume else player_1.backpack.remain_volume
+            actual_buy_num_2 * ratio_2) * capacity_1 <= remain_volume_1 else math.floor(remain_volume_1 / capacity_1)
 
         return actual_buy_num_1, actual_buy_num_2

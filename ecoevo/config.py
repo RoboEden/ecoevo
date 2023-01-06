@@ -26,22 +26,13 @@ class MapConfig:
 class PlayerConfig:
     bag_volume = 1e8
     max_health = 100
-    comsumption_per_step = 1
+    comsumption_per_step = 10
 
 
 class RewardConfig:
     threshold = 0
     weight_coef = 0
-    penalty = 1
-
-    # dis for disposable, dur for durable; nec for necessity, lux for luxury
-    alpha_nec, alpha_lux = 0.62, 0.3
-    rho_nec, rho_lux = 0.2, 0.3
-    eta_dis_nec, eta_dis_lux = 0.53, 0.87
-    lambda_nec, lambda_lux = 59, 41
-    eta_dur_nec, eta_dur_lux = 0.1, 0.16
-    c_dis_nec, c_dis_lux, c_dur_nec, c_dur_lux = 6.46, 5.05, 100, 100
-    c_base = 429.293
+    penalty = 0
 
 
 class DataPath:

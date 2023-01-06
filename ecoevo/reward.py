@@ -4,34 +4,25 @@ import numpy as np
 
 from ecoevo.config import RewardConfig as rc
 from ecoevo.entities import ALL_ITEM_DATA, ALL_PERSONAE, Player
+from ecoevo.types import TradeResult
 
 
-def cal_utility(volumes: Dict[str, int]) -> float:
+def cal_utility(volumes: Dict[str, int], den: int = 10, coef_disposable: int = 3) -> float:
     """
-    calculate total utility
+    calculate total utility, log method
 
     :param volumes:  count dict based on item names
+    :param den:  denominator of volumes
+    :param coef_disposable:  magnification times of disposable items
 
     :return: utility:  total utility
     """
 
-    # lists of different type of items
-    list_dis_nec = [
-        item for item in ALL_ITEM_DATA if ALL_ITEM_DATA[item]['disposable'] and not ALL_ITEM_DATA[item]['luxury']]
-    list_dis_lux = [
-        item for item in ALL_ITEM_DATA if ALL_ITEM_DATA[item]['disposable'] and ALL_ITEM_DATA[item]['luxury']]
-    list_dur_nec = [
-        item for item in ALL_ITEM_DATA if not ALL_ITEM_DATA[item]['disposable'] and not ALL_ITEM_DATA[item]['luxury']]
-    list_dur_lux = [
-        item for item in ALL_ITEM_DATA if not ALL_ITEM_DATA[item]['disposable'] and ALL_ITEM_DATA[item]['luxury']]
-
-    utility = (sum(volumes[item]**rc.rho_nec * rc.alpha_nec
-                   for item in list_dis_nec) + rc.c_dis_nec)**(rc.eta_dis_nec / rc.rho_nec)
-    utility += (sum(volumes[item]**rc.rho_lux * rc.alpha_lux
-                    for item in list_dis_lux) + rc.c_dis_lux)**(rc.eta_dis_lux / rc.rho_lux)
-    utility += (sum(volumes[item] for item in list_dur_nec) + rc.c_dur_nec)**rc.eta_dur_nec * rc.lambda_nec
-    utility += (sum(volumes[item] for item in list_dur_lux) + rc.c_dur_lux)**rc.eta_dur_lux * rc.lambda_lux
-    utility -= rc.c_base
+    utility = 0
+    for item, vol in volumes.items():
+        vol /= den
+        u = np.log(vol + 1) * coef_disposable if ALL_ITEM_DATA[item]['disposable'] else np.log(vol + 1)
+        utility += u
 
     return utility
 
