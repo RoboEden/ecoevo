@@ -4,15 +4,27 @@ import numpy as np
 
 from ecoevo.config import RewardConfig as rc
 from ecoevo.entities import ALL_ITEM_DATA, ALL_PERSONAE, Player
+from ecoevo.types import TradeResult
 
 
-def cal_utility(volumes: Dict[str, int]) -> float:
-    u = 0
-    for item_name, volume in volumes.items():
-        volume /= 10
-        u += np.log(volume + 1)
+def cal_utility(volumes: Dict[str, int], den: int = 10, coef_disposable: int = 3) -> float:
+    """
+    calculate total utility, log method
 
-    return u
+    :param volumes:  count dict based on item names
+    :param den:  denominator of volumes
+    :param coef_disposable:  magnification times of disposable items
+
+    :return: utility:  total utility
+    """
+
+    utility = 0
+    for item, vol in volumes.items():
+        vol /= den
+        u = np.log(vol + 1) * coef_disposable if ALL_ITEM_DATA[item]['disposable'] else np.log(vol + 1)
+        utility += u
+
+    return utility
 
 
 class RewardParser:
