@@ -1,9 +1,9 @@
 import yaml
 from typing import Optional
 
+from loguru import logger
 from pydantic import BaseModel, Field
 from yaml.loader import SafeLoader
-from typing import Optional
 
 from ecoevo.config import MapConfig, PlayerConfig, DataPath
 from ecoevo.entities.items import Bag, Item
@@ -14,51 +14,63 @@ with open(DataPath.player_yaml) as file:
 
 
 class Player(BaseModel):
-    persona:str
+    persona: str
     id: IdType
     pos: PosType
-    backpack:Bag=Field(default_factory=Bag)
-    stomach:Bag=Field(default_factory=Bag)
-    health:int = Field(default=PlayerConfig.max_health)
-    collect_remain:Optional[str]
-    trade_result:str = Field(default=TradeResult.absent)
+    backpack: Bag = Field(default_factory=Bag)
+    stomach: Bag = Field(default_factory=Bag)
+    health: int = Field(default=PlayerConfig.max_health)
+    collect_remain: Optional[str]
+    trade_result: str = Field(default=TradeResult.absent)
 
     @property
-    def preference(self)->dict:
+    def preference(self) -> dict:
         return dict(ALL_PERSONAE[self.persona]['preference'])
+
     @property
-    def ability(self)->dict:
+    def ability(self) -> dict:
         return dict(ALL_PERSONAE[self.persona]['ability'])
 
-    def collect(self, item:Item):
-        # Init
-        if self.collect_remain is None:
-            collect_time = self.ability[item.name]
-            self.collect_remain = collect_time - 1
+    def collect(self, item: Item):
+        if self.backpack.remain_volume >= item.harvest_num:
+            # Init
+            if self.collect_remain is None:
+                collect_time = self.ability[item.name]
+                self.collect_remain = collect_time
 
-        # Process collect
-        elif self.collect_remain > 0:
-            self.collect_remain -= 1
+            # Process collect
+            elif self.collect_remain > 0:
+                self.collect_remain -= 1
 
-        # Succeed collect
-        elif self.collect_remain == 0:
-            item.num -= item.harvest_num
-            self.backpack[item.name].num += item.harvest_num
-            self.collect_remain = None
+                # Succeed collect
+                if self.collect_remain == 0:
+                    item.num -= item.harvest_num
+                    self.backpack[item.name].num += item.harvest_num
+                    self.collect_remain = None
 
         else:
-            raise ValueError(f'Player {self.id}: Negative collect remain.')
+            logger.critical(f'''Player {self.id} cannot collect {item.name} (harvest_num: {item.harvest_num}) 
+            due to insuffient backpack remain {self.backpack.remain_volume}.''')
 
     def consume(self, item_name: str):
         item_in_bag = self.backpack[item_name]
         item_in_stomach = self.stomach[item_name]
         if item_in_bag.disposable:
-            item_in_bag.num -= item_in_bag.consume_num
-            item_in_stomach.num += item_in_bag.consume_num
+            santity = (item_in_bag.num >= item_in_bag.consume_num)
         else:
-            item_in_stomach.num += item_in_bag.num
-        self.health = min(self.health + item_in_stomach.supply * item_in_stomach.num,
-                          PlayerConfig.max_health)
+            santity = (item_in_bag.num > 0)
+
+        if santity:
+            if item_in_bag.disposable:
+                item_in_bag.num -= item_in_bag.consume_num
+                item_in_stomach.num += item_in_bag.consume_num
+            else:
+                item_in_stomach.num += item_in_bag.num
+            self.health = min(self.health + item_in_stomach.supply * item_in_stomach.num, PlayerConfig.max_health)
+        else:
+            logger.critical(
+                f'''Player {self.id} cannot consume {item_name} (num: {item_in_bag.num} disposable: {item_in_bag.disposable})
+                due to insuffient amount.''')
 
     def next_pos(
         self,
@@ -74,8 +86,7 @@ class Player(BaseModel):
         elif direction == Move.left:
             x = max(x - 1, 0)
         else:
-            raise ValueError(
-                f'Failed to parse direction. Player {self.id}: {direction}')
+            raise ValueError(f'Failed to parse direction. Player {self.id}: {direction}')
         return (x, y)
 
     def trade(self, sell_offer: OfferType, buy_offer: OfferType):
@@ -85,3 +96,10 @@ class Player(BaseModel):
         self.backpack[sell_item_name].num -= sell_num
         self.backpack[buy_item_name].num += buy_num
         self.trade_result = TradeResult.success
+        if self.backpack.remain_volume < 0:
+            for lost_num in range(self.backpack[buy_item_name].num):
+                if self.backpack.remain_volume >= 0:
+                    break
+                self.backpack[buy_item_name].num -= 1
+            logger.critical(f'''Player lost num {lost_num} with trade {sell_offer}, {buy_offer}
+             due to insuffient backpack remain''')
