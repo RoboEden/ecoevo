@@ -45,7 +45,3 @@ class MapGenerator:
 
             with open(save_path, "w") as map_fp:
                 json.dump(data, map_fp)
-
-
-if __name__ == "__main__":
-    MapGenerator.gen_rand_map()
