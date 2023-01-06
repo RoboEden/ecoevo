@@ -350,7 +350,7 @@ class Trader(object):
 
                 # get trade amount
                 actual_buy_num_i, actual_buy_num_cur = self._heuristic_match(
-                    deal_1=dict_deal[i], deal_2=dict_deal_match[pid_cur], remain_volume=list_remain_volume[i])
+                    deal_1=dict_deal[i], deal_2=dict_deal_match[pid_cur], remain_volume_1=list_remain_volume[i])
                 dict_deal_match.pop(pid_cur)
 
                 # update deal info
@@ -400,7 +400,7 @@ class Trader(object):
         """
 
         _, (_, sell_num_1), (buy_item_1, buy_num_1) = deal_1
-        _, (_, sell_num_2), (_, buy_num_2) = deal_2
+        _, (_, sell_num_2), (buy_item_2, buy_num_2) = deal_2
         sell_num_1, sell_num_2 = abs(sell_num_1), abs(sell_num_2)
 
         # use deal 2 as pivot
