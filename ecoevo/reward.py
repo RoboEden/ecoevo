@@ -49,7 +49,8 @@ def cal_utility_log(volumes: Dict[str, int], den: int = 10) -> float:
     utility = 0
     for item, vol in volumes.items():
         vol /= den
-        utility += np.log(vol + 1)
+        u = np.log(vol + 1) if not ALL_ITEM_DATA[item]['disposable'] else np.log(vol + 1) / 2
+        utility += u
 
     return utility
 

@@ -72,7 +72,7 @@ class EcoEvo:
     ) -> Tuple[Dict[IdType, Dict[PosType, Tile]], Dict[IdType, float], bool,
                Dict[IdType, dict]]:
         self.curr_step += 1
-        logger.debug(f' >>> current step: {self.curr_step}')
+        logger.debug(f'>>>>> current step: {self.curr_step}')
 
         # trader
         matched_deals = self.trader.parse(players=self.players, actions=actions)
