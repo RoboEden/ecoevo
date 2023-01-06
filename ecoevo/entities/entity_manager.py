@@ -87,8 +87,12 @@ class EntityManager:
     ):
         main_action, sell_offer, buy_offer = action
         primary_action, secondary_action = main_action
+
+        # First trade
         if sell_offer is not None and buy_offer is not None:
             player.trade(sell_offer, buy_offer)
+
+        # Then act
         if primary_action == Action.idle:
             pass
         elif primary_action == Action.move:
