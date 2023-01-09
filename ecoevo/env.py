@@ -112,7 +112,7 @@ class EcoEvo:
         # refresh items
         self.entity_manager.refresh_item()
 
-        return obs, rewards, done, self.info
+        return obs, rewards, done, deepcopy(self.info)
 
     def get_obs(self, player: Player) -> Dict[PosType, Tile]:
         player_x, player_y = player.pos
