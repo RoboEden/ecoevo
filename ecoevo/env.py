@@ -1,23 +1,21 @@
-import sys
 import random
-from loguru import logger
-from typing import Dict, List, Tuple, Optional
+import sys
+from copy import deepcopy
+from typing import Dict, List, Optional, Tuple
 
-from ecoevo.config import EnvConfig, MapConfig, PlayerConfig
-from ecoevo.trader import Trader
-from ecoevo.reward import RewardParser
+from loguru import logger
+
 from ecoevo.analyser import Analyser
-from ecoevo.entities import EntityManager, Tile, Player, ALL_ITEM_DATA
-from ecoevo.types import IdType, PosType, ActionType, Action, TradeResult
+from ecoevo.config import EnvConfig, MapConfig, PlayerConfig
+from ecoevo.entities import ALL_ITEM_DATA, EntityManager, Player, Tile
+from ecoevo.reward import RewardParser
+from ecoevo.trader import Trader
+from ecoevo.types import Action, ActionType, IdType, PosType, TradeResult
 
 
 class EcoEvo:
 
-    def __init__(self,
-                 render_mode=None,
-                 config=EnvConfig,
-                 logging_level="WARNING",
-                 logging_path="out.log"):
+    def __init__(self, render_mode=None, config=EnvConfig, logging_level="WARNING", logging_path="out.log"):
         self.cfg = config
         self.render_mode = render_mode
         self.entity_manager = EntityManager()
@@ -63,7 +61,7 @@ class EcoEvo:
 
         self.ids = [player.id for player in self.players]
 
-        return obs, self.info
+        return obs, deepcopy(self.info)
 
     def step(
         self, actions: List[ActionType]
@@ -114,7 +112,7 @@ class EcoEvo:
         # refresh items
         self.entity_manager.refresh_item()
 
-        return obs, rewards, done, self.info
+        return obs, rewards, done, deepcopy(self.info)
 
     def get_obs(self, player: Player) -> Dict[PosType, Tile]:
         player_x, player_y = player.pos
@@ -162,7 +160,6 @@ class EcoEvo:
                 if item.num < item.harvest_num:
                     is_valid = False
                     logger.warning(f'No resource! Player {player.id} cannot collect {item} at {player.pos}')
-
                 # bagpack volume not enough
                 least_volume = item.harvest_num * item.capacity
                 if sell_offer is not None and buy_offer is not None:
