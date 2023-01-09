@@ -37,16 +37,15 @@ class Player(BaseModel):
             if self.collect_remain is None:
                 collect_time = self.ability[item.name]
                 self.collect_remain = collect_time - 1
-
             # Process collect
             elif self.collect_remain > 0:
                 self.collect_remain -= 1
 
-                # Succeed collect
-                if self.collect_remain == 0:
-                    item.num -= item.harvest_num
-                    self.backpack[item.name].num += item.harvest_num
-                    self.collect_remain = None
+            # Succeed collect
+            if self.collect_remain == 0:
+                item.num -= item.harvest_num
+                self.backpack[item.name].num += item.harvest_num
+                self.collect_remain = None
 
         else:
             logger.critical(f'''Player {self.id} cannot collect {item.name} (harvest_num: {item.harvest_num})
