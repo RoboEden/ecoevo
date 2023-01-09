@@ -36,7 +36,7 @@ class Player(BaseModel):
             # Init
             if self.collect_remain is None:
                 collect_time = self.ability[item.name]
-                self.collect_remain = collect_time
+                self.collect_remain = collect_time - 1
 
             # Process collect
             elif self.collect_remain > 0:
