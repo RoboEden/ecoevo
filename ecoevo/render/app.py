@@ -6,14 +6,8 @@ from ecoevo.config import MapConfig
 from ecoevo.entities import ALL_ITEM_DATA, ALL_PERSONAE
 
 from ecoevo.render import Dash, Input, Output, State, ClientsideFunction
-from ecoevo.render import dcc, html, ctx
-from ecoevo.render import dash_bootstrap_components as dbc
+from ecoevo.render import dcc, dbc, html, ctx
 from ecoevo.render.game_screen import GameScreen
-
-external_scripts = [
-    "https://cdn.jsdelivr.net/npm/chart.js",
-    'https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js',
-]
 
 
 class WebApp:
@@ -25,21 +19,17 @@ class WebApp:
         self.ctrl_policy = {}
         self.app = Dash(
             __name__,
-            external_scripts=external_scripts,
             external_stylesheets=[dbc.themes.DARKLY, erc.dbc_css],
         )
         self.app.layout = html.Div([
             dbc.Row([
                 dbc.Col(erc.info_panel),
-                dbc.Col(dbc.Row([
-                    erc.game_screen,
-                    dbc.Col(erc.reset_button),
-                    dbc.Col(erc.step_button),
-                ]),
-                        width={
-                            "size": "auto",
-                            "order": 'first',
-                        }),
+                dbc.Col(
+                    dbc.Row([
+                        erc.game_screen,
+                        dbc.Col(erc.reset_button),
+                        dbc.Col(erc.step_button),
+                    ])),
                 dbc.Col(erc.control_panel),
             ]),
             dcc.Store(id='selected-ids'),
@@ -107,6 +97,10 @@ class WebApp:
             State('selected-ids', 'data'),
             State('primary-action-state', 'value'),
             State('secondary-action-state', 'value'),
+            State('sell-item-state', 'value'),
+            State('sell-num-state', 'value'),
+            State('buy-item-state', 'value'),
+            State('buy-num-state', 'value'),
             State('written-actions', 'data'),
         )
 

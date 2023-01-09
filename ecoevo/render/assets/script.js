@@ -186,8 +186,8 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
                     "id": id,
                     "primary action": primary_action,
                     "secondary action": secondary_action,
-                    "sell offer": sell_offer,
-                    "buy offer": buy_offer,
+                    "sell offer": String(sell_offer),
+                    "buy offer": String(buy_offer),
                 });
             }
             return data_table;
@@ -197,27 +197,6 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
             if (selected_ids.length === 0) {
                 return window.dash_clientside.no_update;
             }
-            const ctx = document.getElementById('myChart');
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'],
-                    datasets: [{
-                        label: '# of Votes',
-                        data: [12, 19, 3, 5, 2, 3],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-
-
             const env_output_data = JSON.parse(json_env_output_data);
             const id = selected_ids[0];
             const json_player = env_output_data.players[id];
@@ -258,6 +237,10 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
             json_selected_ids,//State
             primary_action,//State
             secondary_action,//State
+            sell_item,//State
+            sell_num,//State
+            buy_item,//State
+            buy_num,//State
             json_written_actions,//State
         ) {
             const triggered_id = window.dash_clientside.callback_context.triggered[0].prop_id.split(".")[0];
@@ -269,11 +252,14 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
                 let written_actions = (json_written_actions !== undefined) ? JSON.parse(json_written_actions) : {};
                 if (triggered_id === "write-button-state") {
                     const selected_ids = JSON.parse(json_selected_ids);
+                    let sell_offer = sell_item !== 'None' ? [sell_item, -sell_num] : undefined
+                    let buy_offer = buy_item !== 'None' ? [buy_item, buy_num] : undefined
                     for (const id of selected_ids) {
                         written_actions[id] = [[primary_action,
-                            secondary_action], undefined, undefined];
+                            secondary_action], sell_offer, buy_offer];
                     }
                 }
+                console.log(written_actions)
                 let ctrl_next_actions = Object.assign(raw_next_actions, written_actions);
                 return [JSON.stringify(ctrl_next_actions), JSON.stringify(written_actions)];
             }

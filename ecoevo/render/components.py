@@ -1,7 +1,7 @@
 from ecoevo.entities import Player
-from ecoevo.render import dash_table, html, dcc
+from ecoevo.render import dash_table, html, dcc, dbc, daq
 from ecoevo.render import graph_objects as go
-from ecoevo.render import dash_bootstrap_components as dbc
+from ecoevo.render import ChartJs
 
 dbc_css = "https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates/dbc.min.css"
 reset_button = dcc.ConfirmDialogProvider(children=html.Button(
@@ -123,8 +123,23 @@ info_panel = html.Div([
     ]),
              id='bag-usage-bar'),
     html.Label('Persona Details'),
-    html.Div(html.Canvas(id="myChart"), id='radar-provider'),
-
+    html.Div(ChartJs(
+        type='bar',
+        data={
+            'labels': ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'],
+            'datasets': [{
+                'label': '# of Votes',
+                'data': [12, 19, 3, 5, 2, 3],
+                'borderWidth': 1
+            }]
+        },
+        options={'scales': {
+            'y': {
+                'beginAtZero': 'true'
+            }
+        }}),
+             id='radar-provider',
+             style={'width': '200px'}),
     html.Label('Obs'),
     html.Div('', id='obs-provider'),
     html.Label('Reward'),
@@ -191,23 +206,11 @@ control_panel = html.Div([
                              clearable=False)),
     ]),
     html.Label('Sell offer'),
-    dcc.Slider(
-        min=0,
-        max=len(trade_options),
-        marks={i: item_name
-               for i, item_name in enumerate(trade_options)},
-        value=0,
-        step=1,
-        id='sell-item-state'),
+    dcc.RadioItems(trade_options, 'None', id='sell-item-state', inline=True),
+    daq.NumericInput(id='sell-num-state', value=0),
     html.Label('Buy offer'),
-    dcc.Slider(
-        min=0,
-        max=len(trade_options),
-        marks={i: item_name
-               for i, item_name in enumerate(trade_options)},
-        value=0,
-        step=1,
-        id='sell-num-state'),
+    dcc.RadioItems(trade_options, 'None', id='buy-item-state', inline=True),
+    daq.NumericInput(id='buy-num-state', value=0),
     dbc.Row([
         dbc.Col(write_button),
         dbc.Col(clear_button),
