@@ -1,7 +1,7 @@
-from typing import List, Dict, Tuple
+from typing import Dict, List, Tuple
 
-from ecoevo.entities import Player, ALL_ITEM_DATA
-from ecoevo.types import Action, IdType, DealType
+from ecoevo.entities import ALL_ITEM_DATA, Player
+from ecoevo.types import Action, DealType, IdType, TradeResult
 
 
 class Analyser(object):
@@ -10,36 +10,40 @@ class Analyser(object):
         pass
 
     @staticmethod
-    def get_info(
-            done: bool, info: Dict[str, int or float], players: List[Player], 
-            matched_deals: Dict[IdType, DealType], actions_valid: Dict[int, Tuple[str, str]], 
-            dict_reward_info: Dict[int, Dict]) -> Dict[str, int or float]:
+    def get_info(done: bool, info: Dict[str, int or float], players: List[Player], matched_deals: Dict[IdType,
+                                                                                                       DealType],
+                 actions_valid: Dict[int, Tuple[str, str]], reward_info: Dict[int, Dict]) -> Dict[str, int or float]:
         """
-        tarder parser
-
         :param done:  if episode done
         :param info:  info of last step
         :param players:  list of all players
         :param matched_deals:  matched deals
         :param actions_valid:  validated actions dictionary, player id to action tuple
-        :param dict_reward_info:  reward info dictionary: rewards, utilities and costs
+        :param reward_info:  reward info dictionary: rewards, utilities and costs
 
         :return: info:  info of current step
         """
 
         # check keys
-        list_keys = ['trade_times'] + ['{}_trade_times'.format(item) for item in ALL_ITEM_DATA.keys()] + [
-            '{}_trade_amount'.format(item) for item in ALL_ITEM_DATA.keys()] + [
-                '{}_consume_times'.format(item) for item in ALL_ITEM_DATA.keys()] + [
-                    '{}_final_consume_amount'.format(item) for item in ALL_ITEM_DATA.keys()] + [
-                        'final_avr_utility', 'final_max_utility', 'final_min_utility'] + [
-                            'final_avr_cost', 'final_max_cost', 'final_min_cost']
-        for key in list_keys:
+        info_keys = ['curr_step'] + \
+                    ['trade_times'] + \
+                    ['{}_trade_times'.format(item) for item in ALL_ITEM_DATA.keys()] + \
+                    ['{}_trade_amount'.format(item) for item in ALL_ITEM_DATA.keys()] + \
+                    ['{}_consume_times'.format(item) for item in ALL_ITEM_DATA.keys()] + \
+                    ['{}_final_consume_amount'.format(item) for item in ALL_ITEM_DATA.keys()] + \
+                    ['final_avr_utility', 'final_max_utility', 'final_min_utility'] + \
+                    ['final_avr_cost', 'final_max_cost', 'final_min_cost']
+        trade_result_keys = [
+            f"avr_{trade_result}_per_step" for trade_result in ['absent', 'illegal', 'failed', 'success']
+        ]
+        info_keys += trade_result_keys
+
+        for key in info_keys:
             if key not in info:
                 info[key] = 0
 
         num_player = len(players)
-        
+
         # trade info
         trade_times, item_trade_times, item_trade_amount = Analyser.get_trade_data(matched_deals=matched_deals)
         info['trade_times'] += trade_times / num_player
@@ -47,6 +51,15 @@ class Analyser(object):
             info['{}_trade_times'.format(item)] += item_trade_times[item] / num_player
         for item in ALL_ITEM_DATA.keys():
             info['{}_trade_amount'.format(item)] += item_trade_amount[item] / num_player
+
+        # trade result
+        for player in players:
+            info_key = f"avr_{player.trade_result}_per_step"
+            info[info_key] += 1
+
+        if done:
+            for key in trade_result_keys:
+                info[key] /= info['curr_step'] + 1
 
         # consume times
         for pid in actions_valid:
@@ -61,8 +74,8 @@ class Analyser(object):
                     info['{}_final_consume_amount'.format(item)] += player.stomach[item].num / num_player
 
         # final utility
-        utilities = {pid: dict_reward_info[pid]['utility'] for pid in dict_reward_info}
-        costs = {pid: dict_reward_info[pid]['cost'] for pid in dict_reward_info}
+        utilities = {pid: reward_info[pid]['utility'] for pid in reward_info}
+        costs = {pid: reward_info[pid]['cost'] for pid in reward_info}
         if done:
             info['final_avr_utility'] = sum(utilities.values()) / len(players)
             info['final_max_utility'] = max(utilities.values())
@@ -74,9 +87,7 @@ class Analyser(object):
         return info
 
     @staticmethod
-    def get_trade_data(
-        matched_deals: Dict[IdType, DealType]
-    ) -> Tuple[int, Dict[str, int], Dict[str, int]]:
+    def get_trade_data(matched_deals: Dict[IdType, DealType]) -> Tuple[int, Dict[str, int], Dict[str, int]]:
         """
         tarder parser
 
@@ -92,11 +103,7 @@ class Analyser(object):
 
         # trade times and amounts of each items
         list_item = list(ALL_ITEM_DATA.keys())
-        item_trade_times, item_trade_amount = {item: 0
-                                               for item in list_item}, {
-                                                   item: 0
-                                                   for item in list_item
-                                               }
+        item_trade_times, item_trade_amount = {item: 0 for item in list_item}, {item: 0 for item in list_item}
         for player_id in matched_deals:
             _, _, (buy_name, buy_num) = matched_deals[player_id]
             item_trade_times[buy_name] += 1
