@@ -9,6 +9,7 @@ from ecoevo.render import Dash, Input, Output, State, ClientsideFunction
 from ecoevo.render import dcc, dbc, html, ctx
 from ecoevo.render.game_screen import GameScreen
 
+
 class WebApp:
 
     def __init__(self, rollout: RollOut):
@@ -57,7 +58,9 @@ class WebApp:
         self.app.clientside_callback(
             ClientsideFunction('clientside', 'displaySelectedActions'),
             Output('datatable-interactivity', 'data'),
-            Input('selected-ids', 'data'), Input('ctrl-next-actions', 'data'))
+            Input('selected-ids', 'data'),
+            Input('ctrl-next-actions', 'data'),
+        )
         self.app.clientside_callback(
             ClientsideFunction('clientside', 'displaySelectedPlayer'),
             *[
@@ -85,7 +88,7 @@ class WebApp:
                 for item_name in erc.all_item_list
             ],
             Input('selected-ids', 'data'),
-            State('env-output-data', 'data'),
+            Input('env-output-data', 'data'),
         )
         self.app.clientside_callback(
             ClientsideFunction('clientside', 'controlActions'),
@@ -94,7 +97,7 @@ class WebApp:
             Input('write-button-state', 'n_clicks'),
             Input('clear-button-state', 'n_clicks'),
             Input('raw-next-actions', 'data'),
-            State('selected-ids', 'data'),
+            Input('selected-ids', 'data'),
             State('primary-action-state', 'value'),
             State('secondary-action-state', 'value'),
             State('sell-item-state', 'value'),
