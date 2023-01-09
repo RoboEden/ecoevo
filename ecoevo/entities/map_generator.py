@@ -95,12 +95,6 @@ class MapGenerator:
             block_width = int(block_width)
             assert block_height > 0 and block_width > 0 and block_width * block_height * num_blocks <= width * height
 
-            print("width", width)
-            print("height", height)
-            print("num_per_item_type", num_per_item_type)
-            print("num_blocks", num_blocks)
-            print("block_height", block_height)
-
             # Scatter items in block
             item_types = list(item_attrs.keys())
             for block_x in range(width // block_width):
@@ -110,7 +104,6 @@ class MapGenerator:
                         continue
                     item_type = item_types[block_idx]
                     top_left_pos = (block_x * block_width, block_y * block_height)
-                    print(f"{item_type} top_left", top_left_pos)
                     cnt = num_per_item_type
                     for w in range(block_width):
                         for h in range(block_height):
@@ -119,7 +112,6 @@ class MapGenerator:
                             row = top_left_pos[0] + w
                             col = top_left_pos[1] + h
                             cnt = cnt - 1
-                            print(f"cur pos {row, col}")
                             data["tiles"][row][col] = item_type
                             data["amount"][row][col] = item_attrs[item_type]["reserve_num"]
 

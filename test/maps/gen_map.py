@@ -13,6 +13,8 @@ if __name__ == "__main__":
     parser.add_argument("--seed", type=int, default=1)
     args = parser.parse_args()
 
+    print(args)
+
     dir = pathlib.Path(__file__).parent
 
     if args.type == "rand":
