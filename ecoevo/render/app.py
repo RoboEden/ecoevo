@@ -25,12 +25,11 @@ class WebApp:
         self.app.layout = html.Div([
             dbc.Row([
                 dbc.Col(erc.info_panel),
-                dbc.Col(
-                    dbc.Row([
-                        erc.game_screen,
-                        dbc.Col(erc.reset_button),
-                        dbc.Col(erc.step_button),
-                    ])),
+                dbc.Col(dbc.Row([
+                    erc.game_screen,
+                    dbc.Col(erc.reset_button),
+                    dbc.Col(erc.step_button),
+                ])),
                 dbc.Col(erc.control_panel),
             ]),
             dcc.Store(id='selected-ids'),
@@ -49,11 +48,13 @@ class WebApp:
             Output('secondary-action-state', 'options'),
             Output('secondary-action-state', 'value'),
             Input('primary-action-state', 'value'),
+            State('all-item-data', 'data'),
         )
         self.app.clientside_callback(
             ClientsideFunction('clientside', 'updateSelectedIds'),
             Output('selected-ids', 'data'),
             Input('game-screen', 'selectedData'),
+            State('all-persona', 'data'),
         )
         self.app.clientside_callback(
             ClientsideFunction('clientside', 'displaySelectedActions'),
@@ -63,32 +64,11 @@ class WebApp:
         )
         self.app.clientside_callback(
             ClientsideFunction('clientside', 'displaySelectedPlayer'),
-            *[
-                Output(f'{item_name}-backpack-bar', 'value')
-                for item_name in erc.all_item_list
-            ],
-            *[
-                Output(f'{item_name}-backpack-popover-num', 'children')
-                for item_name in erc.all_item_list
-            ],
-            *[
-                Output(f'{item_name}-backpack-popover-capacity', 'children')
-                for item_name in erc.all_item_list
-            ],
-            *[
-                Output(f'{item_name}-stomach-bar', 'value')
-                for item_name in erc.all_item_list
-            ],
-            *[
-                Output(f'{item_name}-stomach-popover-num', 'children')
-                for item_name in erc.all_item_list
-            ],
-            *[
-                Output(f'{item_name}-stomach-popover-capacity', 'children')
-                for item_name in erc.all_item_list
-            ],
+            Output('reward-provider', 'children'),
             Input('selected-ids', 'data'),
             Input('env-output-data', 'data'),
+            State('all-item-data', 'data'),
+            State('all-persona', 'data'),
         )
         self.app.clientside_callback(
             ClientsideFunction('clientside', 'controlActions'),
@@ -98,13 +78,13 @@ class WebApp:
             Input('clear-button-state', 'n_clicks'),
             Input('raw-next-actions', 'data'),
             Input('selected-ids', 'data'),
+            State('written-actions', 'data'),
             State('primary-action-state', 'value'),
             State('secondary-action-state', 'value'),
             State('sell-item-state', 'value'),
             State('sell-num-state', 'value'),
             State('buy-item-state', 'value'),
             State('buy-num-state', 'value'),
-            State('written-actions', 'data'),
         )
 
         @self.app.callback(
@@ -142,7 +122,6 @@ class WebApp:
             }
             raw_next_actions = self.rollout.get_actions()
 
-            return self.gs_render.fig, msg, json.dumps(
-                env_output_data), json.dumps(raw_next_actions)
+            return self.gs_render.fig, msg, json.dumps(env_output_data), json.dumps(raw_next_actions)
 
         self.app.run_server(debug=True)

@@ -5,19 +5,12 @@ from ecoevo.render import ChartJs
 
 dbc_css = "https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates/dbc.min.css"
 plotlyjs = "https://cdn.plot.ly/plotly-2.12.1.min.js"
-reset_button = dcc.ConfirmDialogProvider(children=html.Button(
-    'Reset game', className="btn btn-danger"),
+reset_button = dcc.ConfirmDialogProvider(children=html.Button('Reset game', className="btn btn-danger"),
                                          id='reset-danger-button',
                                          message='Reset game?')
-step_button = html.Button('Step',
-                          id='step-button-state',
-                          className="btn btn-success")
-write_button = html.Button('Write',
-                           id='write-button-state',
-                           className="btn btn-primary")
-clear_button = html.Button('Clear',
-                           id='clear-button-state',
-                           className="btn btn-warning")
+step_button = html.Button('Step', id='step-button-state', className="btn btn-success")
+write_button = html.Button('Write', id='write-button-state', className="btn btn-primary")
+clear_button = html.Button('Clear', id='clear-button-state', className="btn btn-warning")
 
 item_to_color = {
     'gold': '#f9c23c',
@@ -40,12 +33,7 @@ columns_name = [
     'buy offer',
 ]
 
-columns = [{
-    "name": i,
-    "id": i,
-    "deletable": False,
-    "selectable": False
-} for i in columns_name]
+columns = [{"name": i, "id": i, "deletable": False, "selectable": False} for i in columns_name]
 
 
 def bag_usage_bar(is_backpack: bool = True):
@@ -112,39 +100,50 @@ info_panel = html.Div([
         bag_usage_bar(is_backpack=True),
         dbc.Popover([
             dbc.PopoverHeader('Backpack'),
-        ],
-                    target=f'backpack-list-group-item',
-                    trigger="hover"),
+        ], target=f'backpack-list-group-item', trigger="hover"),
         bag_usage_bar(is_backpack=False),
         dbc.Popover([
             dbc.PopoverHeader('Stomach'),
-        ],
-                    target=f'stomach-list-group-item',
-                    trigger="hover"),
+        ], target=f'stomach-list-group-item', trigger="hover"),
     ]),
              id='bag-usage-bar'),
     html.Label('Persona Details'),
-    html.Div(ChartJs(
-        type='bar',
-        data={
-            'labels': ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'],
-            'datasets': [{
-                'label': '# of Votes',
-                'data': [12, 19, 3, 5, 2, 3],
-                'borderWidth': 1
-            }]
-        },
-        options={'scales': {
-            'y': {
-                'beginAtZero': 'true'
-            }
-        }}),
+    html.Div(ChartJs(type='radar',
+                     data={
+                         'labels': ['Eating', 'Drinking', 'Sleeping', 'Designing', 'Coding', 'Cycling', 'Running'],
+                         'datasets': [{
+                             'label': 'Ability',
+                             'data': [65, 59, 90, 81, 56, 55, 40],
+                             'fill': True,
+                             'backgroundColor': 'rgba(255, 99, 132, 0.2)',
+                             'borderColor': 'rgb(255, 99, 132)',
+                             'pointBackgroundColor': 'rgb(255, 99, 132)',
+                             'pointBorderColor': '#fff',
+                             'pointHoverBackgroundColor': '#fff',
+                             'pointHoverBorderColor': 'rgb(255, 99, 132)'
+                         }, {
+                             'label': 'Preference',
+                             'data': [28, 48, 40, 19, 96, 27, 100],
+                             'fill': True,
+                             'backgroundColor': 'rgba(54, 162, 235, 0.2)',
+                             'borderColor': 'rgb(54, 162, 235)',
+                             'pointBackgroundColor': 'rgb(54, 162, 235)',
+                             'pointBorderColor': '#fff',
+                             'pointHoverBackgroundColor': '#fff',
+                             'pointHoverBorderColor': 'rgb(54, 162, 235)'
+                         }]
+                     },
+                     options={'elements': {
+                         'line': {
+                             'borderWidth': 3
+                         }
+                     }}),
              id='radar-provider',
-             style={'width': '200px'}),
+             style={'width': '400px'}),
     html.Label('Obs'),
     html.Div('', id='obs-provider'),
     html.Label('Reward'),
-    html.Div('Mother F*cker', id='reward-provider'),
+    html.Div('NaN', id='reward-provider'),
     html.Label('Info'),
     html.Div('', id='info-provider'),
 ],
@@ -203,8 +202,7 @@ control_panel = html.Div([
                 value='idle',
                 clearable=False,
             )),
-        dbc.Col(dcc.Dropdown([], id='secondary-action-state',
-                             clearable=False)),
+        dbc.Col(dcc.Dropdown([], id='secondary-action-state', clearable=False)),
     ]),
     html.Label('Sell offer'),
     dcc.RadioItems(trade_options, 'None', id='sell-item-state', inline=True),

@@ -13,135 +13,12 @@ function toOption(array) {
     }
     return options;
 }
-var all_item_list = [
-    "gold",
-    "hazelnut",
-    "coral",
-    "sand",
-    "pineapple",
-    "peanut",
-    "stone",
-    "pumpkin",
-];
-var player_list = ["gold_digger",
-    "hazelnut_farmer",
-    "coral_collector",
-    "sand_picker",
-    "pineapple_farmer",
-    "peanut_farmer",
-    "stone_picker",
-    "pumpkin_farmer",];
 
-var all_item_data = {
-    'gold':
-    {
-        'id': 1,
-        'supply': 0,
-        'refresh_time': 1000000,
-        'collect_time': 9,
-        'capacity': 1,
-        'harvest_num': 100,
-        'reserve_num': 5000,
-        'consume_num': 0,
-        'expiry': 0,
-        'disposable': false,
-    },
-    'hazelnut':
-    {
-        'id': 2,
-        'supply': 1,
-        'refresh_time': 15,
-        'collect_time': 9,
-        'capacity': 1,
-        'harvest_num': 100,
-        'reserve_num': 100,
-        'consume_num': 100,
-        'expiry': 0,
-        'disposable': true,
-    },
-    'coral':
-    {
-        'id': 3,
-        'supply': 0,
-        'refresh_time': 1000000,
-        'collect_time': 9,
-        'capacity': 100,
-        'harvest_num': 1,
-        'reserve_num': 50,
-        'consume_num': 0,
-        'expiry': 0,
-        'disposable': false,
-    },
-    'sand':
-    {
-        'id': 4,
-        'supply': 0,
-        'refresh_time': 1000000,
-        'collect_time': 3,
-        'capacity': 1,
-        'harvest_num': 100,
-        'reserve_num': 15000,
-        'consume_num': 0,
-        'expiry': 0,
-        'disposable': false,
-    },
-    'pineapple':
-    {
-        'id': 5,
-        'supply': 100,
-        'refresh_time': 15,
-        'collect_time': 9,
-        'capacity': 100,
-        'harvest_num': 1,
-        'reserve_num': 1,
-        'consume_num': 1,
-        'expiry': 0,
-        'disposable': true,
-    },
-    'peanut':
-    {
-        'id': 6,
-        'supply': 1,
-        'refresh_time': 5,
-        'collect_time': 3,
-        'capacity': 1,
-        'harvest_num': 100,
-        'reserve_num': 100,
-        'consume_num': 100,
-        'expiry': 0,
-        'disposable': true,
-    },
-    'stone':
-    {
-        'id': 7,
-        'supply': 0,
-        'refresh_time': 1000000,
-        'collect_time': 3,
-        'capacity': 100,
-        'harvest_num': 1,
-        'reserve_num': 150,
-        'consume_num': 0,
-        'expiry': 0,
-        'disposable': false,
-    },
-    'pumpkin':
-    {
-        'id': 8,
-        'supply': 100,
-        'refresh_time': 5,
-        'collect_time': 3,
-        'capacity': 100,
-        'harvest_num': 1,
-        'reserve_num': 1,
-        'consume_num': 1,
-        'expiry': 0,
-        'disposable': true,
-    },
-};
 
 window.dash_clientside = Object.assign({}, window.dash_clientside, {
     clientside: {
-        actionBinding: function (primaryAction) {
+        actionBinding: function (primaryAction, json_all_item_data) {
+            const all_item_list = Object.keys(JSON.parse(json_all_item_data));
             if (primaryAction === "idle" || primaryAction === "collect") {
                 return [[], undefined];
             }
@@ -154,11 +31,12 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
                 return [options, options[0].value];
             }
         },
-        updateSelectedIds: function (selectedData) {
+        updateSelectedIds: function (selectedData, json_all_persona) {
             if (selectedData == undefined) {
                 return JSON.stringify([]);
             }
             else if ("points" in selectedData) {
+                const player_list = Object.keys(JSON.parse(json_all_persona));
                 let selected_ids = [];
                 for (const points of Object.values(selectedData.points)) {
                     if (player_list.includes(points["customdata"][0])) {
@@ -192,8 +70,10 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
             }
             return data_table;
         },
-        displaySelectedPlayer: function (json_selected_ids, json_env_output_data) {
+        displaySelectedPlayer: function (json_selected_ids, json_env_output_data, json_all_item_data, json_all_persona) {
             const selected_ids = JSON.parse(json_selected_ids);
+            const ALL_ITEM_DATA = Object.keys(JSON.parse(json_all_item_data));
+            const ALL_PERSONA = Object.keys(JSON.parse(json_all_persona));
             if (selected_ids.length === 0) {
                 return window.dash_clientside.no_update;
             }
@@ -208,26 +88,9 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
                 document.getElementById("basic-player-health").innerText = player.health;
                 document.getElementById("basic-player-collect-remain").innerText = String(player.collect_remain);
                 document.getElementById("basic-player-trade-result").innerText = player.trade_result;
-                document.getElementById("radar-provider").innerText = '';
-                document.getElementById("obs-provider").innerText = '';
                 document.getElementById("reward-provider").innerText = env_output_data.rewards[id];
                 document.getElementById("info-provider").innerText = env_output_data.info[id];
-                var output = [];
-                for (const item_name of all_item_list) {
-                    let num = player.backpack[item_name]['num'];
-                    let capacity = all_item_data[item_name]['capacity'];
-                    output.push(num * capacity);
-                    output.push(num);
-                    output.push(capacity);
-                }
-                for (const item_name of all_item_list) {
-                    let num = player.stomach[item_name]['num'];
-                    let capacity = all_item_data[item_name]['capacity'];
-                    output.push(num * capacity);
-                    output.push(num);
-                    output.push(capacity);
-                }
-                return output;
+                return env_output_data.rewards[id];
             }
         },
         controlActions: function (
@@ -235,13 +98,13 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
             clear_n_clicks,//Input
             json_raw_next_actions,//Input
             json_selected_ids,//State
+            json_written_actions,//State
             primary_action,//State
             secondary_action,//State
             sell_item,//State
             sell_num,//State
             buy_item,//State
             buy_num,//State
-            json_written_actions,//State
         ) {
             const triggered_id = window.dash_clientside.callback_context.triggered[0].prop_id.split(".")[0];
             if (triggered_id === "clear-button-state") {
@@ -252,8 +115,8 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
                 let written_actions = (json_written_actions !== undefined) ? JSON.parse(json_written_actions) : {};
                 if (triggered_id === "write-button-state") {
                     const selected_ids = JSON.parse(json_selected_ids);
-                    let sell_offer = sell_item !== 'None' ? [sell_item, -sell_num] : undefined
-                    let buy_offer = buy_item !== 'None' ? [buy_item, buy_num] : undefined
+                    let sell_offer = sell_item !== 'None' ? [sell_item, -sell_num] : undefined;
+                    let buy_offer = buy_item !== 'None' ? [buy_item, buy_num] : undefined;
                     for (const id of selected_ids) {
                         written_actions[id] = [[primary_action,
                             secondary_action], sell_offer, buy_offer];
