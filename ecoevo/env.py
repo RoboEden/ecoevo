@@ -100,7 +100,7 @@ class EcoEvo:
                                       players=self.players,
                                       matched_deals=matched_deals,
                                       actions_valid=actions_valid,
-                                      dict_reward_info={
+                                      reward_info={
                                           player.id: {
                                               'reward': rewards[player.id],
                                               'utility': self.reward_parser.last_utilities[player.id],
