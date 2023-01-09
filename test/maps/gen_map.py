@@ -10,6 +10,7 @@ if __name__ == "__main__":
     parser.add_argument("--width", type=int, default=32)
     parser.add_argument("--height", type=int, default=32)
     parser.add_argument("--num_per_item_type", type=int, default=32)
+    parser.add_argument("--empty_width", type=int, default=2)
     parser.add_argument("--seed", type=int, default=1)
     args = parser.parse_args()
 
@@ -30,6 +31,7 @@ if __name__ == "__main__":
                                      height=args.height,
                                      num_per_item_type=args.num_per_item_type,
                                      seed=args.seed,
+                                     empty_width=args.empty_width,
                                      save_path=save_path)
 
     pic_path = dir / "map.jpg"

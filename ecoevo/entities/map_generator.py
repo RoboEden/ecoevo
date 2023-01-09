@@ -71,6 +71,7 @@ class MapGenerator:
     def gen_regular_map(width: int = 32,
                         height: int = 32,
                         num_per_item_type: int = 16,
+                        empty_width: int = 2,
                         save_path: str = "regular_map.json",
                         seed: int = 1):
         # Seeding
@@ -93,7 +94,10 @@ class MapGenerator:
             block_width = num_tiles_per_block / block_height
             block_height = int(block_height)
             block_width = int(block_width)
-            assert block_height > 0 and block_width > 0 and block_width * block_height * num_blocks <= width * height
+            assert block_height > 0 \
+                    and block_width > 0 \
+                    and block_width * block_height * num_blocks <= width * height \
+                    and block_width * block_height >= num_per_item_type + empty_width*(block_height+block_width)*2 - 4*empty_width*empty_width
 
             # Scatter items in block
             item_types = list(item_attrs.keys())
@@ -105,12 +109,12 @@ class MapGenerator:
                     item_type = item_types[block_idx]
                     top_left_pos = (block_x * block_width, block_y * block_height)
                     cnt = num_per_item_type
-                    for w in range(block_width):
-                        for h in range(block_height):
+                    for w in range(empty_width, block_width - empty_width):
+                        for h in range(empty_width, block_height - empty_width):
                             if cnt <= 0:
                                 break
-                            row = top_left_pos[0] + w
-                            col = top_left_pos[1] + h
+                            col = top_left_pos[0] + w
+                            row = top_left_pos[1] + h
                             cnt = cnt - 1
                             data["tiles"][row][col] = item_type
                             data["amount"][row][col] = item_attrs[item_type]["reserve_num"]
