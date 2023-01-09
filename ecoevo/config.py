@@ -26,17 +26,16 @@ class MapConfig:
 class PlayerConfig:
     bag_volume = 1e8
     max_health = 100
-    comsumption_per_step = 1
+    comsumption_per_step = 10
 
 
 class RewardConfig:
     threshold = 0
     weight_coef = 0
-    penalty = 1
-    rho = 0.5
+    penalty = 0
 
 
 class DataPath:
-    item_yaml = pathlib.Path(__file__).parent / "entities" / "items.yaml"
-    player_yaml = pathlib.Path(__file__).parent / "entities" / "player.yaml"
-    map_json = pathlib.Path(__file__).parent / "maps" / "data" / "base.json"
+    item_yaml = pathlib.Path(__file__).parent / "data" / "items.yaml"
+    player_yaml = pathlib.Path(__file__).parent / "data" / "player.yaml"
+    map_json = pathlib.Path(__file__).parent / "data" / "base.json"

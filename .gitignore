@@ -160,12 +160,11 @@ cython_debug/
 #.idea/
 
 # Data files for ecoevo test cases
-test/*.csv
-test/*/*.csv
-test/*.json
-test/*/*.json
-
-tests/*.csv
-tests/*/*.csv
-tests/*.json
-tests/*/*.json
+test/**/*.csv
+test/**/*.json
+test/**/*.jpg
+test/**/*.png
+tests/**/*.csv
+tests/**/*.json
+tests/**/*.jpg
+tests/**/*.png

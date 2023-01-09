@@ -1,14 +1,30 @@
+from typing import Dict
+
 import numpy as np
-from ecoevo.entities import Player, ALL_PERSONAE, ALL_ITEM_DATA
-from ecoevo.config import RewardConfig
+
+from ecoevo.config import RewardConfig as rc
+from ecoevo.entities import ALL_ITEM_DATA, ALL_PERSONAE, Player
+from ecoevo.types import TradeResult
 
 
-def cal_utility(alpha: np.ndarray, cnt: np.ndarray, rho: float) -> float:
-    u = np.power(cnt, rho)
-    u = alpha * u
-    u = np.sum(u)
-    u = np.power(u, 1 / rho)
-    return u
+def cal_utility(volumes: Dict[str, int], den: int = 10, coef_disposable: int = 3) -> float:
+    """
+    calculate total utility, log method
+
+    :param volumes:  count dict based on item names
+    :param den:  denominator of volumes
+    :param coef_disposable:  magnification times of disposable items
+
+    :return: utility:  total utility
+    """
+
+    utility = 0
+    for item, vol in volumes.items():
+        vol /= den
+        u = np.log(vol + 1) * coef_disposable if ALL_ITEM_DATA[item]['disposable'] else np.log(vol + 1)
+        utility += u
+
+    return utility
 
 
 class RewardParser:
@@ -16,13 +32,6 @@ class RewardParser:
     def __init__(self) -> None:
         self.player_types = list(ALL_PERSONAE.keys())
         self.item_names = list(ALL_ITEM_DATA.keys())
-
-        # get alphas
-        self.alphas = {
-            player_type: np.array([ALL_PERSONAE[
-                player_type]["preference"][item_name] for item_name in self.item_names], dtype=np.float32)
-            for player_type in ALL_PERSONAE
-        }
 
         self.last_utilities = {}
         self.last_costs = {}
@@ -34,15 +43,15 @@ class RewardParser:
         self.total_costs = {}
 
     def utility(self, player: Player) -> float:
-        alpha = self.alphas[player.persona]
-        cnts = np.zeros(len(self.item_names), dtype=np.float32)
-        for idx, item_name in enumerate(self.item_names):
-            cnts[idx] = player.stomach[item_name].num * player.stomach[item_name].capacity
-        return cal_utility(alpha, cnts, RewardConfig.rho)
+        volumes = {}
+        for _, item_name in enumerate(self.item_names):
+            volumes[item_name] = player.stomach[item_name].num * player.stomach[item_name].capacity
+
+        return cal_utility(volumes=volumes)
 
     def cost(self, player: Player) -> float:
-        penalty_flag = player.health <= RewardConfig.threshold
-        cost = RewardConfig.weight_coef * player.backpack.used_volume + penalty_flag * RewardConfig.penalty
+        penalty_flag = player.health <= rc.threshold
+        cost = rc.weight_coef * player.backpack.used_volume + penalty_flag * rc.penalty
         return cost
 
     def parse(self, player: Player) -> float:

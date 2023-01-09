@@ -49,6 +49,10 @@ class Item(BaseModel):
     def disposable(self) -> bool:
         return bool(ALL_ITEM_DATA[self.name]['disposable'])
 
+    @property
+    def luxury(self) -> bool:
+        return bool(ALL_ITEM_DATA[self.name]['luxury'])
+
 
 def load_item(name: str, num=0) -> Item:
     return Item(**{
