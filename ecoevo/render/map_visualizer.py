@@ -1,8 +1,10 @@
 import json
-import os
 
-import matplotlib.patches as pch
-import matplotlib.pyplot as plt
+try:
+    import matplotlib.patches as pch
+    import matplotlib.pyplot as plt
+except ImportError:
+    raise ImportError("Try pip install ecoevo[render]!")
 
 
 class MapVisualizer:
@@ -55,10 +57,3 @@ class MapVisualizer:
 
             # save picture
             plt.savefig(save_path)
-
-
-if __name__ == "__main__":
-    dir = os.path.dirname(__file__)
-    data_path = os.path.join(dir, "map.json")
-    save_path = os.path.join(dir, "map.jpg")
-    MapVisualizer.plot(data_path, save_path)
