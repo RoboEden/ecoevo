@@ -9,7 +9,6 @@ from ecoevo.render import Dash, Input, Output, State, ClientsideFunction
 from ecoevo.render import dcc, dbc, html, ctx
 from ecoevo.render.game_screen import GameScreen
 
-
 class WebApp:
 
     def __init__(self, rollout: RollOut):
@@ -19,6 +18,7 @@ class WebApp:
         self.ctrl_policy = {}
         self.app = Dash(
             __name__,
+            external_scripts=[erc.plotlyjs],
             external_stylesheets=[dbc.themes.DARKLY, erc.dbc_css],
         )
         self.app.layout = html.Div([

@@ -4,6 +4,7 @@ from ecoevo.render import graph_objects as go
 from ecoevo.render import ChartJs
 
 dbc_css = "https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates/dbc.min.css"
+plotlyjs = "https://cdn.plot.ly/plotly-2.12.1.min.js"
 reset_button = dcc.ConfirmDialogProvider(children=html.Button(
     'Reset game', className="btn btn-danger"),
                                          id='reset-danger-button',

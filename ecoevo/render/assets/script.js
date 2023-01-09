@@ -137,7 +137,7 @@ var all_item_data = {
         'expiry': 0,
         'disposable': true,
     },
-}
+};
 
 window.dash_clientside = Object.assign({}, window.dash_clientside, {
     clientside: {
@@ -259,7 +259,6 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
                             secondary_action], sell_offer, buy_offer];
                     }
                 }
-                console.log(written_actions)
                 let ctrl_next_actions = Object.assign(raw_next_actions, written_actions);
                 return [JSON.stringify(ctrl_next_actions), JSON.stringify(written_actions)];
             }
