@@ -272,7 +272,7 @@ class Trader(object):
         idx_pos, idx_sell, idx_buy = 0, 1, 2
         idx_item_name, idx_item_num = 0, 1
 
-        # deal infos during processing
+        # deal infos during processing, transfer tuples to lists
         dict_deal = {}
         for i in self.legal_deals:
             dict_deal[i] = [
@@ -365,8 +365,10 @@ class Trader(object):
                 # update remain volumes
                 capacity_i = ALL_ITEM_DATA[dict_deal[i][idx_buy][idx_item_name]]['capacity']
                 capacity_cur = ALL_ITEM_DATA[dict_deal[pid_cur][idx_buy][idx_item_name]]['capacity']
-                list_remain_volume[i] -= actual_buy_num_i * capacity_i
-                list_remain_volume[pid_cur] -= actual_buy_num_cur * capacity_cur
+                list_remain_volume[i] = list_remain_volume[
+                    i] - actual_buy_num_i * capacity_i + actual_buy_num_cur * capacity_cur
+                list_remain_volume[pid_cur] = list_remain_volume[
+                    pid_cur] - actual_buy_num_cur * capacity_cur + actual_buy_num_i * capacity_i
 
         # result info
         match_deals = {}
@@ -404,7 +406,7 @@ class Trader(object):
         sell_num_1, sell_num_2 = abs(sell_num_1), abs(sell_num_2)
 
         # use deal 2 as pivot
-        actual_buy_num_2 = buy_num_2 if sell_num_1 >= buy_num_2 else sell_num_1
+        actual_buy_num_2 = min(buy_num_2, sell_num_1)
         
         # consider remaining backpack volume of player 1
         ratio_2 = sell_num_2 / buy_num_2
