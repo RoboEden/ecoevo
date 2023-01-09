@@ -3,9 +3,9 @@ import pathlib
 
 class EnvConfig:
     total_step = 1000
-    trade_radius = 7
+    trade_radius = 4
     visual_radius = 7
-    num_person_type = 8
+    num_person_type = 4
     personae = [
         *(['gold_digger'] * num_person_type),
         *(['hazelnut_farmer'] * num_person_type),
@@ -26,13 +26,13 @@ class MapConfig:
 class PlayerConfig:
     bag_volume = 1e8
     max_health = 100
-    comsumption_per_step = 10
+    comsumption_per_step = 5
 
 
 class RewardConfig:
     threshold = 0
     weight_coef = 0
-    penalty = 0
+    penalty = 0.01
 
 
 class DataPath:
