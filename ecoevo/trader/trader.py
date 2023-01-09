@@ -115,7 +115,7 @@ class Trader(object):
                     least_amount += sell_item.consume_num
 
             if sell_item.num < least_amount:
-                logger.debug(f'Insufficient {sell_item_name}:{sell_item.num} sell_num {sell_num}')
+                logger.debug(f'Insufficient {sell_item_name}: {sell_item.num} sell_num {sell_num}')
                 player.trade_result = TradeResult.illegal
                 continue
 
@@ -123,7 +123,7 @@ class Trader(object):
             buy_item_volumne = player.backpack[buy_item_name].capacity * buy_num
             if player.backpack.remain_volume < buy_item_volumne:
                 player.trade_result = TradeResult.illegal
-                logger.debug(f'Insufficient backpack remain volume:{player.backpack.remain_volume}')
+                logger.debug(f'Insufficient backpack remain volume: {player.backpack.remain_volume}')
                 continue
 
             legal_deals[player.id] = (player.pos, sell_offer, buy_offer)
@@ -410,8 +410,9 @@ class Trader(object):
         
         # consider remaining backpack volume of player 1
         ratio_2 = sell_num_2 / buy_num_2
+        buy_num_1_ratio = math.floor(actual_buy_num_2 * ratio_2)
         capacity_1 = ALL_ITEM_DATA[buy_item_1]['capacity']
-        actual_buy_num_1 = math.ceil(actual_buy_num_2 * ratio_2) if math.ceil(
-            actual_buy_num_2 * ratio_2) * capacity_1 <= remain_volume_1 else math.floor(remain_volume_1 / capacity_1)
+        buy_num_1_ub = math.floor(remain_volume_1 / capacity_1)
+        actual_buy_num_1 = min(buy_num_1_ratio, sell_num_2, buy_num_1_ub)
 
         return actual_buy_num_1, actual_buy_num_2
