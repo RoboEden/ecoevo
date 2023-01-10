@@ -56,3 +56,69 @@ class MapGenerator:
             # Serialization
             with open(save_path, "w") as map_fp:
                 json.dump(data, map_fp)
+
+    @staticmethod
+    def init_data(width: int, height: int):
+        data = {
+            "width": width,
+            "height": height,
+            "tiles": [["empty" for _ in range(width)] for _ in range(height)],
+            "amount": [[0 for _ in range(width)] for _ in range(height)]
+        }
+        return data
+
+    @staticmethod
+    def gen_regular_map(width: int = 32,
+                        height: int = 32,
+                        num_per_item_type: int = 16,
+                        empty_width: int = 2,
+                        save_path: str = "regular_map.json",
+                        seed: int = 1):
+        # Seeding
+        if seed:
+            random.seed(seed)
+            np.random.seed(seed=seed)
+
+        # Init
+        data = MapGenerator.init_data(width=width, height=height)
+
+        # Block
+        with open(DataPath.item_yaml) as fp:
+            item_attrs = dict(yaml.load(fp, Loader=SafeLoader))
+            num_blocks = len(item_attrs) + 1
+            num_tiles_per_block = width * height // num_blocks
+            # block_width * block_height = num_tiles_per_block
+            # block_width / block_height = width / height
+            # width / height * block_height * block_height = num_tiles_per_block
+            block_height = np.sqrt(num_tiles_per_block * height / width)
+            block_width = num_tiles_per_block / block_height
+            block_height = int(block_height)
+            block_width = int(block_width)
+            assert block_height > 0 \
+                    and block_width > 0 \
+                    and block_width * block_height * num_blocks <= width * height \
+                    and block_width * block_height >= num_per_item_type + empty_width*(block_height+block_width)*2 - 4*empty_width*empty_width
+
+            # Scatter items in block
+            item_types = list(item_attrs.keys())
+            for block_x in range(width // block_width):
+                for block_y in range(height // block_height):
+                    block_idx = block_x + block_y * width // block_width
+                    if block_idx >= len(item_types):
+                        continue
+                    item_type = item_types[block_idx]
+                    top_left_pos = (block_x * block_width, block_y * block_height)
+                    cnt = num_per_item_type
+                    for w in range(empty_width, block_width - empty_width):
+                        for h in range(empty_width, block_height - empty_width):
+                            if cnt <= 0:
+                                break
+                            col = top_left_pos[0] + w
+                            row = top_left_pos[1] + h
+                            cnt = cnt - 1
+                            data["tiles"][row][col] = item_type
+                            data["amount"][row][col] = item_attrs[item_type]["reserve_num"]
+
+            # Serialization
+            with open(save_path, "w") as map_fp:
+                json.dump(data, map_fp)
