@@ -7,7 +7,7 @@ from ecoevo.entities import ALL_ITEM_DATA, ALL_PERSONAE, Player
 from ecoevo.types import TradeResult
 
 
-def cal_utility(volumes: Dict[str, int], den: int = 10, coef_disposable: int = 3) -> float:
+def cal_utility(volumes: Dict[str, int], den: int = 10, coef_disposable: int = 2) -> float:
     """
     calculate total utility, log method
 
