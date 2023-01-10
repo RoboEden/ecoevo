@@ -70,8 +70,7 @@ class EcoEvo:
         self.curr_step += 1
 
         # trader
-        matched_deals = self.trader.parse(players=self.players, actions=actions)
-
+        matched_deals = self.trader.parse(self.players, actions)
         # execute
         random.shuffle(self.ids)
         for id in self.ids:
@@ -95,19 +94,15 @@ class EcoEvo:
         obs = {player.id: self.get_obs(player) for player in self.players}
         rewards = {player.id: self.reward_parser.parse(player) for player in self.players}
         done = True if self.curr_step > self.cfg.total_step else False
-        self.info = Analyser.get_info(done=done,
-                                      info=self.info,
-                                      players=self.players,
-                                      matched_deals=matched_deals,
-                                      actions_valid=actions_valid,
-                                      reward_info={
-                                          player.id: {
-                                              'reward': rewards[player.id],
-                                              'utility': self.reward_parser.last_utilities[player.id],
-                                              'cost': self.reward_parser.total_costs[player.id]
-                                          }
-                                          for player in self.players
-                                      })
+        self.info = Analyser.get_info(
+            done, self.info, self.players, matched_deals, actions_valid, {
+                player.id: {
+                    'reward': rewards[player.id],
+                    'utility': self.reward_parser.last_utilities[player.id],
+                    'cost': self.reward_parser.total_costs[player.id]
+                }
+                for player in self.players
+            })
 
         # refresh items
         self.entity_manager.refresh_item()
