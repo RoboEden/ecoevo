@@ -1,5 +1,6 @@
 import json
 import random
+from typing import Dict
 
 import numpy as np
 import yaml
@@ -122,3 +123,32 @@ class MapGenerator:
             # Serialization
             with open(save_path, "w") as map_fp:
                 json.dump(data, map_fp)
+
+    @staticmethod
+    def fixed_map(width=32, height=32, block_size=10, outer=1, inner_gap=2, num_per_item_type=9) -> Dict:
+        data = MapGenerator.init_data(width=width, height=height)
+
+        with open(DataPath.item_yaml) as fp:
+            item_attrs = dict(yaml.load(fp, Loader=SafeLoader))
+            item_names = list(item_attrs.keys())
+            item_names.insert(4, "empty")
+            for block_x in range((width - outer * 2) // block_size):
+                for block_y in range((height - outer * 2) // block_size):
+                    if block_x == 1 and block_y == 1:
+                        continue
+                    block_idx = block_x + block_y * (width - outer * 2) // block_size
+                    item_name = item_names[block_idx]
+
+                    top_left = (outer + 1 + block_x * block_size, outer + 1 + block_y * block_size)
+                    cur_pos = list(top_left)
+                    for i in range(num_per_item_type):
+                        col = cur_pos[0]
+                        row = cur_pos[1]
+                        data["tiles"][row][col] = item_name
+                        data["amount"][row][col] = item_attrs[item_name]["reserve_num"]
+                        cur_pos[0] += 1 + inner_gap
+                        if cur_pos[0] >= top_left[0] + block_size - 1:
+                            cur_pos[0] = top_left[0]
+                            cur_pos[1] += 1 + inner_gap
+
+        return data

@@ -1,4 +1,5 @@
 import argparse
+import json
 import pathlib
 
 from ecoevo.entities.map_generator import MapGenerator
@@ -33,6 +34,11 @@ if __name__ == "__main__":
                                      seed=args.seed,
                                      empty_width=args.empty_width,
                                      save_path=save_path)
+    elif args.type == "fixed":
+        save_path = dir / "fixed_map.json"
+        data = MapGenerator.fixed_map()
+        with open(save_path, "w") as fp:
+            json.dump(data, fp)
 
     pic_path = dir / "map.jpg"
     MapVisualizer.plot(save_path, pic_path)
