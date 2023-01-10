@@ -7,7 +7,7 @@ from ecoevo.entities import ALL_ITEM_DATA, ALL_PERSONAE, Player
 from ecoevo.types import TradeResult
 
 
-def cal_utility(volumes: Dict[str, int], den: int = 10, coef_disposable: int = 1) -> float:  # TODO
+def cal_utility(volumes: Dict[str, int], den: int = 10, coef_disposable: int = 2) -> float:
     """
     calculate total utility, log method
 
@@ -66,10 +66,7 @@ class RewardParser:
         self.last_costs[player.id] = cost
         self.total_costs[player.id] = self.total_costs[player.id] + cost if player.id in self.total_costs else cost
 
-        # TODO: trade reward
-        reward_trade = 0.1 if player.trade_result == TradeResult.success else 0
-
         # reward
-        reward = du - cost + reward_trade
+        reward = du - cost
 
         return reward
