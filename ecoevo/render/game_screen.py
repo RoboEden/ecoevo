@@ -79,10 +79,11 @@ class GameScreen:
         self.fig.update_xaxes(visible=False)
         self.fig.update_yaxes(visible=False)
 
-    def update(self, map: Dict[PosType, Tile]):
+    def update(self, map: Dict[PosType, Tile], dict_flow: Dict[Tuple[IdType, IdType], Tuple[OfferType, OfferType]],
+               players: List[Player]):
         self.update_item_trace(map)
         self.update_player_trace(map)
-        # ph.plotly_chart(self.fig)
+        self.update_trade_trace(dict_flow, players)
 
     def update_item_trace(self, map: Dict[PosType, Tile]):
         poses = []
@@ -121,27 +122,36 @@ class GameScreen:
                                customdata=customdata,
                                selector=dict(type="scatter", name="player-trace"))
 
-    def update_trade_trace(self, trade_mat: Dict[Tuple[IdType, IdType], Tuple[OfferType, OfferType]],
+    def update_trade_trace(self, dict_flow: Dict[Tuple[IdType, IdType], Tuple[OfferType, OfferType]],
                            players: List[Player]):
         self.fig.data = self.fig.data[0:3]
-        for (id_foo, id_bar), (offer_foo, offer_bar) in trade_mat.items():
+        for (id_foo, id_bar), (offer_foo, offer_bar) in dict_flow.items():
             x = [players[id_foo].pos[0], players[id_bar].pos[0]]
             y = [players[id_foo].pos[1], players[id_bar].pos[1]]
             line_width = self.trade_line_width / math.cos(math.atan((y[0] - y[1]) / (x[0] - x[1])))
 
             x_rev = x[::-1]
-            y2_upper = [_y + line_width / 2 for _y in y]
-            y2_lower = [_y - line_width / 2 for _y in y]
-            y2_lower = y2_lower[::-1]
+            y_upper = [_y + line_width / 2 for _y in y]
+            y_lower = [_y - line_width / 2 for _y in y]
+            y_lower = y_lower[::-1]
 
             self.fig.add_trace(
                 go.Scatter(
                     x=x + x_rev,
-                    y=y2_upper + y2_lower,
+                    y=y_upper + y_lower,
                     fill='toself',
                     fillcolor='rgba(255,255,255,0.5)',
                     line_color='rgba(255,255,255,0)',
                     hoveron='fills',
+                    showlegend=False,
+                    name=f"""{id_foo}: {offer_foo}<br>{id_bar}: {offer_bar}""",
+                ))
+            self.fig.add_trace(
+                go.Scatter(
+                    x=x,
+                    y=y,
+                    line_color='rgba(255,255,255,0)',
+                    hoverinfo='skip',
                     showlegend=False,
                     name=f"""{id_foo}: {offer_foo}<br>{id_bar}: {offer_bar}""",
                 ))

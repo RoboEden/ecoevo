@@ -90,6 +90,29 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
                 document.getElementById("basic-player-trade-result").innerText = player.trade_result;
                 document.getElementById("reward-provider").innerText = env_output_data.rewards[id];
                 document.getElementById("info-provider").innerText = env_output_data.info[id];
+                const ctx = document.getElementById('myChart');
+
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'],
+                        datasets: [{
+                            label: '# of Votes',
+                            data: [12, 19, 3, 5, 2, 3],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+
+
+
                 return env_output_data.rewards[id];
             }
         },

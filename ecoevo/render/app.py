@@ -19,7 +19,7 @@ class WebApp:
         self.ctrl_policy = {}
         self.app = Dash(
             __name__,
-            external_scripts=[erc.plotlyjs],
+            external_scripts=[erc.plotlyjs, erc.chartjs],
             external_stylesheets=[dbc.themes.DARKLY, erc.dbc_css],
         )
         self.app.layout = html.Div([
@@ -113,7 +113,12 @@ class WebApp:
                 rewards = [0.0] * self.env.num_player
                 msg = u'Ready to play!'
 
-            self.gs_render.update(self.env.entity_manager.map)
+            print('dict_flow:', self.env.trader.dict_flow)
+            self.gs_render.update(
+                self.env.entity_manager.map,
+                self.env.trader.dict_flow,
+                self.env.players,
+            )
             env_output_data = {
                 'obs': None,
                 'rewards': rewards,

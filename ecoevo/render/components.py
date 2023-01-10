@@ -1,10 +1,10 @@
-from ecoevo.entities import Player
 from ecoevo.render import dash_table, html, dcc, dbc, daq
 from ecoevo.render import graph_objects as go
-from ecoevo.render import ChartJs
 
 dbc_css = "https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates/dbc.min.css"
 plotlyjs = "https://cdn.plot.ly/plotly-2.12.1.min.js"
+chartjs = "https://cdn.jsdelivr.net/npm/chart.js"
+
 reset_button = dcc.ConfirmDialogProvider(children=html.Button('Reset game', className="btn btn-danger"),
                                          id='reset-danger-button',
                                          message='Reset game?')
@@ -108,38 +108,7 @@ info_panel = html.Div([
     ]),
              id='bag-usage-bar'),
     html.Label('Persona Details'),
-    html.Div(ChartJs(type='radar',
-                     data={
-                         'labels': ['Eating', 'Drinking', 'Sleeping', 'Designing', 'Coding', 'Cycling', 'Running'],
-                         'datasets': [{
-                             'label': 'Ability',
-                             'data': [65, 59, 90, 81, 56, 55, 40],
-                             'fill': True,
-                             'backgroundColor': 'rgba(255, 99, 132, 0.2)',
-                             'borderColor': 'rgb(255, 99, 132)',
-                             'pointBackgroundColor': 'rgb(255, 99, 132)',
-                             'pointBorderColor': '#fff',
-                             'pointHoverBackgroundColor': '#fff',
-                             'pointHoverBorderColor': 'rgb(255, 99, 132)'
-                         }, {
-                             'label': 'Preference',
-                             'data': [28, 48, 40, 19, 96, 27, 100],
-                             'fill': True,
-                             'backgroundColor': 'rgba(54, 162, 235, 0.2)',
-                             'borderColor': 'rgb(54, 162, 235)',
-                             'pointBackgroundColor': 'rgb(54, 162, 235)',
-                             'pointBorderColor': '#fff',
-                             'pointHoverBackgroundColor': '#fff',
-                             'pointHoverBorderColor': 'rgb(54, 162, 235)'
-                         }]
-                     },
-                     options={'elements': {
-                         'line': {
-                             'borderWidth': 3
-                         }
-                     }}),
-             id='radar-provider',
-             style={'width': '400px'}),
+    html.Div(html.Canvas(id='myChart'), id='radar-provider', style={'width': '400px'}),
     html.Label('Obs'),
     html.Div('', id='obs-provider'),
     html.Label('Reward'),
@@ -152,7 +121,6 @@ info_panel = html.Div([
                           'padding': 10,
                           'flex': 1
                       })
-
 all_primary_action = ['idle', 'move', 'collect', 'consume']
 control_panel = html.Div([
     html.Div('Control Panel', className="card-header"),
