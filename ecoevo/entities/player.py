@@ -1,13 +1,13 @@
-import yaml
 from typing import Optional
 
+import yaml
 from loguru import logger
 from pydantic import BaseModel, Field
 from yaml.loader import SafeLoader
 
-from ecoevo.config import MapConfig, PlayerConfig, DataPath
+from ecoevo.config import DataPath, MapConfig, PlayerConfig
 from ecoevo.entities.items import Bag, Item
-from ecoevo.types import IdType, PosType, OfferType, Move, TradeResult
+from ecoevo.types import IdType, Move, OfferType, PosType, TradeResult
 
 with open(DataPath.player_yaml) as file:
     ALL_PERSONAE = yaml.load(file, Loader=SafeLoader)
@@ -32,24 +32,23 @@ class Player(BaseModel):
         return dict(ALL_PERSONAE[self.persona]['ability'])
 
     def collect(self, item: Item):
-        if self.backpack.remain_volume >= item.harvest_num:
+        if self.backpack.remain_volume >= item.harvest_num * item.capacity:
             # Init
             if self.collect_remain is None:
                 collect_time = self.ability[item.name]
-                self.collect_remain = collect_time
-
+                self.collect_remain = collect_time - 1
             # Process collect
             elif self.collect_remain > 0:
                 self.collect_remain -= 1
 
-                # Succeed collect
-                if self.collect_remain == 0:
-                    item.num -= item.harvest_num
-                    self.backpack[item.name].num += item.harvest_num
-                    self.collect_remain = None
+            # Succeed collect
+            if self.collect_remain == 0:
+                item.num -= item.harvest_num
+                self.backpack[item.name].num += item.harvest_num
+                self.collect_remain = None
 
         else:
-            logger.critical(f'''Player {self.id} cannot collect {item.name} (harvest_num: {item.harvest_num}) 
+            logger.critical(f'''Player {self.id} cannot collect {item.name} (harvest_num: {item.harvest_num})
             due to insuffient backpack remain {self.backpack.remain_volume}.''')
 
     def consume(self, item_name: str):
