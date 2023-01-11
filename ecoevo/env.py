@@ -84,23 +84,21 @@ class EcoEvo:
         # execute
         random.shuffle(self.ids)
         for id in self.ids:
-            # Validation
-            if not is_action_valids[id]:
-                continue
+            if is_action_valids[id]:
+                player = self.players[id]
+                main_action, sell_offer, buy_offer = actions[player.id]
+                if player.id in matched_deals:
+                    _, sell_offer, buy_offer = matched_deals[player.id]
+                    action = (main_action, sell_offer, buy_offer)
+                else:
+                    action = (main_action, None, None)
 
-            player = self.players[id]
-            main_action, sell_offer, buy_offer = actions[player.id]
-            if player.id in matched_deals:
-                _, sell_offer, buy_offer = matched_deals[player.id]
-                action = (main_action, sell_offer, buy_offer)
-            else:
-                action = (main_action, None, None)
+                self.entity_manager.execute(player, action)
+                if player.id in self.trader.legal_deals:
+                    if player.trade_result != TradeResult.success:
+                        player.trade_result = TradeResult.failed
+                actions_valid[player.id] = action[0]
 
-            self.entity_manager.execute(player, action)
-            if player.id in self.trader.legal_deals:
-                if player.trade_result != TradeResult.success:
-                    player.trade_result = TradeResult.failed
-            actions_valid[player.id] = action[0]
             # consumption
             player.health = max(0, player.health - PlayerConfig.comsumption_per_step)
 
