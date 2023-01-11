@@ -83,7 +83,7 @@ class EcoEvo:
             else:
                 action = (main_action, None, None)
 
-            if self.is_action_valid(player, actions[player.id]):
+            if self.is_action_valid(player, action):
                 self.entity_manager.execute(player, action)
                 if player.id in self.trader.legal_deals:
                     if player.trade_result != TradeResult.success:
