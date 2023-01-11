@@ -18,7 +18,7 @@ function toOption(array) {
 window.dash_clientside = Object.assign({}, window.dash_clientside, {
     clientside: {
         actionBinding: function (primaryAction, json_all_item_data) {
-            const all_item_list = Object.keys(JSON.parse(json_all_item_data));
+            const all_items = Object.keys(JSON.parse(json_all_item_data));
             if (primaryAction === "idle" || primaryAction === "collect") {
                 return [[], undefined];
             }
@@ -27,7 +27,7 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
                 return [options, options[0].value];
             }
             else if (primaryAction === "consume") {
-                let options = toOption(all_item_list);
+                let options = toOption(all_items);
                 return [options, options[0].value];
             }
         },
@@ -36,10 +36,10 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
                 return JSON.stringify([]);
             }
             else if ("points" in selectedData) {
-                const player_list = Object.keys(JSON.parse(json_all_persona));
+                const all_persona = Object.keys(JSON.parse(json_all_persona));
                 let selected_ids = [];
                 for (const points of Object.values(selectedData.points)) {
-                    if (player_list.includes(points["customdata"][0])) {
+                    if (all_persona.includes(points["customdata"][0])) {
                         selected_ids.push(points["customdata"][1]);
                     }
                 }
@@ -72,8 +72,9 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
         },
         displaySelectedPlayer: function (json_selected_ids, json_env_output_data, json_all_item_data, json_all_persona) {
             const selected_ids = JSON.parse(json_selected_ids);
-            const ALL_ITEM_DATA = Object.keys(JSON.parse(json_all_item_data));
-            const ALL_PERSONA = Object.keys(JSON.parse(json_all_persona));
+            const ALL_ITEM_DATA = JSON.parse(json_all_item_data);
+            const all_items = Object.keys(ALL_ITEM_DATA)
+            const ALL_PERSONA_DATA = JSON.parse(json_all_persona);
             if (selected_ids.length === 0) {
                 return window.dash_clientside.no_update;
             }
@@ -88,30 +89,54 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
                 document.getElementById("basic-player-health").innerText = player.health;
                 document.getElementById("basic-player-collect-remain").innerText = String(player.collect_remain);
                 document.getElementById("basic-player-trade-result").innerText = player.trade_result;
+                const ctx = document.getElementById("radar-chart");
+                let chart = Chart.getChart(ctx);
+                if (chart === undefined) {
+                    new Chart(ctx, {
+                        type: 'radar',
+                        data: {
+                            labels: all_items,
+                            datasets: [{
+                                label: 'Preference',
+                                data: new Array(all_items.length).fill(0),
+                                fill: true,
+                                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                                borderColor: 'rgb(255, 99, 132)',
+                                pointBackgroundColor: 'rgb(255, 99, 132)',
+                                pointBorderColor: '#fff',
+                                pointHoverBackgroundColor: '#fff',
+                                pointHoverBorderColor: 'rgb(255, 99, 132)',
+                                order: 1
+                            }, {
+                                label: 'Ability',
+                                data: new Array(all_items.length).fill(0),
+                                fill: true,
+                                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                                borderColor: 'rgb(54, 162, 235)',
+                                pointBackgroundColor: 'rgb(54, 162, 235)',
+                                pointBorderColor: '#fff',
+                                pointHoverBackgroundColor: '#fff',
+                                pointHoverBorderColor: 'rgb(54, 162, 235)',
+                                order: 2
+                            }]
+                        },
+                        options: {
+                            elements: {
+                                line: {
+                                    borderWidth: 3
+                                }
+                            }
+                        },
+                    });
+                }
+                else {
+                    chart.data.labels = Object.keys(ALL_PERSONA_DATA[player.persona].preference);
+                    chart.data.datasets[0].data = Object.values(ALL_PERSONA_DATA[player.persona].preference);
+                    chart.data.datasets[1].data = Object.values(ALL_PERSONA_DATA[player.persona].ability);
+                    chart.update()
+                }
                 document.getElementById("reward-provider").innerText = env_output_data.rewards[id];
                 document.getElementById("info-provider").innerText = env_output_data.info[id];
-                const ctx = document.getElementById('myChart');
-
-                new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'],
-                        datasets: [{
-                            label: '# of Votes',
-                            data: [12, 19, 3, 5, 2, 3],
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        scales: {
-                            y: {
-                                beginAtZero: true
-                            }
-                        }
-                    }
-                });
-
-
 
                 return env_output_data.rewards[id];
             }

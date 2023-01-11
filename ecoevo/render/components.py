@@ -96,19 +96,9 @@ info_panel = html.Div([
     ),
              id='basic-provider'),
     html.Label('Backpack & Stomach'),
-    html.Div(dbc.ListGroup([
-        bag_usage_bar(is_backpack=True),
-        dbc.Popover([
-            dbc.PopoverHeader('Backpack'),
-        ], target=f'backpack-list-group-item', trigger="hover"),
-        bag_usage_bar(is_backpack=False),
-        dbc.Popover([
-            dbc.PopoverHeader('Stomach'),
-        ], target=f'stomach-list-group-item', trigger="hover"),
-    ]),
-             id='bag-usage-bar'),
+    html.Div(html.Canvas(id='donut-chart'), style={'width': '400px'}),
     html.Label('Persona Details'),
-    html.Div(html.Canvas(id='myChart'), id='radar-provider', style={'width': '400px'}),
+    html.Div(html.Canvas(id='radar-chart'), style={'width': '400px'}),
     html.Label('Obs'),
     html.Div('', id='obs-provider'),
     html.Label('Reward'),
