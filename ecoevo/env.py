@@ -69,12 +69,25 @@ class EcoEvo:
         actions_valid = {}
         self.curr_step += 1
 
+        # First check all main actions
+        is_action_valids = [True] * len(actions)
+        for player_id, action in enumerate(actions):
+            player = self.players[player_id]
+            is_action_valids[player_id] = self.is_main_action_valid(player=player, action=action)
+            # Clear offers if not valid
+            if not is_action_valids[player_id]:
+                actions[player_id] = ((Action.idle, None), None, None)
+
         # trader
         matched_deals = self.trader.parse(players=self.players, actions=actions)
 
         # execute
         random.shuffle(self.ids)
         for id in self.ids:
+            # Validation
+            if not is_action_valids[id]:
+                continue
+
             player = self.players[id]
             main_action, sell_offer, buy_offer = actions[player.id]
             if player.id in matched_deals:
@@ -83,12 +96,11 @@ class EcoEvo:
             else:
                 action = (main_action, None, None)
 
-            if self.is_action_valid(player, action):
-                self.entity_manager.execute(player, action)
-                if player.id in self.trader.legal_deals:
-                    if player.trade_result != TradeResult.success:
-                        player.trade_result = TradeResult.failed
-                actions_valid[player.id] = action[0]
+            self.entity_manager.execute(player, action)
+            if player.id in self.trader.legal_deals:
+                if player.trade_result != TradeResult.success:
+                    player.trade_result = TradeResult.failed
+            actions_valid[player.id] = action[0]
             # consumption
             player.health = max(0, player.health - PlayerConfig.comsumption_per_step)
 
@@ -132,13 +144,13 @@ class EcoEvo:
 
         return local_obs
 
-    def is_action_valid(self, player: Player, action: ActionType) -> bool:
+    def is_main_action_valid(self, player: Player, action: ActionType) -> bool:
         is_valid = True
         main_action, sell_offer, buy_offer = action
         primary_action, secondary_action = main_action
 
         if primary_action == Action.idle:
-            pass
+            return is_valid
 
         # check move
         elif primary_action == Action.move:
@@ -148,7 +160,7 @@ class EcoEvo:
                 if tile.player is not None:
                     hitted_player = tile.player
                     is_valid = False
-                    logger.warning(
+                    logger.debug(
                         f'Player {player.id} at {player.pos} tried to hit player {hitted_player.id} at {hitted_player.pos}'
                     )
 
@@ -159,7 +171,7 @@ class EcoEvo:
                 # no item to collect or the amount of item not enough
                 if item.num < item.harvest_num:
                     is_valid = False
-                    logger.warning(f'No resource! Player {player.id} cannot collect {item} at {player.pos}')
+                    logger.debug(f'No resource! Player {player.id} cannot collect {item} at {player.pos}')
                 # bagpack volume not enough
                 least_volume = item.harvest_num * item.capacity
                 if sell_offer is not None and buy_offer is not None:
@@ -169,10 +181,10 @@ class EcoEvo:
                 if player.backpack.remain_volume < least_volume:
                     is_valid = False
 
-                    logger.warning(f'Bag full! Player {player.id} cannot collect {item} at {player.pos}')
+                    logger.debug(f'Bag full! Player {player.id} cannot collect {item} at {player.pos}')
             else:
                 is_valid = False
-                logger.warning(f'No item exists! Player {player.id} cannot collect {player.pos}')
+                logger.debug(f'No item exists! Player {player.id} cannot collect {player.pos}')
 
         # check consume
         elif primary_action == Action.consume:

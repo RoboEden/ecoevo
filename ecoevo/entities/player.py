@@ -74,7 +74,7 @@ class Player(BaseModel):
     def next_pos(
         self,
         direction: str,
-    ):
+    ) -> PosType:
         x, y = self.pos
         if direction == Move.up:
             y = min(y + 1, MapConfig.height - 1)
