@@ -1,5 +1,4 @@
 from ecoevo.render import dash_table, html, dcc, dbc, daq
-from ecoevo.render import graph_objects as go
 
 dbc_css = "https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates/dbc.min.css"
 plotlyjs = "https://cdn.plot.ly/plotly-2.12.1.min.js"
@@ -96,9 +95,17 @@ info_panel = html.Div([
     ),
              id='basic-provider'),
     html.Label('Backpack & Stomach'),
-    html.Div(html.Canvas(id='donut-chart'), style={'width': '400px'}),
+    html.Div(html.Canvas(id='doughnut-chart'), style={
+        'width': '300px',
+        "padding": "25px",
+        "boxSizing": "border-box"
+    }),
     html.Label('Persona Details'),
-    html.Div(html.Canvas(id='radar-chart'), style={'width': '400px'}),
+    html.Div(html.Canvas(id='radar-chart'), style={
+        'width': '300px',
+        "padding": "25px",
+        "boxSizing": "border-box"
+    }),
     html.Label('Obs'),
     html.Div('', id='obs-provider'),
     html.Label('Reward'),

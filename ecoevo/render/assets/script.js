@@ -14,6 +14,116 @@ function toOption(array) {
     return options;
 }
 
+function normalizeData(my_array, val_max) {
+    let norm_array = [];
+    for (val of my_array) {
+        let norm_val = val == 0 ? 0 : (val / val_max).toFixed(2);
+        norm_array.push({ 'origin': val, 'norm': norm_val });
+    }
+    return norm_array;
+}
+
+function doughnutChart(ctx, labels) {
+    let chart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: [],
+                backgroundColor: [
+                    '#444444',
+                ],
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            parsing: {
+                key: 'volume'
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            return 'volume: ' + context.raw.volume;
+                        },
+                        afterLabel: function (context) {
+                            return 'num: ' + context.raw.num;
+                        },
+                    }
+                },
+                legend: {
+                    display: false,
+                }
+            }
+        },
+    });
+    return chart;
+}
+function radarChart(ctx, labels) {
+    let chart = new Chart(ctx, {
+        type: 'radar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Preference',
+                fill: true,
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                borderColor: 'rgb(255, 99, 132)',
+                pointBackgroundColor: 'rgb(255, 99, 132)',
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: 'rgb(255, 99, 132)',
+                order: 1
+            }, {
+                label: 'Ability',
+                fill: true,
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                borderColor: 'rgb(54, 162, 235)',
+                pointBackgroundColor: 'rgb(54, 162, 235)',
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: 'rgb(54, 162, 235)',
+                order: 2
+            },]
+        },
+        options: {
+            elements: {
+                line: {
+                    borderWidth: 3
+                }
+            },
+            scales: {
+                r: {
+                    beginAtZero: true,
+                    suggestedMax: 1,
+                    ticks: {
+                        display: false
+                    }
+                },
+            },
+            parsing: {
+                key: 'norm'
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.raw !== null) {
+                                label += context.raw.origin;
+                            }
+                            return label;
+                        }
+                    }
+                }
+            }
+        },
+    });
+    return chart;
+}
 
 window.dash_clientside = Object.assign({}, window.dash_clientside, {
     clientside: {
@@ -73,8 +183,23 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
         displaySelectedPlayer: function (json_selected_ids, json_env_output_data, json_all_item_data, json_all_persona) {
             const selected_ids = JSON.parse(json_selected_ids);
             const ALL_ITEM_DATA = JSON.parse(json_all_item_data);
-            const all_items = Object.keys(ALL_ITEM_DATA)
+            const all_items = Object.keys(ALL_ITEM_DATA);
             const ALL_PERSONA_DATA = JSON.parse(json_all_persona);
+
+            const doughnut_ctx = document.getElementById("doughnut-chart");
+            let doughnut_chart = Chart.getChart(doughnut_ctx);
+            if (doughnut_chart === undefined) {
+                doughnut_chart = doughnutChart(doughnut_ctx, all_items);
+            }
+
+            const radar_ctx = document.getElementById("radar-chart");
+            let radar_chart = Chart.getChart(radar_ctx);
+            console.log(all_items)
+            if (radar_chart === undefined) {
+                radar_chart = radarChart(radar_ctx, all_items);
+            }
+
+
             if (selected_ids.length === 0) {
                 return window.dash_clientside.no_update;
             }
@@ -89,52 +214,31 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
                 document.getElementById("basic-player-health").innerText = player.health;
                 document.getElementById("basic-player-collect-remain").innerText = String(player.collect_remain);
                 document.getElementById("basic-player-trade-result").innerText = player.trade_result;
-                const ctx = document.getElementById("radar-chart");
-                let chart = Chart.getChart(ctx);
-                if (chart === undefined) {
-                    new Chart(ctx, {
-                        type: 'radar',
-                        data: {
-                            labels: all_items,
-                            datasets: [{
-                                label: 'Preference',
-                                data: new Array(all_items.length).fill(0),
-                                fill: true,
-                                backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                                borderColor: 'rgb(255, 99, 132)',
-                                pointBackgroundColor: 'rgb(255, 99, 132)',
-                                pointBorderColor: '#fff',
-                                pointHoverBackgroundColor: '#fff',
-                                pointHoverBorderColor: 'rgb(255, 99, 132)',
-                                order: 1
-                            }, {
-                                label: 'Ability',
-                                data: new Array(all_items.length).fill(0),
-                                fill: true,
-                                backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                                borderColor: 'rgb(54, 162, 235)',
-                                pointBackgroundColor: 'rgb(54, 162, 235)',
-                                pointBorderColor: '#fff',
-                                pointHoverBackgroundColor: '#fff',
-                                pointHoverBorderColor: 'rgb(54, 162, 235)',
-                                order: 2
-                            }]
-                        },
-                        options: {
-                            elements: {
-                                line: {
-                                    borderWidth: 3
-                                }
-                            }
-                        },
-                    });
+
+                let persona_data = ALL_PERSONA_DATA[player.persona];
+                radar_chart.data.labels = Object.keys(persona_data.preference);
+                radar_chart.data.datasets[0].data = normalizeData(Object.values(persona_data.preference), 0.1);
+                radar_chart.data.datasets[1].data = normalizeData(Object.values(persona_data.ability), 10);
+                radar_chart.update();
+
+                doughnut_chart.data.labels = Object.keys(player.backpack);
+                doughnut_chart.data.datasets.backgroundColor = [
+                    '#f9c23c',
+                    '#6d4534',
+                    '#029ee1',
+                    '#f14f4c',
+                    '#86d72f',
+                    '#f3ad61',
+                    '#9b9b9b',
+                    '#ff8257',
+                ];
+                let backpack_data = Object.values(player.backpack)
+                for (item of backpack_data) {
+                    item["volume"] = item.num * ALL_ITEM_DATA[item.name].capacity
                 }
-                else {
-                    chart.data.labels = Object.keys(ALL_PERSONA_DATA[player.persona].preference);
-                    chart.data.datasets[0].data = Object.values(ALL_PERSONA_DATA[player.persona].preference);
-                    chart.data.datasets[1].data = Object.values(ALL_PERSONA_DATA[player.persona].ability);
-                    chart.update()
-                }
+                doughnut_chart.data.datasets[0].data = backpack_data;
+                doughnut_chart.update();
+
                 document.getElementById("reward-provider").innerText = env_output_data.rewards[id];
                 document.getElementById("info-provider").innerText = env_output_data.info[id];
 
