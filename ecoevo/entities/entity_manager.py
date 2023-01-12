@@ -75,6 +75,13 @@ class EntityManager:
             del self.map[player.pos]
 
     def move_player(self, player: Player, secondary_action):
+        # If destination has agent, skip move action
+        next_pos = player.next_pos(secondary_action)
+        if next_pos in self.map:
+            tile = self.map[next_pos]
+            if tile.player:
+                return
+
         self.remove_player(player)
         player.pos = player.next_pos(secondary_action)
         self.add_player(player)
@@ -98,9 +105,7 @@ class EntityManager:
         elif primary_action == Action.consume:
             player.consume(secondary_action)
         else:
-            raise ValueError(
-                f'Failed to parse primary action. Player {player.id}: {primary_action} '
-            )
+            raise ValueError(f'Failed to parse primary action. Player {player.id}: {primary_action} ')
 
         # reset the remaining collection steps
         if primary_action != Action.collect:
