@@ -28,13 +28,13 @@ class MapConfig:
 class PlayerConfig:
     bag_volume = 1e8
     max_health = 100
-    comsumption_per_step = 10
+    comsumption_per_step = 5
 
 
 class RewardConfig:
     threshold = 0
     weight_coef = 0
-    penalty = 0
+    penalty = 0.01
 
 
 class DataPath:

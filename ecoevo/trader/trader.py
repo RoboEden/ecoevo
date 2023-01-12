@@ -33,7 +33,13 @@ class Trader(object):
         self.players: List[Player] = []
         self.actions: List[ActionType] = []
         self.legal_deals: Dict[IdType, DealType] = {}
-    
+
+        # result: matched deals, DealType
+        self.match_deals = {}
+
+        # result: actual item flows during the trades
+        self.dict_flow = {}
+
     def parse(self, players: List[Player], actions: List[ActionType]) -> Dict[IdType, DealType]:
         """
         tarder parser
@@ -41,35 +47,38 @@ class Trader(object):
         :param players:  list of players
         :param actions:  list of actions
 
-        :return: match_deals:  result of matched deals
+        :return: self.match_deals:  result of matched deals
         """
 
         self.players, self.actions = players, actions
         self.legal_deals = self._get_legal_deals()
 
-        match_deals = {}
+        self.match_deals = {}
 
         # method 1: IP model
         if self.mode == 'IP':
             list_deal = list(self.legal_deals.values())
             mat_if_match, mat_volume = self._ip_process(list_deal=list_deal)
             list_match = self._ip_model(list_deal=list_deal, mat_if_match=mat_if_match, mat_volume=mat_volume)
-            
+
             # result process
             idx2key = list(self.legal_deals.keys())
             for match in list_match:
                 idx_1, idx_2 = match
                 key_1, key_2 = idx2key[idx_1], idx2key[idx_2]
                 deal_1, deal_2 = self.legal_deals[key_1], self.legal_deals[key_2]
-                
+
                 min_deal_1, min_deal_2 = self._mini_close(deal_1=deal_1, deal_2=deal_2)
-                match_deals[key_1], match_deals[key_2] = min_deal_1, min_deal_2
+                self.match_deals[key_1], self.match_deals[key_2] = min_deal_1, min_deal_2
+
+                _, (sell_name_1, sell_num_1), (buy_name_1, buy_num_1) = min_deal_1
+                self.dict_flow[key_1, key_2] = ((sell_name_1, sell_num_1), (buy_name_1, -buy_num_1))
 
         # method 2: heuristic method
         else:
-            match_deals, _ = self._heuristic()
-        
-        return match_deals
+            self.match_deals, self.dict_flow = self._heuristic()
+
+        return self.match_deals
 
     def _get_legal_deals(self) -> Dict[IdType, DealType]:
         """
@@ -81,49 +90,8 @@ class Trader(object):
         legal_deals = {}
         for player in self.players:
             main_action, sell_offer, buy_offer = self.actions[player.id]
-            primary_action, secondary_action = main_action
 
-            # parse offer
             if sell_offer is None or buy_offer is None:
-                player.trade_result = TradeResult.absent
-                continue
-
-            sell_item_name, sell_num = sell_offer
-            buy_item_name, buy_num = buy_offer
-            if sell_item_name == buy_item_name:
-                player.trade_result = TradeResult.illegal
-                logger.debug(f'Invalid: sell item is the same as buy item {sell_item_name}')
-                continue
-            if sell_num >= 0:
-                player.trade_result = TradeResult.illegal
-                logger.debug(f'Invalid sell_num {sell_num}, should be < 0')
-                continue
-            if buy_num <= 0:
-                player.trade_result = TradeResult.illegal
-                logger.debug(f'Invalid buy_num {buy_num}, should be > 0')
-                continue
-            sell_num, buy_num = abs(sell_num), abs(buy_num)
-
-            # check sell
-            sell_item = player.backpack[sell_item_name]
-
-            # handle sell and consume same item
-            least_amount = sell_num
-            if primary_action == Action.consume:
-                consume_item_name = secondary_action
-                if sell_item_name == consume_item_name:
-                    least_amount += sell_item.consume_num
-
-            if sell_item.num < least_amount:
-                logger.debug(f'Insufficient {sell_item_name}:{sell_item.num} sell_num {sell_num}')
-                player.trade_result = TradeResult.illegal
-                continue
-
-            # check buy
-            buy_item_volumne = player.backpack[buy_item_name].capacity * buy_num
-            if player.backpack.remain_volume < buy_item_volumne:
-                player.trade_result = TradeResult.illegal
-                logger.debug(f'Insufficient backpack remain volume:{player.backpack.remain_volume}')
                 continue
 
             legal_deals[player.id] = (player.pos, sell_offer, buy_offer)
@@ -140,7 +108,7 @@ class Trader(object):
         :return: mat_volume:  trading volume matrix
         """
 
-        mat_if_match = [[False for _ in list_deal]for _ in list_deal]
+        mat_if_match = [[False for _ in list_deal] for _ in list_deal]
         mat_volume = [[0 for _ in list_deal] for _ in list_deal]
         for i in range(len(list_deal)):
             for j in range(len(list_deal)):
@@ -168,8 +136,8 @@ class Trader(object):
 
         return mat_if_match, mat_volume
 
-    def _ip_model(self, list_deal: List[
-        DealType], mat_if_match: List[List[bool]], mat_volume: List[List[int]]) -> List[Tuple[int, int]]:
+    def _ip_model(self, list_deal: List[DealType], mat_if_match: List[List[bool]],
+                  mat_volume: List[List[int]]) -> List[Tuple[int, int]]:
         """
         IP model for automated trade matching
 
@@ -263,8 +231,8 @@ class Trader(object):
         """
         heuristic method for automated trade matching
 
-        :return: match_deals:  result of matched deals with actual trade amount
-        :return: dict_flow:  actual item flows during the trades
+        :return: self.match_deals:  result of matched deals with actual trade amount
+        :return: self.dict_flow:  actual item flows during the trades
         """
 
         dts = datetime.now()
@@ -272,16 +240,16 @@ class Trader(object):
         idx_pos, idx_sell, idx_buy = 0, 1, 2
         idx_item_name, idx_item_num = 0, 1
 
-        # deal infos during processing
+        # deal infos during processing, transfer tuples to lists
         dict_deal = {}
         for i in self.legal_deals:
             dict_deal[i] = [
-                list(self.legal_deals[i][idx_pos]), 
-                list(self.legal_deals[i][idx_sell]), 
-                list(self.legal_deals[i][idx_buy])]
+                list(self.legal_deals[i][idx_pos]),
+                list(self.legal_deals[i][idx_sell]),
+                list(self.legal_deals[i][idx_buy])
+            ]
 
-        # actual item flows during the trades
-        dict_flow = {}
+        self.dict_flow = {}
 
         random.seed(42)
         list_deal_id = list(dict_deal.keys())
@@ -330,7 +298,7 @@ class Trader(object):
                         # get a new match deal
                         if pid_cur is None:
                             pid_cur, match_ratio = j, ratio_j
-                            
+
                         # may update match deal
                         else:
                             # if get a bigger supply-demand ratio, update match deal
@@ -343,14 +311,15 @@ class Trader(object):
                                 dist_cur, dist_j = abs(x_i - x_cur) + abs(y_i - y_cur), abs(x_i - x_j) + abs(y_i - y_j)
                                 if dist_j < dist_cur:
                                     pid_cur, match_ratio = j, ratio_j
-                
+
                 # no matched deals
                 if not pid_cur:
                     break
 
                 # get trade amount
-                actual_buy_num_i, actual_buy_num_cur = self._heuristic_match(
-                    deal_1=dict_deal[i], deal_2=dict_deal_match[pid_cur], remain_volume_1=list_remain_volume[i])
+                actual_buy_num_i, actual_buy_num_cur = self._heuristic_match(deal_1=dict_deal[i],
+                                                                             deal_2=dict_deal_match[pid_cur],
+                                                                             remain_volume_1=list_remain_volume[i])
                 dict_deal_match.pop(pid_cur)
 
                 # update deal info
@@ -358,36 +327,37 @@ class Trader(object):
                 dict_deal[i][idx_buy][idx_item_num] -= actual_buy_num_i
                 dict_deal[pid_cur][idx_sell][idx_item_num] += actual_buy_num_i
                 dict_deal[pid_cur][idx_buy][idx_item_num] -= actual_buy_num_cur
-                dict_flow[i, pid_cur] = ((dict_deal[i][idx_sell][idx_item_name], -actual_buy_num_cur), (
-                    dict_deal[i][idx_buy][idx_item_name], actual_buy_num_i))
+                self.dict_flow[i, pid_cur] = ((dict_deal[i][idx_sell][idx_item_name], -actual_buy_num_cur),
+                                              (dict_deal[i][idx_buy][idx_item_name], -actual_buy_num_i))
                 sell_num_i, buy_num_i = dict_deal[i][idx_sell][idx_item_num], dict_deal[i][idx_buy][idx_item_num]
 
                 # update remain volumes
                 capacity_i = ALL_ITEM_DATA[dict_deal[i][idx_buy][idx_item_name]]['capacity']
                 capacity_cur = ALL_ITEM_DATA[dict_deal[pid_cur][idx_buy][idx_item_name]]['capacity']
-                list_remain_volume[i] -= actual_buy_num_i * capacity_i
-                list_remain_volume[pid_cur] -= actual_buy_num_cur * capacity_cur
+                list_remain_volume[
+                    i] = list_remain_volume[i] - actual_buy_num_i * capacity_i + actual_buy_num_cur * capacity_cur
+                list_remain_volume[pid_cur] = list_remain_volume[
+                    pid_cur] - actual_buy_num_cur * capacity_cur + actual_buy_num_i * capacity_i
 
         # result info
-        match_deals = {}
+        self.match_deals = {}
         for i in self.legal_deals:
             sell_num = dict_deal[i][idx_sell][idx_item_num] - self.legal_deals[i][idx_sell][idx_item_num]
             buy_num = self.legal_deals[i][idx_buy][idx_item_num] - dict_deal[i][idx_buy][idx_item_num]
             if sell_num == 0 or buy_num == 0:
                 continue
 
-            match_deals[i] = (
-                self.legal_deals[i][idx_pos], (self.legal_deals[i][idx_sell][idx_item_name], -sell_num), (
-                    self.legal_deals[i][idx_buy][idx_item_name], buy_num))
+            self.match_deals[i] = (self.legal_deals[i][idx_pos], (self.legal_deals[i][idx_sell][idx_item_name],
+                                                                  -sell_num),
+                                   (self.legal_deals[i][idx_buy][idx_item_name], buy_num))
 
         dte = datetime.now()
-        tm = round((dte - dts).seconds + (dte - dts).microseconds / (10 ** 6), 3)
+        tm = round((dte - dts).seconds + (dte - dts).microseconds / (10**6), 3)
         logger.debug(f"heuristic processing time: {tm} s")
-        
-        return match_deals, dict_flow
 
-    def _heuristic_match(
-        self, deal_1: DealType, deal_2: DealType, remain_volume_1: int) -> Tuple[int, int]:
+        return self.match_deals, self.dict_flow
+
+    def _heuristic_match(self, deal_1: DealType, deal_2: DealType, remain_volume_1: int) -> Tuple[int, int]:
         """
         get trade amount of a couple of deals
 
@@ -404,12 +374,13 @@ class Trader(object):
         sell_num_1, sell_num_2 = abs(sell_num_1), abs(sell_num_2)
 
         # use deal 2 as pivot
-        actual_buy_num_2 = buy_num_2 if sell_num_1 >= buy_num_2 else sell_num_1
-        
+        actual_buy_num_2 = min(buy_num_2, sell_num_1)
+
         # consider remaining backpack volume of player 1
         ratio_2 = sell_num_2 / buy_num_2
+        buy_num_1_ratio = math.floor(actual_buy_num_2 * ratio_2)
         capacity_1 = ALL_ITEM_DATA[buy_item_1]['capacity']
-        actual_buy_num_1 = math.ceil(actual_buy_num_2 * ratio_2) if math.ceil(
-            actual_buy_num_2 * ratio_2) * capacity_1 <= remain_volume_1 else math.floor(remain_volume_1 / capacity_1)
+        buy_num_1_ub = math.floor(remain_volume_1 / capacity_1)
+        actual_buy_num_1 = min(buy_num_1_ratio, sell_num_2, buy_num_1_ub)
 
         return actual_buy_num_1, actual_buy_num_2
