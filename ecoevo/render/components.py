@@ -34,34 +34,6 @@ columns_name = [
 
 columns = [{"name": i, "id": i, "deletable": False, "selectable": False} for i in columns_name]
 
-
-def bag_usage_bar(is_backpack: bool = True):
-    where = 'backpack' if is_backpack else 'stomach'
-    return dbc.ListGroupItem([
-        dbc.Progress([
-            dbc.Progress(value=0,
-                         color=item_to_color[item_name],
-                         label=item_name.capitalize(),
-                         id=f'{item_name}-{where}-bar',
-                         bar=True) for item_name in all_item_list
-        ]),
-        html.Div([
-            dbc.Popover(
-                [
-                    dbc.PopoverHeader(item_name.capitalize()),
-                    dbc.PopoverBody([
-                        html.Div(id=f'{item_name}-{where}-popover-num'),
-                        html.Div(id=f'{item_name}-{where}-popover-capacity'),
-                    ])
-                ],
-                target=f'{item_name}-{where}-bar',
-                trigger="hover",
-            ) for item_name in all_item_list
-        ])
-    ],
-                             id=f'{where}-list-group-item')
-
-
 info_panel = html.Div([
     html.Div('Info Panel', className="card-header"),
     html.Label('Basic info'),
@@ -95,11 +67,18 @@ info_panel = html.Div([
     ),
              id='basic-provider'),
     html.Label('Backpack & Stomach'),
-    html.Div(html.Canvas(id='doughnut-chart'), style={
-        'width': '300px',
-        "padding": "25px",
-        "boxSizing": "border-box"
-    }),
+    dbc.ListGroup([
+        dbc.ListGroupItem(
+            dbc.Progress([
+                dbc.Progress(value=10, label=item_name.capitalize(), id=f'backpack-{item_name}-bar', bar=True)
+                for item_name in all_item_list
+            ]), ),
+        dbc.ListGroupItem(
+            dbc.Progress([
+                dbc.Progress(value=0, label=item_name.capitalize(), id=f'stomach-{item_name}-bar', bar=True)
+                for item_name in all_item_list
+            ])),
+    ]),
     html.Label('Persona Details'),
     html.Div(html.Canvas(id='radar-chart'), style={
         'width': '300px',

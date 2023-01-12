@@ -113,7 +113,7 @@ class WebApp:
                 rewards = [0.0] * self.env.num_player
                 msg = u'Ready to play!'
 
-            print('dict_flow:', self.env.trader.dict_flow)
+            # costy
             self.gs_render.update(
                 self.env.entity_manager.map,
                 self.env.trader.dict_flow,

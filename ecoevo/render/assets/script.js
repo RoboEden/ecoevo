@@ -1,3 +1,15 @@
+const itemToColor = {
+    'gold': '#f9c23c',
+    'hazelnut': '#6d4534',
+    'coral': '#029ee1',
+    'sand': '#f14f4c',
+    'pineapple': '#86d72f',
+    'peanut': '#f3ad61',
+    'stone': '#9b9b9b',
+    'pumpkin': '#ff8257',
+}
+
+// helper functions
 function capitalize(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
 }
@@ -8,7 +20,7 @@ function toOption(array) {
         options.push({
             "label": capitalize(item),
             "value": item.toLowerCase(),
-            "title": "secondary action"
+            "title": "secondary action",
         });
     }
     return options;
@@ -16,49 +28,29 @@ function toOption(array) {
 
 function normalizeData(my_array, val_max) {
     let norm_array = [];
-    for (val of my_array) {
+    for (const val of my_array) {
         let norm_val = val == 0 ? 0 : (val / val_max).toFixed(2);
         norm_array.push({ 'origin': val, 'norm': norm_val });
     }
     return norm_array;
 }
 
-function doughnutChart(ctx, labels) {
-    let chart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: labels,
-            datasets: [{
-                data: [],
-                backgroundColor: [
-                    '#444444',
-                ],
-                hoverOffset: 4
-            }]
-        },
-        options: {
-            parsing: {
-                key: 'volume'
-            },
-            plugins: {
-                tooltip: {
-                    callbacks: {
-                        label: function (context) {
-                            return 'volume: ' + context.raw.volume;
-                        },
-                        afterLabel: function (context) {
-                            return 'num: ' + context.raw.num;
-                        },
-                    }
-                },
-                legend: {
-                    display: false,
-                }
-            }
-        },
-    });
-    return chart;
+function updateProgressBar(bag, ALL_ITEM_DATA, id_prefix) {
+    var used_volume = 0
+    for (const [name, item] of Object.entries(bag)) {
+        var node = document.getElementById(`${id_prefix}-${name}-bar`);
+        const vol = item.num * ALL_ITEM_DATA[name].capacity;
+        used_volume += vol;
+        node.style = `width: ${vol}%; background-color: ${itemToColor[name]};`;
+        node.ariaValueNow = `${vol}`;
+        node.title = `${capitalize(name)}\n volume: ${vol}\n num: ${item.num}`;
+    }
+    for (const [name, item] of Object.entries(bag)) {
+        var node = document.getElementById(`${id_prefix}-${name}-bar`);
+        node.ariaValueMax = `${used_volume}`;
+    }
 }
+
 function radarChart(ctx, labels) {
     let chart = new Chart(ctx, {
         type: 'radar',
@@ -73,7 +65,7 @@ function radarChart(ctx, labels) {
                 pointBorderColor: '#fff',
                 pointHoverBackgroundColor: '#fff',
                 pointHoverBorderColor: 'rgb(255, 99, 132)',
-                order: 1
+                order: 1,
             }, {
                 label: 'Ability',
                 fill: true,
@@ -83,13 +75,13 @@ function radarChart(ctx, labels) {
                 pointBorderColor: '#fff',
                 pointHoverBackgroundColor: '#fff',
                 pointHoverBorderColor: 'rgb(54, 162, 235)',
-                order: 2
+                order: 2,
             },]
         },
         options: {
             elements: {
                 line: {
-                    borderWidth: 3
+                    borderWidth: 3,
                 }
             },
             scales: {
@@ -97,12 +89,12 @@ function radarChart(ctx, labels) {
                     beginAtZero: true,
                     suggestedMax: 1,
                     ticks: {
-                        display: false
+                        display: false,
                     }
                 },
             },
             parsing: {
-                key: 'norm'
+                key: 'norm',
             },
             plugins: {
                 tooltip: {
@@ -186,19 +178,11 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
             const all_items = Object.keys(ALL_ITEM_DATA);
             const ALL_PERSONA_DATA = JSON.parse(json_all_persona);
 
-            const doughnut_ctx = document.getElementById("doughnut-chart");
-            let doughnut_chart = Chart.getChart(doughnut_ctx);
-            if (doughnut_chart === undefined) {
-                doughnut_chart = doughnutChart(doughnut_ctx, all_items);
-            }
-
             const radar_ctx = document.getElementById("radar-chart");
             let radar_chart = Chart.getChart(radar_ctx);
-            console.log(all_items)
             if (radar_chart === undefined) {
                 radar_chart = radarChart(radar_ctx, all_items);
             }
-
 
             if (selected_ids.length === 0) {
                 return window.dash_clientside.no_update;
@@ -215,29 +199,14 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
                 document.getElementById("basic-player-collect-remain").innerText = String(player.collect_remain);
                 document.getElementById("basic-player-trade-result").innerText = player.trade_result;
 
+                updateProgressBar(player.backpack, ALL_ITEM_DATA, 'backpack')
+                updateProgressBar(player.stomach, ALL_ITEM_DATA, 'stomach')
+
                 let persona_data = ALL_PERSONA_DATA[player.persona];
                 radar_chart.data.labels = Object.keys(persona_data.preference);
                 radar_chart.data.datasets[0].data = normalizeData(Object.values(persona_data.preference), 0.1);
                 radar_chart.data.datasets[1].data = normalizeData(Object.values(persona_data.ability), 10);
                 radar_chart.update();
-
-                doughnut_chart.data.labels = Object.keys(player.backpack);
-                doughnut_chart.data.datasets.backgroundColor = [
-                    '#f9c23c',
-                    '#6d4534',
-                    '#029ee1',
-                    '#f14f4c',
-                    '#86d72f',
-                    '#f3ad61',
-                    '#9b9b9b',
-                    '#ff8257',
-                ];
-                let backpack_data = Object.values(player.backpack)
-                for (item of backpack_data) {
-                    item["volume"] = item.num * ALL_ITEM_DATA[item.name].capacity
-                }
-                doughnut_chart.data.datasets[0].data = backpack_data;
-                doughnut_chart.update();
 
                 document.getElementById("reward-provider").innerText = env_output_data.rewards[id];
                 document.getElementById("info-provider").innerText = env_output_data.info[id];
