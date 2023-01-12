@@ -211,7 +211,7 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
                 document.getElementById("reward-provider").innerText = env_output_data.rewards[id];
                 document.getElementById("info-provider").innerText = env_output_data.info[id];
 
-                return env_output_data.rewards[id];
+                return env_output_data.info[id];
             }
         },
         controlActions: function (

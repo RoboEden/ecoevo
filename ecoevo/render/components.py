@@ -70,7 +70,7 @@ info_panel = html.Div([
     dbc.ListGroup([
         dbc.ListGroupItem(
             dbc.Progress([
-                dbc.Progress(value=10, label=item_name.capitalize(), id=f'backpack-{item_name}-bar', bar=True)
+                dbc.Progress(value=0, label=item_name.capitalize(), id=f'backpack-{item_name}-bar', bar=True)
                 for item_name in all_item_list
             ]), ),
         dbc.ListGroupItem(
@@ -90,7 +90,7 @@ info_panel = html.Div([
     html.Label('Reward'),
     html.Div('NaN', id='reward-provider'),
     html.Label('Info'),
-    html.Div('', id='info-provider'),
+    html.Pre('', id='info-provider'),
 ],
                       className='card border-secondary mb-3',
                       style={

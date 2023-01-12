@@ -64,7 +64,7 @@ class WebApp:
         )
         self.app.clientside_callback(
             ClientsideFunction('clientside', 'displaySelectedPlayer'),
-            Output('reward-provider', 'children'),
+            Output('info-provider', 'children'),
             Input('selected-ids', 'data'),
             Input('env-output-data', 'data'),
             State('all-item-data', 'data'),
