@@ -73,7 +73,7 @@ class EcoEvo:
         is_action_valids = [True] * len(actions)
         for player_id, action in enumerate(actions):
             player = self.players[player_id]
-            is_action_valids[player_id] = self.is_main_action_valid(player=player, action=action)
+            is_action_valids[player_id] = self.is_action_valid(player=player, action=action)
             # Clear offers if not valid
             if not is_action_valids[player_id]:
                 actions[player_id] = ((Action.idle, None), None, None)
@@ -142,25 +142,62 @@ class EcoEvo:
 
         return local_obs
 
-    def is_main_action_valid(self, player: Player, action: ActionType) -> bool:
-        is_valid = True
+    def is_action_valid(self, player: Player, action: ActionType) -> bool:
+        if player is None or action is None:
+            return False
+
         main_action, sell_offer, buy_offer = action
+        if main_action is None:
+            return False
+
         primary_action, secondary_action = main_action
 
+        # Check trade
+        if sell_offer is not None and buy_offer is not None:
+            sell_item_name, sell_num = sell_offer
+            buy_item_name, buy_num = buy_offer
+
+            if sell_item_name == buy_item_name:
+                return False
+            if sell_num >= 0:
+                return False
+            if buy_num <= 0:
+                return False
+
+            # check sell
+            sell_item = player.backpack[sell_item_name]
+
+            # handle sell and consume same item
+            least_num = abs(sell_num)
+            if primary_action == Action.consume:
+                consume_item_name = secondary_action
+                if sell_item_name == consume_item_name:
+                    least_num += sell_item.consume_num
+
+            if sell_item.num < least_num:
+                return False
+
+            # check buy
+            buy_item_volumne = player.backpack[buy_item_name].capacity * buy_num
+            if player.backpack.remain_volume < buy_item_volumne:
+                return False
+
         if primary_action == Action.idle:
-            return is_valid
+            return True
 
         # check move
         elif primary_action == Action.move:
+            if secondary_action is None:
+                return False
             x, y = player.next_pos(secondary_action)
             tile = self.gettile((x, y))
             if tile:
                 if tile.player is not None:
                     hitted_player = tile.player
-                    is_valid = False
                     logger.debug(
                         f'Player {player.id} at {player.pos} tried to hit player {hitted_player.id} at {hitted_player.pos}'
                     )
+                    return False
 
         # check collect
         elif primary_action == Action.collect:
@@ -168,38 +205,42 @@ class EcoEvo:
             if item:
                 # no item to collect or the amount of item not enough
                 if item.num < item.harvest_num:
-                    is_valid = False
                     logger.debug(f'No resource! Player {player.id} cannot collect {item} at {player.pos}')
+                    return False
                 # bagpack volume not enough
                 least_volume = item.harvest_num * item.capacity
                 if sell_offer is not None and buy_offer is not None:
                     buy_item_name, buy_num = buy_offer
+                    sell_item_name, sell_num = sell_offer
                     least_volume += buy_num * player.backpack[buy_item_name].capacity
-
+                    least_volume -= abs(sell_num) * player.backpack[sell_item_name].capacity
                 if player.backpack.remain_volume < least_volume:
-                    is_valid = False
-
                     logger.debug(f'Bag full! Player {player.id} cannot collect {item} at {player.pos}')
+                    return False
             else:
-                is_valid = False
                 logger.debug(f'No item exists! Player {player.id} cannot collect {player.pos}')
+                return False
 
         # check consume
         elif primary_action == Action.consume:
+            if secondary_action is None:
+                return False
+
             consume_item_name = secondary_action
 
             # handle consume and sell same item
-            least_amount = player.backpack[consume_item_name].consume_num
+            least_num = player.backpack[consume_item_name].consume_num
             if sell_offer is not None and buy_offer is not None:
                 sell_item_name, sell_num = sell_offer
                 if consume_item_name == sell_item_name:
-                    least_amount += sell_num
+                    least_num += abs(sell_num)
 
-            if player.backpack[consume_item_name].num < least_amount:
-                is_valid = False
+            if player.backpack[consume_item_name].num < least_num:
                 logger.debug(
-                    f'Player {player.id} cannot consume "{consume_item_name}" since num no more than {least_amount}.')
+                    f'Player {player.id} cannot consume "{consume_item_name}" since num no more than {least_num}.')
+                return False
         else:
             logger.debug(f'Failed to parse primary action. Player {player.id}: {primary_action} ')
+            return False
 
-        return is_valid
+        return True
