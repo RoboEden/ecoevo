@@ -15,6 +15,6 @@ class TestBug:
             (0, ((Action.idle, None), (Item.gold, -10), (Item.sand, 10))),
             (1, ((Action.collect, None), (Item.sand, -10), (Item.gold, 10))),
         ).assert_bag(
-            (0, Item.gold, 10),
-            (1, Item.sand, 10),
+            (0, Item.sand, 10),
+            (1, Item.gold, 10),
         )

@@ -21,7 +21,12 @@ class TestDemo:
         ).step(
             (0, ((Action.idle, None), (Item.gold, -10), (Item.sand, 10))),
             (1, ((Action.idle, None), (Item.sand, -10), (Item.gold, 10))),
-        ).assert_bag(
+        )
+
+        print(h.env.players[0].backpack)
+        print(h.env.players[1].backpack)
+
+        h.assert_bag(
             (0, Item.sand, 10),
             (1, Item.gold, 10),
         )

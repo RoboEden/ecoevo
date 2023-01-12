@@ -59,50 +59,54 @@ class EcoEvo:
         obs = {player.id: self.get_obs(player) for player in self.players}
         self.info = {}
 
-        self.ids = [player.id for player in self.players]
+        self.shuffled_id = list(range(self.num_player))
 
         return obs, deepcopy(self.info)
 
     def step(
         self, actions: List[ActionType]
     ) -> Tuple[Dict[IdType, Dict[PosType, Tile]], Dict[IdType, float], bool, Dict[IdType, dict]]:
-        actions_valid = {}
+        random.shuffle(self.shuffled_id)
         self.curr_step += 1
 
-        # First check all main actions
-        is_action_valids = [True] * len(actions)
-        for player_id, action in enumerate(actions):
-            player = self.players[player_id]
-            player.trade_result = TradeResult.absent
-            is_action_valids[player_id] = self.is_action_valid(player=player, action=action)
-            # Clear offers if not valid
-            if not is_action_valids[player_id]:
-                actions[player_id] = ((Action.idle, None), None, None)
+        # validate trade action
+        for id, action in enumerate(actions):
+            main_action, sell_offer, buy_offer = action
+            player = self.players[id]
+            if sell_offer is None or buy_offer is None:
+                actions[id] = (main_action, None, None)
+                player.trade_result = TradeResult.absent
+            elif self.is_trade_valid(player, action):
+                player.trade_result = TradeResult.failed
+            else:
+                actions[id] = (action[0], None, None)
+                player.trade_result = TradeResult.illegal
 
-        # trader
+        # match trade
         matched_deals = self.trader.parse(players=self.players, actions=actions)
 
-        # execute
-        random.shuffle(self.ids)
-        for id in self.ids:
-            if is_action_valids[id]:
+        # execute trade
+        for id in self.shuffled_id:
+            if id in matched_deals:
                 player = self.players[id]
-                main_action, sell_offer, buy_offer = actions[player.id]
-                if player.id in matched_deals:
-                    _, sell_offer, buy_offer = matched_deals[player.id]
-                    action = (main_action, sell_offer, buy_offer)
-                else:
-                    action = (main_action, None, None)
+                _, sell_offer, buy_offer = matched_deals[id]
+                player.trade(sell_offer, buy_offer)
+                player.trade_result = TradeResult.success
 
-                self.entity_manager.execute(player, action)
-                if player.id in self.trader.legal_deals:
-                    if player.trade_result != TradeResult.success:
-                        player.trade_result = TradeResult.failed
-                actions_valid[player.id] = action[0]
+        # validate and execute main action
+        executed_main_action = {}
+        for id in self.shuffled_id:
+            player = self.players[id]
+            action = actions[id]
+            if self.is_main_action_valid(player, action):
+                self.entity_manager.execute_main_action(player, action)
+                executed_main_action[id] = action[0]
 
-            # consumption
+        # health decrease
+        for id in self.shuffled_id:
             player.health = max(0, player.health - PlayerConfig.comsumption_per_step)
 
+        # generate obs, reward, info
         obs = {player.id: self.get_obs(player) for player in self.players}
         rewards = {player.id: self.reward_parser.parse(player) for player in self.players}
         done = True if self.curr_step > self.cfg.total_step else False
@@ -110,7 +114,7 @@ class EcoEvo:
                                       info=self.info,
                                       players=self.players,
                                       matched_deals=matched_deals,
-                                      actions_valid=actions_valid,
+                                      executed_main_action=executed_main_action,
                                       reward_info={
                                           player.id: {
                                               'reward': rewards[player.id],
@@ -143,46 +147,33 @@ class EcoEvo:
 
         return local_obs
 
-    def is_action_valid(self, player: Player, action: ActionType) -> bool:
-        if player is None or action is None:
+    def is_trade_valid(self, player: Player, action: ActionType) -> bool:
+        _, sell_offer, buy_offer = action
+
+        if sell_offer is None or buy_offer is None:
             return False
 
-        main_action, sell_offer, buy_offer = action
-        if main_action is None:
+        sell_item_name, sell_num = sell_offer
+        buy_item_name, buy_num = buy_offer
+
+        if sell_item_name == buy_item_name or sell_num >= 0 or buy_num <= 0:
             return False
 
+        # check sell item amount
+        sell_item = player.backpack[sell_item_name]
+        if sell_item.num < abs(sell_num):
+            return False
+
+        # check buy item bag volume
+        buy_item_volume = player.backpack[buy_item_name].capacity * buy_num
+        if player.backpack.remain_volume < buy_item_volume:
+            return False
+
+        return True
+
+    def is_main_action_valid(self, player: Player, action: ActionType) -> bool:
+        main_action, _, _ = action
         primary_action, secondary_action = main_action
-
-        # Check trade
-        if sell_offer is not None and buy_offer is not None:
-            sell_item_name, sell_num = sell_offer
-            buy_item_name, buy_num = buy_offer
-
-            if sell_item_name == buy_item_name or sell_num >= 0 or buy_num <= 0:
-                player.trade_result = TradeResult.illegal
-                return False
-
-            # check sell
-            sell_item = player.backpack[sell_item_name]
-
-            # handle sell and consume same item
-            least_num = abs(sell_num)
-            if primary_action == Action.consume:
-                consume_item_name = secondary_action
-                if sell_item_name == consume_item_name:
-                    least_num += sell_item.consume_num
-
-            if sell_item.num < least_num:
-                player.trade_result = TradeResult.illegal
-                return False
-
-            # check buy
-            buy_item_volumne = player.backpack[buy_item_name].capacity * buy_num
-            if player.backpack.remain_volume < buy_item_volumne:
-                player.trade_result = TradeResult.illegal
-                return False
-        else:
-            player.trade_result = TradeResult.absent
 
         # Check main action
         if primary_action == Action.idle:
@@ -191,9 +182,13 @@ class EcoEvo:
         # check move
         elif primary_action == Action.move:
             if secondary_action is None:
+                logger.critical(f'Player {player.id} move with no direction')
                 return False
-            x, y = player.next_pos(secondary_action)
-            tile = self.gettile((x, y))
+            next_pos = player.next_pos(secondary_action)
+            if player.pos == next_pos:
+                logger.debug(f'Player {player.id} move towards map boarder')
+                return False
+            tile = self.gettile(next_pos)
             if tile:
                 if tile.player is not None:
                     hitted_player = tile.player
@@ -212,9 +207,6 @@ class EcoEvo:
                     return False
                 # bagpack volume not enough
                 least_volume = item.harvest_num * item.capacity
-                if sell_offer is not None and buy_offer is not None:
-                    buy_item_name, buy_num = buy_offer
-                    least_volume += buy_num * player.backpack[buy_item_name].capacity
                 if player.backpack.remain_volume < least_volume:
                     logger.debug(f'Bag full! Player {player.id} cannot collect {item} at {player.pos}')
                     return False
@@ -231,11 +223,6 @@ class EcoEvo:
 
             # handle consume and sell same item
             least_num = player.backpack[consume_item_name].consume_num
-            if sell_offer is not None and buy_offer is not None:
-                sell_item_name, sell_num = sell_offer
-                if consume_item_name == sell_item_name:
-                    least_num += abs(sell_num)
-
             if player.backpack[consume_item_name].num < least_num:
                 logger.debug(
                     f'Player {player.id} cannot consume "{consume_item_name}" since num no more than {least_num}.')
