@@ -49,7 +49,7 @@ class EcoEvo:
         self.players = []
         self.curr_step = 0
         self.reward_parser.reset()
-        points = self.entity_manager.sample(len(self.cfg.personae))
+        points = self.cfg.init_points or self.entity_manager.sample(len(self.cfg.personae))
         for id, persona in enumerate(self.cfg.personae):
             player = Player(persona=persona, id=id, pos=points[id])
             self.players.append(player)
