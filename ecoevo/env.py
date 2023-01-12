@@ -73,6 +73,7 @@ class EcoEvo:
         is_action_valids = [True] * len(actions)
         for player_id, action in enumerate(actions):
             player = self.players[player_id]
+            player.trade_result = TradeResult.absent
             is_action_valids[player_id] = self.is_action_valid(player=player, action=action)
             # Clear offers if not valid
             if not is_action_valids[player_id]:
@@ -157,11 +158,8 @@ class EcoEvo:
             sell_item_name, sell_num = sell_offer
             buy_item_name, buy_num = buy_offer
 
-            if sell_item_name == buy_item_name:
-                return False
-            if sell_num >= 0:
-                return False
-            if buy_num <= 0:
+            if sell_item_name == buy_item_name or sell_num >= 0 or buy_num <= 0:
+                player.trade_result = TradeResult.illegal
                 return False
 
             # check sell
@@ -175,13 +173,18 @@ class EcoEvo:
                     least_num += sell_item.consume_num
 
             if sell_item.num < least_num:
+                player.trade_result = TradeResult.illegal
                 return False
 
             # check buy
             buy_item_volumne = player.backpack[buy_item_name].capacity * buy_num
             if player.backpack.remain_volume < buy_item_volumne:
+                player.trade_result = TradeResult.illegal
                 return False
+        else:
+            player.trade_result = TradeResult.absent
 
+        # Check main action
         if primary_action == Action.idle:
             return True
 
@@ -211,9 +214,7 @@ class EcoEvo:
                 least_volume = item.harvest_num * item.capacity
                 if sell_offer is not None and buy_offer is not None:
                     buy_item_name, buy_num = buy_offer
-                    sell_item_name, sell_num = sell_offer
                     least_volume += buy_num * player.backpack[buy_item_name].capacity
-                    least_volume -= abs(sell_num) * player.backpack[sell_item_name].capacity
                 if player.backpack.remain_volume < least_volume:
                     logger.debug(f'Bag full! Player {player.id} cannot collect {item} at {player.pos}')
                     return False
