@@ -59,14 +59,14 @@ class EcoEvo:
         obs = {player.id: self.get_obs(player) for player in self.players}
         self.info = {}
 
-        self.shuffled_id = list(range(self.num_player))
+        self.shuffled_ids = list(range(self.num_player))
 
         return obs, deepcopy(self.info)
 
     def step(
         self, actions: List[ActionType]
     ) -> Tuple[Dict[IdType, Dict[PosType, Tile]], Dict[IdType, float], bool, Dict[IdType, dict]]:
-        random.shuffle(self.shuffled_id)
+        random.shuffle(self.shuffled_ids)
         self.curr_step += 1
 
         # validate trade action
@@ -79,14 +79,14 @@ class EcoEvo:
             elif self.is_trade_valid(player, action):
                 player.trade_result = TradeResult.failed
             else:
-                actions[id] = (action[0], None, None)
+                actions[id] = (main_action, None, None)
                 player.trade_result = TradeResult.illegal
 
         # match trade
         matched_deals = self.trader.parse(players=self.players, actions=actions)
 
         # execute trade
-        for id in self.shuffled_id:
+        for id in self.shuffled_ids:
             if id in matched_deals:
                 player = self.players[id]
                 _, sell_offer, buy_offer = matched_deals[id]
@@ -95,7 +95,7 @@ class EcoEvo:
 
         # validate and execute main action
         executed_main_action = {}
-        for id in self.shuffled_id:
+        for id in self.shuffled_ids:
             player = self.players[id]
             action = actions[id]
             if self.is_main_action_valid(player, action):
@@ -103,7 +103,7 @@ class EcoEvo:
                 executed_main_action[id] = action[0]
 
         # health decrease
-        for id in self.shuffled_id:
+        for id in self.shuffled_ids:
             player.health = max(0, player.health - PlayerConfig.comsumption_per_step)
 
         # generate obs, reward, info
