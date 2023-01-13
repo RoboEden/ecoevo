@@ -77,7 +77,7 @@ class EcoEvo:
                 actions[id] = (main_action, None, None)
                 player.trade_result = TradeResult.absent
             elif self.is_trade_valid(player, action):
-                player.trade_result = TradeResult.failed
+                player.trade_result = TradeResult.failed  # may changed to success later if the deal is matched
             else:
                 actions[id] = (main_action, None, None)
                 player.trade_result = TradeResult.illegal
