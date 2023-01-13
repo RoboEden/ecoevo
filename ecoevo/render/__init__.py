@@ -1,9 +1,11 @@
 try:
-    from dash import Dash, dash_table, dcc, html
-    from dash import Output, Input, State
-    from rich import print
+    import dash_bootstrap_components as dbc
+    import dash_daq as daq
+    from dash import dcc, html, dash_table, ctx
+    from dash import Dash, Output, Input, State, ClientsideFunction
     from plotly import graph_objects
-    import dash_bootstrap_components
+    from rich import print
     from ecoevo.render.app import WebApp
+
 except ImportError:
     raise ImportError("Try pip install ecoevo[render]!")
