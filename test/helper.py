@@ -37,6 +37,7 @@ class Helper:
         visited = set()
         for pos, id in lst:
             pos_dict[id] = pos
+            assert pos not in visited
             visited.add(pos)
         visited.add(None)
 
@@ -44,10 +45,11 @@ class Helper:
         idx = 0
         for id in range(len(self.cfg.personae)):
             pos = pos_dict.get(id)
-            while pos in visited:
-                pos = divmod(idx, MapConfig.width)
-                idx += 1
-            visited.add(pos)
+            if pos is None:
+                while pos in visited:
+                    pos = divmod(idx, MapConfig.width)
+                    idx += 1
+                visited.add(pos)
             self.cfg.init_points.append(pos)
 
         return self
