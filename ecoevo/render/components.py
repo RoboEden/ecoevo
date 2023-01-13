@@ -102,7 +102,7 @@ info_panel = html.Div([
 all_primary_action = ['idle', 'move', 'collect', 'consume']
 control_panel = html.Div([
     html.Div('Control Panel', className="card-header"),
-    html.Label('Selected players'),
+    html.Label('Next step actions'),
     html.Div([
         dash_table.DataTable(
             columns=columns,
@@ -152,10 +152,20 @@ control_panel = html.Div([
     ]),
     html.Label('Sell offer'),
     dcc.RadioItems(trade_options, 'None', id='sell-item-state', inline=True),
-    daq.NumericInput(id='sell-num-state', value=0),
+    daq.NumericInput(
+        id='sell-num-state',
+        value=0,
+        min=0,
+        max=1000,
+    ),
     html.Label('Buy offer'),
     dcc.RadioItems(trade_options, 'None', id='buy-item-state', inline=True),
-    daq.NumericInput(id='buy-num-state', value=0),
+    daq.NumericInput(
+        id='buy-num-state',
+        value=0,
+        min=0,
+        max=1000,
+    ),
     dbc.Row([
         dbc.Col(write_button),
         dbc.Col(clear_button),

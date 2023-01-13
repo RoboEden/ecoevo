@@ -11,9 +11,8 @@ class Analyser(object):
 
     @staticmethod
     def get_info(done: bool, info: Dict[str, int or float], players: List[Player],
-                 matched_deals: Dict[IdType, DealType], transaction_graph: Dict[Tuple[IdType, IdType], OfferType],
-                 executed_main_action: Dict[int, Tuple[str, str]], reward_info: Dict[int,
-                                                                                     Dict]) -> Dict[str, int or float]:
+                 matched_deals: Dict[IdType, DealType], executed_main_actions: Dict[int, Tuple[str, str]],
+                 reward_info: Dict[int, Dict]) -> Dict[str, int or float]:
         """
         :param done:  if episode done
         :param info:  info of last step
@@ -24,8 +23,6 @@ class Analyser(object):
 
         :return: info:  info of current step
         """
-
-        info['transaction_graph'] = transaction_graph
 
         # check keys
         info_keys = ['curr_step'] + \
@@ -65,8 +62,8 @@ class Analyser(object):
                 info[key] /= info['curr_step'] + 1
 
         # consume times
-        for pid in executed_main_action:
-            (action_type, action_item) = executed_main_action[pid]
+        for pid in executed_main_actions:
+            (action_type, action_item) = executed_main_actions[pid]
             if action_type == Action.consume:
                 info['{}_consume_times'.format(action_item)] += 1 / num_player
 
