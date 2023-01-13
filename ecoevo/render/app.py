@@ -126,7 +126,7 @@ class WebApp:
                 'players': [player.json() for player in self.env.players]
             }
             raw_next_actions = self.rollout.get_actions()
-
+            
             return self.gs_render.fig, msg, json.dumps(env_output_data), json.dumps(raw_next_actions)
 
         self.app.run_server(debug=True)

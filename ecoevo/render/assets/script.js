@@ -209,9 +209,27 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
                 radar_chart.update();
 
                 document.getElementById("reward-provider").innerText = env_output_data.rewards[id];
-                // document.getElementById("info-provider").innerText = env_output_data.info;
-                // console.log(env_output_data.info)
-                return '';
+                if (Object.keys(env_output_data.info).length) {
+                    let info = env_output_data.info;
+                    document.getElementById("primary-action-provider").innerText = info.executed_main_actions[id][0];
+                    document.getElementById("secondary-action-provider").innerText = info.executed_main_actions[id][1];
+                    let sell_offer, buy_offer;
+                    if (Object.keys(info.success_trades).includes(id)) {
+                        sell_offer = info.success_trades[id][0];
+                        buy_offer = info.success_trades[id][1];
+                    }
+                    document.getElementById("sell-offer-provider").innerText = sell_offer;
+                    document.getElementById("buy-offer-provider").innerText = buy_offer;
+                }
+
+                // coarse print `info`
+                let info = '';
+                for (const [k, v] of Object.entries(env_output_data.info)) {
+                    if (!(['executed_main_actions', 'success_trades'].includes(k))) {
+                        info += k + ': ' + v + '\n'
+                    }
+                }
+                return info;
             }
         },
         controlActions: function (
