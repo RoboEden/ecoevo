@@ -77,13 +77,13 @@ class EcoEvo:
                 actions[id] = (main_action, None, None)
                 player.trade_result = TradeResult.absent
             elif self.is_trade_valid(player, action):
-                player.trade_result = TradeResult.failed
+                player.trade_result = TradeResult.failed  # may changed to success later if the deal is matched
             else:
                 actions[id] = (main_action, None, None)
                 player.trade_result = TradeResult.illegal
 
         # match trade
-        matched_deals = self.trader.parse(self.players, actions)
+        matched_deals, transaction_graph = self.trader.parse(self.players, actions)
 
         # execute trade
         success_trades = {}
@@ -123,6 +123,7 @@ class EcoEvo:
             })
         self.info['executed_main_actions'] = executed_main_actions
         self.info['success_trades'] = success_trades
+        self.info['transaction_graph'] = transaction_graph
 
         # refresh items
         self.entity_manager.refresh_item()

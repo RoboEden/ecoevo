@@ -1,7 +1,7 @@
 from typing import Dict, List, Tuple
 
 from ecoevo.entities import ALL_ITEM_DATA, Player
-from ecoevo.types import Action, DealType, IdType, TradeResult
+from ecoevo.types import Action, DealType, IdType, OfferType
 
 
 class Analyser(object):
