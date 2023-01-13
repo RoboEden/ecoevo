@@ -83,24 +83,26 @@ class EcoEvo:
                 player.trade_result = TradeResult.illegal
 
         # match trade
-        matched_deals = self.trader.parse(players=self.players, actions=actions)
+        matched_deals = self.trader.parse(self.players, actions)
 
         # execute trade
+        success_trades = {}
         for id in self.shuffled_ids:
             if id in matched_deals:
                 player = self.players[id]
                 _, sell_offer, buy_offer = matched_deals[id]
                 player.trade(sell_offer, buy_offer)
                 player.trade_result = TradeResult.success
+                success_trades[id] = (sell_offer, buy_offer)
 
         # validate and execute main action
-        executed_main_action = {}
+        executed_main_actions = {}
         for id in self.shuffled_ids:
             player = self.players[id]
             action = actions[id]
             if self.is_main_action_valid(player, action):
                 self.entity_manager.execute_main_action(player, action)
-                executed_main_action[id] = action[0]
+                executed_main_actions[id] = action[0]
 
         # health decrease
         for id in self.shuffled_ids:
@@ -110,19 +112,17 @@ class EcoEvo:
         obs = {player.id: self.get_obs(player) for player in self.players}
         rewards = {player.id: self.reward_parser.parse(player) for player in self.players}
         done = True if self.curr_step > self.cfg.total_step else False
-        self.info = Analyser.get_info(done=done,
-                                      info=self.info,
-                                      players=self.players,
-                                      matched_deals=matched_deals,
-                                      executed_main_action=executed_main_action,
-                                      reward_info={
-                                          player.id: {
-                                              'reward': rewards[player.id],
-                                              'utility': self.reward_parser.last_utilities[player.id],
-                                              'cost': self.reward_parser.total_costs[player.id]
-                                          }
-                                          for player in self.players
-                                      })
+        self.info = Analyser.get_info(
+            done, self.info, self.players, matched_deals, executed_main_actions, {
+                player.id: {
+                    'reward': rewards[player.id],
+                    'utility': self.reward_parser.last_utilities[player.id],
+                    'cost': self.reward_parser.total_costs[player.id]
+                }
+                for player in self.players
+            })
+        self.info['executed_main_actions'] = executed_main_actions
+        self.info['success_trades'] = success_trades
 
         # refresh items
         self.entity_manager.refresh_item()

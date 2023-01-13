@@ -128,7 +128,10 @@ class GameScreen:
         for (id_foo, id_bar), (offer_foo, offer_bar) in dict_flow.items():
             x = [players[id_foo].pos[0], players[id_bar].pos[0]]
             y = [players[id_foo].pos[1], players[id_bar].pos[1]]
-            line_width = self.trade_line_width / math.cos(math.atan((y[0] - y[1]) / (x[0] - x[1])))
+            if x[0] == x[1]:
+                line_width = self.trade_line_width
+            else:
+                line_width = self.trade_line_width / math.cos(math.atan((y[0] - y[1]) / (x[0] - x[1])))
 
             x_rev = x[::-1]
             y_upper = [_y + line_width / 2 for _y in y]

@@ -209,9 +209,9 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
                 radar_chart.update();
 
                 document.getElementById("reward-provider").innerText = env_output_data.rewards[id];
-                document.getElementById("info-provider").innerText = env_output_data.info[id];
-
-                return env_output_data.info[id];
+                // document.getElementById("info-provider").innerText = env_output_data.info;
+                // console.log(env_output_data.info)
+                return '';
             }
         },
         controlActions: function (

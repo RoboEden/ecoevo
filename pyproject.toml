@@ -38,6 +38,7 @@ render = [
     "werkzeug~=2.0.0",
     "dash",
     "dash-bootstrap-components",
+    "dash_daq",
     "plotly",
     "matplotlib",
     "rich",
