@@ -40,7 +40,8 @@ class Trader(object):
         # result: actual item flows during the trades
         self.dict_flow = {}
 
-    def parse(self, players: List[Player], actions: List[ActionType]) -> Dict[IdType, DealType]:
+    def parse(self, players: List[Player],
+              actions: List[ActionType]) -> Tuple[Dict[IdType, DealType], Dict[Tuple[IdType, IdType], OfferType]]:
         """
         tarder parser
 
@@ -48,6 +49,7 @@ class Trader(object):
         :param actions:  list of actions
 
         :return: self.match_deals:  result of matched deals
+        :return: self.dict_flow:  actual item flows during the trades
         """
 
         self.players, self.actions = players, actions
@@ -82,7 +84,7 @@ class Trader(object):
 
         self.dict_flow = dict_flow
 
-        return self.match_deals
+        return self.match_deals, self.dict_flow
 
     def _get_legal_deals(self) -> Dict[IdType, DealType]:
         """
