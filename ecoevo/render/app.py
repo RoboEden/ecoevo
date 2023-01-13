@@ -119,6 +119,8 @@ class WebApp:
                 self.env.trader.dict_flow,
                 self.env.players,
             )
+            if 'transaction_graph' in info:
+                info.pop['transaction_graph']
             env_output_data = {
                 'obs': None,
                 'rewards': rewards,
@@ -126,7 +128,6 @@ class WebApp:
                 'players': [player.json() for player in self.env.players]
             }
             raw_next_actions = self.rollout.get_actions()
-            
             return self.gs_render.fig, msg, json.dumps(env_output_data), json.dumps(raw_next_actions)
 
         self.app.run_server(debug=True)
