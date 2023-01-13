@@ -54,6 +54,7 @@ class Trader(object):
         self.legal_deals = self._get_legal_deals()
 
         self.match_deals = {}
+        dict_flow = {}
 
         # method 1: IP model
         if self.mode == 'IP':
@@ -72,11 +73,14 @@ class Trader(object):
                 self.match_deals[key_1], self.match_deals[key_2] = min_deal_1, min_deal_2
 
                 _, (sell_name_1, sell_num_1), (buy_name_1, buy_num_1) = min_deal_1
-                self.dict_flow[key_1, key_2] = ((sell_name_1, sell_num_1), (buy_name_1, -buy_num_1))
+                dict_flow[key_1, key_2] = (sell_name_1, abs(sell_num_1))
+                dict_flow[key_2, key_1] = (buy_name_1, buy_num_1)
 
         # method 2: heuristic method
         else:
-            self.match_deals, self.dict_flow = self._heuristic()
+            self.match_deals, dict_flow = self._heuristic()
+
+        self.dict_flow = dict_flow
 
         return self.match_deals
 
@@ -227,12 +231,12 @@ class Trader(object):
 
         return min_deal_1, min_deal_2
 
-    def _heuristic(self) -> Tuple[Dict[IdType, DealType], Dict[Tuple[IdType, IdType], Tuple[OfferType, OfferType]]]:
+    def _heuristic(self) -> Tuple[Dict[IdType, DealType], Dict[Tuple[IdType, IdType], OfferType]]:
         """
         heuristic method for automated trade matching
 
         :return: self.match_deals:  result of matched deals with actual trade amount
-        :return: self.dict_flow:  actual item flows during the trades
+        :return: dict_flow:  actual item flows during the trades
         """
 
         dts = datetime.now()
@@ -249,7 +253,7 @@ class Trader(object):
                 list(self.legal_deals[i][idx_buy])
             ]
 
-        self.dict_flow = {}
+        dict_flow = {}
 
         random.seed(42)
         list_deal_id = list(dict_deal.keys())
@@ -327,8 +331,8 @@ class Trader(object):
                 dict_deal[i][idx_buy][idx_item_num] -= actual_buy_num_i
                 dict_deal[pid_cur][idx_sell][idx_item_num] += actual_buy_num_i
                 dict_deal[pid_cur][idx_buy][idx_item_num] -= actual_buy_num_cur
-                self.dict_flow[i, pid_cur] = ((dict_deal[i][idx_sell][idx_item_name], -actual_buy_num_cur),
-                                              (dict_deal[i][idx_buy][idx_item_name], -actual_buy_num_i))
+                dict_flow[i, pid_cur] = (dict_deal[i][idx_sell][idx_item_name], actual_buy_num_cur)
+                dict_flow[pid_cur, i] = (dict_deal[i][idx_buy][idx_item_name], actual_buy_num_i)
                 sell_num_i, buy_num_i = dict_deal[i][idx_sell][idx_item_num], dict_deal[i][idx_buy][idx_item_num]
 
                 # update remain volumes
@@ -355,7 +359,7 @@ class Trader(object):
         tm = round((dte - dts).seconds + (dte - dts).microseconds / (10**6), 3)
         logger.debug(f"heuristic processing time: {tm} s")
 
-        return self.match_deals, self.dict_flow
+        return self.match_deals, dict_flow
 
     def _heuristic_match(self, deal_1: DealType, deal_2: DealType, remain_volume_1: int) -> Tuple[int, int]:
         """
