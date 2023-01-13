@@ -10,9 +10,9 @@ class Analyser(object):
         pass
 
     @staticmethod
-    def get_info(done: bool, info: Dict[str, int or float], players: List[Player], matched_deals: Dict[IdType,
-                                                                                                       DealType],
-                 actions_valid: Dict[int, Tuple[str, str]], reward_info: Dict[int, Dict]) -> Dict[str, int or float]:
+    def get_info(done: bool, info: Dict[str, int or float], players: List[Player],
+                 matched_deals: Dict[IdType, DealType], executed_main_action: Dict[int, Tuple[str, str]],
+                 reward_info: Dict[int, Dict]) -> Dict[str, int or float]:
         """
         :param done:  if episode done
         :param info:  info of last step
@@ -62,8 +62,8 @@ class Analyser(object):
                 info[key] /= info['curr_step'] + 1
 
         # consume times
-        for pid in actions_valid:
-            (action_type, action_item) = actions_valid[pid]
+        for pid in executed_main_action:
+            (action_type, action_item) = executed_main_action[pid]
             if action_type == Action.consume:
                 info['{}_consume_times'.format(action_item)] += 1 / num_player
 

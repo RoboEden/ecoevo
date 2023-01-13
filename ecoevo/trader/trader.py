@@ -46,10 +46,27 @@ class Trader(object):
         """
         self.legal_deals = self._get_legal_deals()
         if self.mode == 'IP':
-            match_deals, dict_flow = self._ip()
+            list_deal = list(self.legal_deals.values())
+            mat_if_match, mat_volume = self._ip_process(list_deal=list_deal)
+            list_match = self._ip_model(list_deal=list_deal, mat_if_match=mat_if_match, mat_volume=mat_volume)
+
+            # result process
+            idx2key = list(self.legal_deals.keys())
+            for match in list_match:
+                idx_1, idx_2 = match
+                key_1, key_2 = idx2key[idx_1], idx2key[idx_2]
+                deal_1, deal_2 = self.legal_deals[key_1], self.legal_deals[key_2]
+
+                min_deal_1, min_deal_2 = self._mini_close(deal_1=deal_1, deal_2=deal_2)
+                self.match_deals[key_1], self.match_deals[key_2] = min_deal_1, min_deal_2
+
+                _, (sell_name_1, sell_num_1), (buy_name_1, buy_num_1) = min_deal_1
+                self.dict_flow[key_1, key_2] = ((sell_name_1, sell_num_1), (buy_name_1, -buy_num_1))
+
+        # method 2: heuristic method
         else:
-            match_deals, dict_flow = self._heuristic()
-        self.dict_flow = dict_flow
+            self.match_deals, self.dict_flow = self._heuristic()
+
         return self.match_deals
 
     def _ip(self):
@@ -83,49 +100,8 @@ class Trader(object):
         legal_deals = {}
         for player in self.players:
             main_action, sell_offer, buy_offer = self.actions[player.id]
-            primary_action, secondary_action = main_action
 
-            # parse offer
             if sell_offer is None or buy_offer is None:
-                player.trade_result = TradeResult.absent
-                continue
-
-            sell_item_name, sell_num = sell_offer
-            buy_item_name, buy_num = buy_offer
-            if sell_item_name == buy_item_name:
-                player.trade_result = TradeResult.illegal
-                logger.debug(f'Invalid: sell item is the same as buy item {sell_item_name}')
-                continue
-            if sell_num >= 0:
-                player.trade_result = TradeResult.illegal
-                logger.debug(f'Invalid sell_num {sell_num}, should be < 0')
-                continue
-            if buy_num <= 0:
-                player.trade_result = TradeResult.illegal
-                logger.debug(f'Invalid buy_num {buy_num}, should be > 0')
-                continue
-            sell_num, buy_num = abs(sell_num), abs(buy_num)
-
-            # check sell
-            sell_item = player.backpack[sell_item_name]
-
-            # handle sell and consume same item
-            least_amount = sell_num
-            if primary_action == Action.consume:
-                consume_item_name = secondary_action
-                if sell_item_name == consume_item_name:
-                    least_amount += sell_item.consume_num
-
-            if sell_item.num < least_amount:
-                logger.debug(f'Insufficient {sell_item_name}: {sell_item.num} sell_num {sell_num}')
-                player.trade_result = TradeResult.illegal
-                continue
-
-            # check buy
-            buy_item_volumne = player.backpack[buy_item_name].capacity * buy_num
-            if player.backpack.remain_volume < buy_item_volumne:
-                player.trade_result = TradeResult.illegal
-                logger.debug(f'Insufficient backpack remain volume: {player.backpack.remain_volume}')
                 continue
 
             legal_deals[player.id] = (player.pos, sell_offer, buy_offer)

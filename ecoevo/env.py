@@ -49,7 +49,7 @@ class EcoEvo:
         self.players = []
         self.curr_step = 0
         self.reward_parser.reset()
-        points = self.entity_manager.sample(len(self.cfg.personae))
+        points = self.cfg.init_points or self.entity_manager.sample(len(self.cfg.personae))
         for id, persona in enumerate(self.cfg.personae):
             player = Player(persona=persona, id=id, pos=points[id])
             self.players.append(player)
@@ -59,50 +59,70 @@ class EcoEvo:
         obs = {player.id: self.get_obs(player) for player in self.players}
         self.info = {}
 
-        self.ids = [player.id for player in self.players]
+        self.shuffled_ids = list(range(self.num_player))
 
         return obs, deepcopy(self.info)
 
     def step(
         self, actions: List[ActionType]
     ) -> Tuple[Dict[IdType, Dict[PosType, Tile]], Dict[IdType, float], bool, Dict[IdType, dict]]:
-        actions_valid = {}
+        random.shuffle(self.shuffled_ids)
         self.curr_step += 1
 
-        # trader
-        matched_deals = self.trader.parse(self.players, actions)
-        # execute
-        random.shuffle(self.ids)
-        for id in self.ids:
+        # validate trade action
+        for id, action in enumerate(actions):
+            main_action, sell_offer, buy_offer = action
             player = self.players[id]
-            main_action, sell_offer, buy_offer = actions[player.id]
-            if player.id in matched_deals:
-                _, sell_offer, buy_offer = matched_deals[player.id]
-                action = (main_action, sell_offer, buy_offer)
+            if sell_offer is None or buy_offer is None:
+                actions[id] = (main_action, None, None)
+                player.trade_result = TradeResult.absent
+            elif self.is_trade_valid(player, action):
+                player.trade_result = TradeResult.failed
             else:
-                action = (main_action, None, None)
+                actions[id] = (main_action, None, None)
+                player.trade_result = TradeResult.illegal
 
-            if self.is_action_valid(player, actions[player.id]):
-                self.entity_manager.execute(player, action)
-                if player.id in self.trader.legal_deals:
-                    if player.trade_result != TradeResult.success:
-                        player.trade_result = TradeResult.failed
-                actions_valid[player.id] = action[0]
-            # consumption
+        # match trade
+        matched_deals = self.trader.parse(players=self.players, actions=actions)
+
+        # execute trade
+        for id in self.shuffled_ids:
+            if id in matched_deals:
+                player = self.players[id]
+                _, sell_offer, buy_offer = matched_deals[id]
+                player.trade(sell_offer, buy_offer)
+                player.trade_result = TradeResult.success
+
+        # validate and execute main action
+        executed_main_action = {}
+        for id in self.shuffled_ids:
+            player = self.players[id]
+            action = actions[id]
+            if self.is_main_action_valid(player, action):
+                self.entity_manager.execute_main_action(player, action)
+                executed_main_action[id] = action[0]
+
+        # health decrease
+        for id in self.shuffled_ids:
             player.health = max(0, player.health - PlayerConfig.comsumption_per_step)
 
+        # generate obs, reward, info
         obs = {player.id: self.get_obs(player) for player in self.players}
         rewards = {player.id: self.reward_parser.parse(player) for player in self.players}
         done = True if self.curr_step > self.cfg.total_step else False
-        self.info = Analyser.get_info(
-            done, self.info, self.players, matched_deals, actions_valid, {
-                player.id: {
-                    'reward': rewards[player.id],
-                    'utility': self.reward_parser.last_utilities[player.id],
-                    'cost': self.reward_parser.total_costs[player.id]
-                }
-                for player in self.players
-            })
+        self.info = Analyser.get_info(done=done,
+                                      info=self.info,
+                                      players=self.players,
+                                      matched_deals=matched_deals,
+                                      executed_main_action=executed_main_action,
+                                      reward_info={
+                                          player.id: {
+                                              'reward': rewards[player.id],
+                                              'utility': self.reward_parser.last_utilities[player.id],
+                                              'cost': self.reward_parser.total_costs[player.id]
+                                          }
+                                          for player in self.players
+                                      })
 
         # refresh items
         self.entity_manager.refresh_item()
@@ -127,25 +147,55 @@ class EcoEvo:
 
         return local_obs
 
-    def is_action_valid(self, player: Player, action: ActionType) -> bool:
-        is_valid = True
-        main_action, sell_offer, buy_offer = action
+    def is_trade_valid(self, player: Player, action: ActionType) -> bool:
+        _, sell_offer, buy_offer = action
+
+        if sell_offer is None or buy_offer is None:
+            return False
+
+        sell_item_name, sell_num = sell_offer
+        buy_item_name, buy_num = buy_offer
+
+        if sell_item_name == buy_item_name or sell_num >= 0 or buy_num <= 0:
+            return False
+
+        # check sell item amount
+        sell_item = player.backpack[sell_item_name]
+        if sell_item.num < abs(sell_num):
+            return False
+
+        # check buy item bag volume
+        buy_item_volume = player.backpack[buy_item_name].capacity * buy_num
+        if player.backpack.remain_volume < buy_item_volume:
+            return False
+
+        return True
+
+    def is_main_action_valid(self, player: Player, action: ActionType) -> bool:
+        main_action, _, _ = action
         primary_action, secondary_action = main_action
 
+        # Check main action
         if primary_action == Action.idle:
-            pass
+            return True
 
         # check move
         elif primary_action == Action.move:
-            x, y = player.next_pos(secondary_action)
-            tile = self.gettile((x, y))
+            if secondary_action is None:
+                logger.critical(f'Player {player.id} move with no direction')
+                return False
+            next_pos = player.next_pos(secondary_action)
+            if player.pos == next_pos:
+                logger.debug(f'Player {player.id} move towards map boarder')
+                return False
+            tile = self.gettile(next_pos)
             if tile:
                 if tile.player is not None:
                     hitted_player = tile.player
-                    is_valid = False
-                    logger.warning(
+                    logger.debug(
                         f'Player {player.id} at {player.pos} tried to hit player {hitted_player.id} at {hitted_player.pos}'
                     )
+                    return False
 
         # check collect
         elif primary_action == Action.collect:
@@ -153,38 +203,32 @@ class EcoEvo:
             if item:
                 # no item to collect or the amount of item not enough
                 if item.num < item.harvest_num:
-                    is_valid = False
-                    logger.warning(f'No resource! Player {player.id} cannot collect {item} at {player.pos}')
+                    logger.debug(f'No resource! Player {player.id} cannot collect {item} at {player.pos}')
+                    return False
                 # bagpack volume not enough
                 least_volume = item.harvest_num * item.capacity
-                if sell_offer is not None and buy_offer is not None:
-                    buy_item_name, buy_num = buy_offer
-                    least_volume += buy_num * player.backpack[buy_item_name].capacity
-
                 if player.backpack.remain_volume < least_volume:
-                    is_valid = False
-
-                    logger.warning(f'Bag full! Player {player.id} cannot collect {item} at {player.pos}')
+                    logger.debug(f'Bag full! Player {player.id} cannot collect {item} at {player.pos}')
+                    return False
             else:
-                is_valid = False
-                logger.warning(f'No item exists! Player {player.id} cannot collect {player.pos}')
+                logger.debug(f'No item exists! Player {player.id} cannot collect {player.pos}')
+                return False
 
         # check consume
         elif primary_action == Action.consume:
+            if secondary_action is None:
+                return False
+
             consume_item_name = secondary_action
 
             # handle consume and sell same item
-            least_amount = player.backpack[consume_item_name].consume_num
-            if sell_offer is not None and buy_offer is not None:
-                sell_item_name, sell_num = sell_offer
-                if consume_item_name == sell_item_name:
-                    least_amount += sell_num
-
-            if player.backpack[consume_item_name].num < least_amount:
-                is_valid = False
+            least_num = player.backpack[consume_item_name].consume_num
+            if player.backpack[consume_item_name].num < least_num:
                 logger.debug(
-                    f'Player {player.id} cannot consume "{consume_item_name}" since num no more than {least_amount}.')
+                    f'Player {player.id} cannot consume "{consume_item_name}" since num no more than {least_num}.')
+                return False
         else:
             logger.debug(f'Failed to parse primary action. Player {player.id}: {primary_action} ')
+            return False
 
-        return is_valid
+        return True

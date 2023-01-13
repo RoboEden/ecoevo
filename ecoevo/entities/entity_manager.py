@@ -1,13 +1,13 @@
 import json
+from dataclasses import dataclass
+from typing import Dict, List, Optional
+
 import numpy as np
 import tree
 
-from typing import Dict, List, Optional
-from dataclasses import dataclass
-
-from ecoevo.config import MapConfig, DataPath
-from ecoevo.entities import load_item, Item, Player
-from ecoevo.types import PosType, ActionType, Action
+from ecoevo.config import DataPath, MapConfig
+from ecoevo.entities import Item, Player, load_item
+from ecoevo.types import Action, ActionType, PosType
 
 
 @dataclass
@@ -75,24 +75,21 @@ class EntityManager:
             del self.map[player.pos]
 
     def move_player(self, player: Player, secondary_action):
+        # If destination has agent, skip move action
+        next_pos = player.next_pos(secondary_action)
+        if next_pos in self.map:
+            tile = self.map[next_pos]
+            if tile.player:
+                return
+
         self.remove_player(player)
         player.pos = player.next_pos(secondary_action)
         self.add_player(player)
         player.collect_remain = None
 
-    def execute(
-        self,
-        player: Player,
-        action: ActionType,
-    ):
-        main_action, sell_offer, buy_offer = action
+    def execute_main_action(self, player: Player, action: ActionType):
+        main_action, _, _ = action
         primary_action, secondary_action = main_action
-
-        # First trade
-        if sell_offer is not None and buy_offer is not None:
-            player.trade(sell_offer, buy_offer)
-
-        # Then act
         if primary_action == Action.idle:
             pass
         elif primary_action == Action.move:
@@ -102,9 +99,7 @@ class EntityManager:
         elif primary_action == Action.consume:
             player.consume(secondary_action)
         else:
-            raise ValueError(
-                f'Failed to parse primary action. Player {player.id}: {primary_action} '
-            )
+            raise ValueError(f'Failed to parse primary action. Player {player.id}: {primary_action} ')
 
         # reset the remaining collection steps
         if primary_action != Action.collect:

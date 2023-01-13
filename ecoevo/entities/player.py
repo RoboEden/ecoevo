@@ -74,7 +74,7 @@ class Player(BaseModel):
     def next_pos(
         self,
         direction: str,
-    ):
+    ) -> PosType:
         x, y = self.pos
         if direction == Move.up:
             y = min(y + 1, MapConfig.height - 1)
@@ -94,7 +94,6 @@ class Player(BaseModel):
         sell_num, buy_num = abs(sell_num), abs(buy_num)
         self.backpack[sell_item_name].num -= sell_num
         self.backpack[buy_item_name].num += buy_num
-        self.trade_result = TradeResult.success
         if self.backpack.remain_volume < 0:
             for lost_num in range(self.backpack[buy_item_name].num):
                 if self.backpack.remain_volume >= 0:
