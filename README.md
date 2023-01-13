@@ -3,6 +3,14 @@
 Economy Evolution Environment for Currency Emergence Research
 
 ## Ghange log
+### version 0.1.4
+- ADD transaction_graph in env step info
+- FIX test helper bug
+
+### version 0.1.3
+- TODO
+### version 0.1.2
+
 - Add sanity check for `Player`
 - Fix bug when render sell offer
 
@@ -36,7 +44,7 @@ while not done:
     actions = my_policy(obs, infos) # your policy goes here
     obs, rewards, done, infos = env.step(actions)
 ```
-You can change game setting such as `total_step` (the game durateion) and  `personae` (the num of players withhold each persona) in [`config.py`](ecoevo/config.py). 
+You can change game setting such as `total_step` (the game durateion) and  `personae` (the num of players withhold each persona) in [`config.py`](ecoevo/config.py).
 
 Note that for now change `MapConfig` is not effective.
 
@@ -53,7 +61,7 @@ First of all, here is a list of all avaliable `item_name`
 | '`stone`'     |
 | '`pumpkin`'   |
 
-See [item.yaml](ecoevo/entities/items.yaml) for a complete property of each item. 
+See [item.yaml](ecoevo/entities/items.yaml) for a complete property of each item.
 
 ## Input
 The game core takes a list of actions of `ActionType` as input after reset. See [types.py](ecoevo/entities/types.py) for more details.
@@ -83,7 +91,7 @@ Note that "sell offer" stands *before* "buy offer" in the ternary tuple, followi
     | :--------- | :------------------------------- | :----------- |
     | sell offer | One of the string in `item_name` | negative int |
     | buy offer  | One of the string in `item_name` | positive int |
-    
+
     If any one of the offer is `None`, the game core will skip both offers of this agent.
 
 ### Input Examples
@@ -103,11 +111,11 @@ Note that "sell offer" stands *before* "buy offer" in the ternary tuple, followi
 The gamecore outputs `obs`, `rewards`, `done`, `infos` when step. See details below.
 
 - `obs`: `Dict[IdType, Dict[PosType, Tile]]`
-  
+
   Its key is a player's id and value is the local vision of this player. Vision radius is 7 and can be changed in [`config.py`](ecoevo/config.py).
-  
+
   The local vision is also a dict with `(x, y)` coordinates as its key and   `Tile` object as its value.
-  
+
   A tile contains either an item or a player, or both, at its position.
 
   If neither an item nor a player exists at this position, then it cannot be found in the local vision.
@@ -116,10 +124,10 @@ The gamecore outputs `obs`, `rewards`, `done`, `infos` when step. See details be
 
   Contains rewards for each players. See [reward.py](/ecoevo/reward.py) for implementation details.
 - `done`: `bool`
-  
+
   Returns to `True` if the current game is over.
 - `infos`: `Dict[IdType, dict]`
-  
+
   Returns infos of each player.
 ### Output Examples
 - `obs`
@@ -200,9 +208,9 @@ The gamecore outputs `obs`, `rewards`, `done`, `infos` when step. See details be
 ## Render
 See the example below:
 
-> **_NOTE:_** 
+> **_NOTE:_**
 > For a `RollOut` object
-> - `self.env` must be an `EcoEvo` object 
+> - `self.env` must be an `EcoEvo` object
 > - Implement your own `self.get_actions()`.  You can get current `obs` by calling `self.get_current_obs()` method.
 ```python
 import ecoevo

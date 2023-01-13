@@ -16,17 +16,16 @@ class TestDemo:
             ((8, 8), 0),
             ((8, 9), 1),
         ).reset().set_bag(
-            (0, Item.gold, 10),
+            (0, Item.gold, 5),
             (1, Item.sand, 10),
         ).step(
-            (0, ((Action.idle, None), (Item.gold, -10), (Item.sand, 10))),
-            (1, ((Action.idle, None), (Item.sand, -10), (Item.gold, 10))),
-        )
-
-        print(h.env.players[0].backpack)
-        print(h.env.players[1].backpack)
-
-        h.assert_bag(
+            (0, ((Action.idle, None), (Item.gold, -5), (Item.sand, 10))),
+            (1, ((Action.idle, None), (Item.sand, -10), (Item.gold, 5))),
+        ).assert_bag(
             (0, Item.sand, 10),
-            (1, Item.gold, 10),
+            (1, Item.gold, 5),
         )
+        transaction_graph = h.info['transaction_graph']
+        assert transaction_graph[(0, 1)] == (Item.gold, 5)
+        assert transaction_graph[(1, 0)] == (Item.sand, 10)
+        assert len(transaction_graph) == 2
