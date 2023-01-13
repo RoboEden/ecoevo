@@ -3,10 +3,13 @@ from helper import Helper
 
 
 def test_init_points():
-    h = Helper().init_points(
+    h = Helper()
+    h.init_points(
         ((8, 8), 0),
         ((0, 0), 5),
-    ).reset().assert_pos_player(
+    )
+    h.reset()
+    h.assert_pos_player(
         ((8, 8), 0),
         ((0, 0), 5),
         ((0, 1), 1),
