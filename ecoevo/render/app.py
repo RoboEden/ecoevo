@@ -1,12 +1,13 @@
 import json
-import copy
 import ecoevo.render.components as erc
-from typing import Optional
+
 from ecoevo.rollout import RollOut
 from ecoevo.config import MapConfig
+from ecoevo.entities import ALL_ITEM_DATA, ALL_PERSONAE
+
+from ecoevo.render import Dash, Input, Output, State, ClientsideFunction
+from ecoevo.render import dcc, dbc, html, ctx
 from ecoevo.render.game_screen import GameScreen
-from ecoevo.render import Dash, dcc, html, Output, Input, State
-from ecoevo.render import dash_bootstrap_components as dbc
 
 
 class WebApp:
@@ -14,14 +15,13 @@ class WebApp:
     def __init__(self, rollout: RollOut):
         self.rollout = rollout
         self.env = rollout.env
-        self.env.reset()
         self.gs_render = GameScreen(MapConfig.width, MapConfig.height)
-        self.gs_render.update(self.env.entity_manager.map)
-        self.next_actions = self.rollout.get_actions()
-        self.old_actions = copy.deepcopy(self.next_actions)
-        self.writed_actions = {}
-        self.app = Dash(__name__, external_stylesheets=[dbc.themes.DARKLY])
-
+        self.ctrl_policy = {}
+        self.app = Dash(
+            __name__,
+            external_scripts=[erc.plotlyjs, erc.chartjs],
+            external_stylesheets=[dbc.themes.DARKLY, erc.dbc_css],
+        )
         self.app.layout = html.Div([
             dbc.Row([
                 dbc.Col(erc.info_panel),
@@ -29,163 +29,104 @@ class WebApp:
                     erc.game_screen,
                     dbc.Col(erc.reset_button),
                     dbc.Col(erc.step_button),
-                ]),
-                        width={
-                            "size": "auto",
-                            "order": 'first',
-                        }),
+                ])),
                 dbc.Col(erc.control_panel),
             ]),
-            dcc.Store(id='selected-data'),
-            dcc.Store(id='next-actions'),
+            dcc.Store(id='selected-ids'),
+            dcc.Store(id='raw-next-actions'),
+            dcc.Store(id='ctrl-next-actions'),
+            dcc.Store(id='written-actions'),
+            dcc.Store(id='env-output-data'),
+            dcc.Store(id='curr-step'),
+            dcc.Store(id='all-item-data', data=json.dumps(ALL_ITEM_DATA)),
+            dcc.Store(id='all-persona', data=json.dumps(ALL_PERSONAE)),
         ])
-        self.app.callback(
+
+    def run_server(self):
+        self.app.clientside_callback(
+            ClientsideFunction('clientside', 'actionBinding'),
             Output('secondary-action-state', 'options'),
             Output('secondary-action-state', 'value'),
             Input('primary-action-state', 'value'),
-        )(self._callback_bind_action)
-
-        self.app.callback(
-            Output('datatable-interactivity', 'data'),
-            Output('write-button-state', 'n_clicks'),
-            Output('clear-button-state', 'n_clicks'),
+            State('all-item-data', 'data'),
+        )
+        self.app.clientside_callback(
+            ClientsideFunction('clientside', 'updateSelectedIds'),
+            Output('selected-ids', 'data'),
             Input('game-screen', 'selectedData'),
+            State('all-persona', 'data'),
+        )
+        self.app.clientside_callback(
+            ClientsideFunction('clientside', 'displaySelectedActions'),
+            Output('datatable-interactivity', 'data'),
+            Input('selected-ids', 'data'),
+            Input('ctrl-next-actions', 'data'),
+        )
+        self.app.clientside_callback(
+            ClientsideFunction('clientside', 'displaySelectedPlayer'),
+            Output('info-provider', 'children'),
+            Input('selected-ids', 'data'),
+            Input('env-output-data', 'data'),
+            State('all-item-data', 'data'),
+            State('all-persona', 'data'),
+        )
+        self.app.clientside_callback(
+            ClientsideFunction('clientside', 'controlActions'),
+            Output('ctrl-next-actions', 'data'),
+            Output('written-actions', 'data'),
             Input('write-button-state', 'n_clicks'),
             Input('clear-button-state', 'n_clicks'),
+            Input('raw-next-actions', 'data'),
+            Input('selected-ids', 'data'),
+            State('written-actions', 'data'),
             State('primary-action-state', 'value'),
             State('secondary-action-state', 'value'),
-        )(self._callback_control_panel)
+            State('sell-item-state', 'value'),
+            State('sell-num-state', 'value'),
+            State('buy-item-state', 'value'),
+            State('buy-num-state', 'value'),
+        )
 
-        self.app.callback(
-            Output('basic-provider', 'children'),
-            Output('preference-provider', 'children'),
-            Output('backpack-stomach-provider', 'children'),
-            # Output('obs-provider', 'children'),
-            Output('reward-provider', 'children'),
-            Output('info-provider', 'children'),
-            Input('game-screen', 'clickData'),
-            Input('step-button-state', 'n_clicks'),
-            Input('reset-danger-button', 'submit_n_clicks'),
-        )(self._callback_info_panel)
-        self.app.callback(
+        @self.app.callback(
             Output('game-screen', 'figure'),
             Output('output-provider', 'children'),
-            Output('reset-danger-button', 'submit_n_clicks'),
+            Output('env-output-data', 'data'),
+            Output('raw-next-actions', 'data'),
             Input('step-button-state', 'n_clicks'),
             Input('reset-danger-button', 'submit_n_clicks'),
-        )(self._callback_game_screen)
+            State('ctrl-next-actions', 'data'),
+        )
+        def serverside_callback(
+            step_n_clicks,
+            reset_n_clicks,
+            jsonified_ctrl_next_actions,
+        ):
+            if ctx.triggered_id == 'step-button-state':
+                ctrl_next_actions = json.loads(jsonified_ctrl_next_actions)
+                obs, rewards, done, info = self.env.step(ctrl_next_actions)
+                if done:
+                    msg = u'Game Over!'
+                else:
+                    msg = u'Current Step {}'.format(self.env.curr_step)
+            else:
+                obs, info = self.env.reset()
+                rewards = [0.0] * self.env.num_player
+                msg = u'Ready to play!'
 
-    def run_server(self):
+            # costy
+            self.gs_render.update(
+                self.env.entity_manager.map,
+                self.env.trader.dict_flow,
+                self.env.players,
+            )
+            env_output_data = {
+                'obs': None,
+                'rewards': rewards,
+                'info': info,
+                'players': [player.json() for player in self.env.players]
+            }
+            raw_next_actions = self.rollout.get_actions()
+
+            return self.gs_render.fig, msg, json.dumps(env_output_data), json.dumps(raw_next_actions)
+
         self.app.run_server(debug=True)
-
-    def _callback_bind_action(self, primary_action):
-        if primary_action in ['idle', 'collect']:
-            return [{
-                'label': 'None',
-                'value': 'none',
-                'title': 'secondary action'
-            }], 'none'
-        elif primary_action == 'move':
-            all_directions = ['up', 'down', 'left', 'right']
-            return [{
-                'label': direction.capitalize(),
-                'value': direction,
-                'title': 'secondary action'
-            } for direction in all_directions], 'up'
-        elif primary_action == 'consume':
-            return [{
-                'label': item_name.capitalize(),
-                'value': item_name,
-                'title': 'secondary action'
-            } for item_name in erc.all_item_list], erc.all_item_list[0]
-
-    def _callback_control_panel(
-        self,
-        selectedData,
-        write_n_clicks,
-        clear_n_clicks,
-        primary_action: Optional[str],
-        secondary_action: Optional[str],
-    ):
-        ids = []
-        selected_actions = []
-        _data = json.loads(json.dumps(selectedData))
-        if _data is not None:
-            _data = _data['points']
-            for d in _data:
-                custom_data = d['customdata']
-                if custom_data[0] in self.gs_render.player_to_emoji.keys():
-                    id = custom_data[1]
-                    ids.append(id)
-
-            if write_n_clicks:  # 0 or 1
-                # parse main action
-                if secondary_action == 'none': secondary_action = None
-                action_to_write = ((primary_action, secondary_action), None,
-                                   None)
-                for id in ids:
-                    self.writed_actions[id] = action_to_write
-                    self.next_actions[id] = action_to_write
-                write_n_clicks = 0
-
-            if clear_n_clicks:
-                self.next_actions = self.old_actions
-                self.writed_actions = {}
-                clear_n_clicks = 0
-
-            # display from self.next_actions
-            for id in ids:
-                _action = self.next_actions[id]
-                main_action, sell_offer, buy_offer = _action
-                primary_action, secondary_action = main_action
-                selected_actions.append({
-                    'id': id,
-                    'primary action': primary_action,
-                    'secondary action': secondary_action,
-                    'sell offer': str(sell_offer) if sell_offer else 'None',
-                    'buy offer': str(buy_offer) if buy_offer else 'None',
-                })
-
-        return selected_actions, write_n_clicks, clear_n_clicks
-
-    def _callback_info_panel(self, clickData, step_n_clicks, reset_n_clicks):
-        # update clickData
-        if reset_n_clicks:
-            return None, None, None, None, None
-        player = None
-        basic, preference, bac_sto_fig, myreward, myinfo = None, None, None, None, None
-        _data = json.loads(json.dumps(clickData, indent=2))
-        if _data is not None and len(_data['points']):
-            custom_data = _data['points'][0]['customdata']
-            if custom_data[0] in self.gs_render.player_to_emoji.keys():
-                id = custom_data[1]
-                player = self.env.players[id]
-        if step_n_clicks and player is not None:  # update upon step or clickData change
-            basic, preference, bac_sto_fig, myreward, myinfo = erc.update_player_info(
-                player)
-        elif player is not None:
-            basic, preference, bac_sto_fig, myreward, myinfo = erc.update_player_info(
-                player)
-        return basic, preference, bac_sto_fig, myreward, myinfo
-
-    def _callback_game_screen(self, step_n_clicks, reset_n_clicks):
-        reset_msg = u'Ready to play!'
-        step_msg = u'Current Step {}'.format(step_n_clicks)
-        if reset_n_clicks:  # 0 or 1
-            obs, infos = self.env.reset()
-            msg = reset_msg
-        elif step_n_clicks:  # 0 or 1,2,3...
-
-            # change self.next_actions
-            for id, action in self.writed_actions.items():
-                self.next_actions[id] = action
-
-            obs, rewards, done, infos = self.env.step(self.next_actions)
-            self.next_actions = self.rollout.get_actions()
-            self.old_actions = copy.deepcopy(self.next_actions)
-
-            msg = step_msg if not done else u'Game Over!'
-        else:
-            msg = reset_msg
-        self.gs_render.update(self.env.entity_manager.map)
-        return self.gs_render.fig, msg, 0
