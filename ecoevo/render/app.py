@@ -120,7 +120,7 @@ class WebApp:
                 self.env.players,
             )
             if 'transaction_graph' in info:
-                info.pop['transaction_graph']
+                info.pop('transaction_graph')
             env_output_data = {
                 'obs': None,
                 'rewards': rewards,

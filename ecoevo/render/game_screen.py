@@ -130,31 +130,37 @@ class GameScreen:
             y = [players[id_foo].pos[1], players[id_bar].pos[1]]
             if x[0] == x[1]:
                 line_width = self.trade_line_width
+                x_left = [_x + line_width / 2 for _x in x]
+                x_right = [_x - line_width / 2 for _x in x]
+                x_right = x_right[::-1]
+                y_rev = y[::-1]
+
+                self.fig.add_trace(
+                    go.Scatter(
+                        x=x_left + x_right,
+                        y=y + y_rev,
+                        fill='toself',
+                        fillcolor='rgba(255,255,255,0.5)',
+                        line_color='rgba(255,255,255,0)',
+                        hoveron='fills',
+                        showlegend=False,
+                        name=f"""{id_foo}: {offer_foo}<br>{id_bar}: {offer_bar}""",
+                    ))
             else:
                 line_width = self.trade_line_width / math.cos(math.atan((y[0] - y[1]) / (x[0] - x[1])))
+                x_rev = x[::-1]
+                y_upper = [_y + line_width / 2 for _y in y]
+                y_lower = [_y - line_width / 2 for _y in y]
+                y_lower = y_lower[::-1]
 
-            x_rev = x[::-1]
-            y_upper = [_y + line_width / 2 for _y in y]
-            y_lower = [_y - line_width / 2 for _y in y]
-            y_lower = y_lower[::-1]
-
-            self.fig.add_trace(
-                go.Scatter(
-                    x=x + x_rev,
-                    y=y_upper + y_lower,
-                    fill='toself',
-                    fillcolor='rgba(255,255,255,0.5)',
-                    line_color='rgba(255,255,255,0)',
-                    hoveron='fills',
-                    showlegend=False,
-                    name=f"""{id_foo}: {offer_foo}<br>{id_bar}: {offer_bar}""",
-                ))
-            self.fig.add_trace(
-                go.Scatter(
-                    x=x,
-                    y=y,
-                    line_color='rgba(255,255,255,0)',
-                    hoverinfo='skip',
-                    showlegend=False,
-                    name=f"""{id_foo}: {offer_foo}<br>{id_bar}: {offer_bar}""",
-                ))
+                self.fig.add_trace(
+                    go.Scatter(
+                        x=x + x_rev,
+                        y=y_upper + y_lower,
+                        fill='toself',
+                        fillcolor='rgba(255,255,255,0.5)',
+                        line_color='rgba(255,255,255,0)',
+                        hoveron='fills',
+                        showlegend=False,
+                        name=f"""{id_foo}: {offer_foo}<br>{id_bar}: {offer_bar}""",
+                    ))

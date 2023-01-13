@@ -187,13 +187,13 @@ class EcoEvo:
                 return False
             next_pos = player.next_pos(secondary_action)
             if player.pos == next_pos:
-                logger.debug(f'Player {player.id} move towards map boarder')
+                logger.warning(f'Player {player.id} move towards map boarder')
                 return False
             tile = self.gettile(next_pos)
             if tile:
                 if tile.player is not None:
                     hitted_player = tile.player
-                    logger.debug(
+                    logger.warning(
                         f'Player {player.id} at {player.pos} tried to hit player {hitted_player.id} at {hitted_player.pos}'
                     )
                     return False
@@ -204,15 +204,15 @@ class EcoEvo:
             if item:
                 # no item to collect or the amount of item not enough
                 if item.num < item.harvest_num:
-                    logger.debug(f'No resource! Player {player.id} cannot collect {item} at {player.pos}')
+                    logger.warning(f'No resource! Player {player.id} cannot collect {item} at {player.pos}')
                     return False
                 # bagpack volume not enough
                 least_volume = item.harvest_num * item.capacity
                 if player.backpack.remain_volume < least_volume:
-                    logger.debug(f'Bag full! Player {player.id} cannot collect {item} at {player.pos}')
+                    logger.warning(f'Bag full! Player {player.id} cannot collect {item} at {player.pos}')
                     return False
             else:
-                logger.debug(f'No item exists! Player {player.id} cannot collect {player.pos}')
+                logger.warning(f'No item exists! Player {player.id} cannot collect {player.pos}')
                 return False
 
         # check consume
@@ -225,11 +225,11 @@ class EcoEvo:
             # handle consume and sell same item
             least_num = player.backpack[consume_item_name].consume_num
             if player.backpack[consume_item_name].num < least_num:
-                logger.debug(
+                logger.warning(
                     f'Player {player.id} cannot consume "{consume_item_name}" since num no more than {least_num}.')
                 return False
         else:
-            logger.debug(f'Failed to parse primary action. Player {player.id}: {primary_action} ')
+            logger.warning(f'Failed to parse primary action. Player {player.id}: {primary_action} ')
             return False
 
         return True
