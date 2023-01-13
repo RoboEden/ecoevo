@@ -83,7 +83,7 @@ class EcoEvo:
                 player.trade_result = TradeResult.illegal
 
         # match trade
-        matched_deals, _ = self.trader.parse(players=self.players, actions=actions)
+        matched_deals, transaction_graph = self.trader.parse(players=self.players, actions=actions)
 
         # execute trade
         for id in self.shuffled_ids:
@@ -114,6 +114,7 @@ class EcoEvo:
                                       info=self.info,
                                       players=self.players,
                                       matched_deals=matched_deals,
+                                      transaction_graph=transaction_graph,
                                       executed_main_action=executed_main_action,
                                       reward_info={
                                           player.id: {

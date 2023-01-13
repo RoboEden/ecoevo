@@ -84,7 +84,7 @@ class Helper:
         for id, action in lst:
             actions[id] = action
 
-        self.obs, self.rewards, self.done, self.infos = self.env.step(actions)
+        self.obs, self.rewards, self.done, self.info = self.env.step(actions)
 
         return self
 

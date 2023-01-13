@@ -1,7 +1,7 @@
 from typing import Dict, List, Tuple
 
 from ecoevo.entities import ALL_ITEM_DATA, Player
-from ecoevo.types import Action, DealType, IdType, TradeResult
+from ecoevo.types import Action, DealType, IdType, OfferType
 
 
 class Analyser(object):
@@ -11,8 +11,9 @@ class Analyser(object):
 
     @staticmethod
     def get_info(done: bool, info: Dict[str, int or float], players: List[Player],
-                 matched_deals: Dict[IdType, DealType], executed_main_action: Dict[int, Tuple[str, str]],
-                 reward_info: Dict[int, Dict]) -> Dict[str, int or float]:
+                 matched_deals: Dict[IdType, DealType], transaction_graph: Dict[Tuple[IdType, IdType], OfferType],
+                 executed_main_action: Dict[int, Tuple[str, str]], reward_info: Dict[int,
+                                                                                     Dict]) -> Dict[str, int or float]:
         """
         :param done:  if episode done
         :param info:  info of last step
@@ -23,6 +24,8 @@ class Analyser(object):
 
         :return: info:  info of current step
         """
+
+        info['transaction_graph'] = transaction_graph
 
         # check keys
         info_keys = ['curr_step'] + \
