@@ -1,7 +1,7 @@
-import math
-import random
 from datetime import datetime
 from typing import Dict, List, Tuple
+import random
+import math
 
 from loguru import logger
 from ortools.linear_solver import pywraplp
@@ -15,23 +15,28 @@ class Trader(object):
     trader
     """
 
-    def __init__(self, trade_radius: int, mode='heu') -> None:
+    def __init__(self, trade_radius: int) -> None:
         """
         trader, initialise
 
         :param trade_radius:  trade radius
         """
 
+        # param
         self.trade_radius = trade_radius
-        self.mode = mode  # 'heu'/'ip' heuristic method/ IP mode
+
+        # mode
+        # self.mode = 'ip'  # IP model
+        self.mode = 'heu'  # heuristic method
 
         # env info
-        # self.players: List[Player] = []
-        # self.actions: List[ActionType] = []
-        # self.legal_deals: Dict[IdType, DealType] = {}
+        self.players: List[Player] = []
+        self.actions: List[ActionType] = []
+        self.legal_deals: Dict[IdType, DealType] = {}
 
         # result: matched deals, DealType
         self.match_deals = {}
+
         # result: actual item flows during the trades
         self.dict_flow = {}
 
@@ -42,9 +47,15 @@ class Trader(object):
         :param players:  list of players
         :param actions:  list of actions
 
-        :return: match_deals:  result of matched deals
+        :return: self.match_deals:  result of matched deals
         """
+
+        self.players, self.actions = players, actions
         self.legal_deals = self._get_legal_deals()
+
+        self.match_deals = {}
+
+        # method 1: IP model
         if self.mode == 'IP':
             list_deal = list(self.legal_deals.values())
             mat_if_match, mat_volume = self._ip_process(list_deal=list_deal)
@@ -68,27 +79,6 @@ class Trader(object):
             self.match_deals, self.dict_flow = self._heuristic()
 
         return self.match_deals
-
-    def _ip(self):
-        match_deals = {}
-        dict_flow = {}
-        list_deal = list(self.legal_deals.values())
-        mat_if_match, mat_volume = self._ip_process(list_deal=list_deal)
-        list_match = self._ip_model(list_deal=list_deal, mat_if_match=mat_if_match, mat_volume=mat_volume)
-
-        # result process
-        idx2key = list(self.legal_deals.keys())
-        for match in list_match:
-            idx_1, idx_2 = match
-            key_1, key_2 = idx2key[idx_1], idx2key[idx_2]
-            deal_1, deal_2 = self.legal_deals[key_1], self.legal_deals[key_2]
-
-            min_deal_1, min_deal_2 = self._mini_close(deal_1=deal_1, deal_2=deal_2)
-            match_deals[key_1], match_deals[key_2] = min_deal_1, min_deal_2
-
-            _, (sell_name_1, sell_num_1), (buy_name_1, buy_num_1) = min_deal_1
-            dict_flow[key_1, key_2] = ((sell_name_1, sell_num_1), (buy_name_1, -buy_num_1))
-        return match_deals, dict_flow
 
     def _get_legal_deals(self) -> Dict[IdType, DealType]:
         """

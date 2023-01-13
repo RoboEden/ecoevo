@@ -68,16 +68,18 @@ info_panel = html.Div([
              id='basic-provider'),
     html.Label('Backpack & Stomach'),
     dbc.ListGroup([
-        dbc.ListGroupItem(
-            dbc.Progress([
-                dbc.Progress(value=0, label=item_name.capitalize(), id=f'backpack-{item_name}-bar', bar=True)
-                for item_name in all_item_list
-            ]), ),
-        dbc.ListGroupItem(
-            dbc.Progress([
-                dbc.Progress(value=0, label=item_name.capitalize(), id=f'stomach-{item_name}-bar', bar=True)
-                for item_name in all_item_list
-            ])),
+        dbc.ListGroupItem(dbc.Progress([
+            dbc.Progress(value=0, label=item_name.capitalize(), id=f'backpack-{item_name}-bar', bar=True)
+            for item_name in all_item_list
+        ]),
+                          id='backpack-list-group-item'),
+        dbc.Popover('Backpack', target='backpack-list-group-item', trigger='hover'),
+        dbc.ListGroupItem(dbc.Progress([
+            dbc.Progress(value=0, label=item_name.capitalize(), id=f'stomach-{item_name}-bar', bar=True)
+            for item_name in all_item_list
+        ]),
+                          id='stomach-list-group-item'),
+        dbc.Popover('Stomach', target='stomach-list-group-item', trigger='hover'),
     ]),
     html.Label('Persona Details'),
     html.Div(html.Canvas(id='radar-chart'), style={
