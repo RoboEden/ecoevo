@@ -1,13 +1,13 @@
 import json
+from dataclasses import dataclass
+from typing import Dict, List, Optional
+
 import numpy as np
 import tree
 
-from typing import Dict, List, Optional
-from dataclasses import dataclass
-
-from ecoevo.config import MapConfig, DataPath
-from ecoevo.entities import load_item, Item, Player
-from ecoevo.types import PosType, ActionType, Action
+from ecoevo.config import DataPath, MapConfig
+from ecoevo.entities import Item, Player, load_item
+from ecoevo.types import Action, ActionType, PosType
 
 
 @dataclass
@@ -87,15 +87,9 @@ class EntityManager:
         self.add_player(player)
         player.collect_remain = None
 
-    def execute(
-        self,
-        player: Player,
-        action: ActionType,
-    ):
-        main_action, sell_offer, buy_offer = action
+    def execute_main_action(self, player: Player, action: ActionType):
+        main_action, _, _ = action
         primary_action, secondary_action = main_action
-        if sell_offer is not None and buy_offer is not None:
-            player.trade(sell_offer, buy_offer)
         if primary_action == Action.idle:
             pass
         elif primary_action == Action.move:

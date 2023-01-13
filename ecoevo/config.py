@@ -17,6 +17,8 @@ class EnvConfig:
         *(['pumpkin_farmer'] * num_person_type),
     ]
 
+    init_points = None
+
 
 class MapConfig:
     width = 32
