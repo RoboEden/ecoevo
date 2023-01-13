@@ -36,6 +36,26 @@ def test_move_conflict():
     assert h.env.players[1].pos in [(16, 14), (16, 15)]
 
 
+def test_health_decrease():
+    from ecoevo.config import PlayerConfig
+    h = Helper()
+    h.reset()
+    D = PlayerConfig.comsumption_per_step
+    init_health = [1, D, D + 1]
+    actions = []
+    for i in range(3):
+        h.env.players[i].health = init_health[i]
+        h.env.players[i + 3].health = init_health[i]
+        h.env.players[i + 3].backpack.pineapple.num = ALL_ITEMS.pineapple.consume_num
+        actions.append((i + 3, ((Action.consume, Item.pineapple), None, None)))
+    h.step(*actions)
+    E = ALL_ITEMS.pineapple.consume_num * ALL_ITEMS.pineapple.supply
+    for i in range(3):
+        assert h.env.players[i].health == max(init_health[i] - D, 0)
+        assert h.env.players[i + 3].health == min(init_health[i] + E, PlayerConfig.max_health) - D
+        assert h.env.reward_parser.last_costs[i] > h.env.reward_parser.last_costs[i + 3] or (i == 2)
+
+
 def test_trade():
     h = Helper().init_points(
         ((8, 8), 0),
