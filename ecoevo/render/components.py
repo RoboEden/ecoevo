@@ -50,12 +50,12 @@ info_panel = html.Div([
                 ])),
             html.Tbody([
                 html.Tr([
-                    html.Td(id='basic-player-persona'),
-                    html.Td(id='basic-player-id'),
-                    html.Td(id='basic-player-pos'),
-                    html.Td(id='basic-player-health'),
-                    html.Td(id='basic-player-collect-remain'),
-                    html.Td(id='basic-player-trade-result'),
+                    html.Td("null", id='basic-player-persona'),
+                    html.Td("null", id='basic-player-id'),
+                    html.Td("null", id='basic-player-pos'),
+                    html.Td("null", id='basic-player-health'),
+                    html.Td("null", id='basic-player-collect-remain'),
+                    html.Td("null", id='basic-player-trade-result'),
                 ])
             ])
         ],
@@ -81,14 +81,38 @@ info_panel = html.Div([
                           id='stomach-list-group-item'),
         dbc.Popover('Stomach', target='stomach-list-group-item', trigger='hover'),
     ]),
+    html.Label('Last action'),
+    html.Div(
+        dbc.Table(
+            [
+                html.Thead(
+                    html.Tr([
+                        html.Th("primary action"),
+                        html.Th("secondary action"),
+                        html.Th("sell offer"),
+                        html.Th("buy offer"),
+                    ])),
+                html.Tbody([
+                    html.Tr([
+                        html.Td("null", id='primary-action-provider'),
+                        html.Td("null", id='secondary-action-provider'),
+                        html.Td("null", id='sell-offer-provider'),
+                        html.Td("null", id='buy-offer-provider'),
+                    ])
+                ])
+            ],
+            bordered=False,
+            dark=True,
+            hover=True,
+            responsive=True,
+            striped=True,
+        )),
     html.Label('Persona Details'),
     html.Div(html.Canvas(id='radar-chart'), style={
         'width': '300px',
         "padding": "25px",
         "boxSizing": "border-box"
     }),
-    html.Label('Obs'),
-    html.Div('', id='obs-provider'),
     html.Label('Reward'),
     html.Div('NaN', id='reward-provider'),
     html.Label('Info'),
