@@ -106,6 +106,7 @@ class EcoEvo:
 
         # health decrease
         for id in self.shuffled_ids:
+            player = self.players[id]
             player.health = max(0, player.health - PlayerConfig.comsumption_per_step)
 
         # generate obs, reward, info

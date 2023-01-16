@@ -1,4 +1,7 @@
+import io
 from typing import Tuple
+
+from loguru import logger
 
 import ecoevo.entities.items
 from ecoevo import EcoEvo
@@ -25,6 +28,8 @@ class Helper:
     def __init__(self):
         self.env = EcoEvo()
         self.cfg = EnvConfig
+        self.error_log = io.StringIO()
+        logger.add(self.error_log, level='ERROR')
 
     def reset(self):
         self.obs, self.info = self.env.reset()
@@ -120,5 +125,16 @@ class Helper:
                     assert item.num == 0, (id, item_name)
                 else:
                     assert item.num == answer, (id, item_name)
+
+        return self
+
+    def assert_pos_player(self, *lst: Tuple[PosType, IdType]):
+        for pos, id in lst:
+            assert self.env.players[id].pos == pos
+
+        return self
+
+    def assert_no_error_log(self):
+        assert self.error_log.getvalue() == ''
 
         return self
