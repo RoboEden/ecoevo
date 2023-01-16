@@ -2,38 +2,36 @@ import pytest
 from helper import Helper
 
 
-def test_init_points():
-    h = Helper()
-    h.init_points(
-        ((8, 8), 0),
-        ((0, 0), 5),
-    )
-    h.reset()
-    h.assert_pos_player(
-        ((8, 8), 0),
-        ((0, 0), 5),
-        ((0, 1), 1),
-    )
+class TestInitPoints:
+
+    def test(self):
+        h = Helper()
+        h.init_pos({
+            0: (8, 8),
+            5: (0, 0),
+        })
+        h.reset()
+        assert h.env.players[0].pos == (8, 8)
+        assert h.env.players[5].pos == (0, 0)
+        assert h.env.players[1].pos == (0, 1)
 
 
-def test_assert_no_error_log_warning():
-    h = Helper()
-    from loguru import logger
-    logger.warning('msg')
-    h.assert_no_error_log()
+class TestGetErrorLog:
 
+    def test_warning(self):
+        h = Helper()
+        from loguru import logger
+        logger.warning('msg')
+        assert h.get_error_log() == ''
 
-def test_assert_no_error_log_error():
-    h = Helper()
-    from loguru import logger
-    logger.error('msg')
-    with pytest.raises(AssertionError):
-        h.assert_no_error_log()
+    def test_error(self):
+        h = Helper()
+        from loguru import logger
+        logger.error('msg')
+        assert h.get_error_log() != ''
 
-
-def test_assert_no_error_log_critical():
-    h = Helper()
-    from loguru import logger
-    logger.critical('msg')
-    with pytest.raises(AssertionError):
-        h.assert_no_error_log()
+    def test_critical(self):
+        h = Helper()
+        from loguru import logger
+        logger.critical('msg')
+        assert h.get_error_log() != ''
