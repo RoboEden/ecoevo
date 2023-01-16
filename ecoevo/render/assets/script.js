@@ -226,7 +226,7 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
                 let info = '';
                 for (const [k, v] of Object.entries(env_output_data.info)) {
                     if (!(['executed_main_actions', 'success_trades'].includes(k))) {
-                        info += k + ': ' + v + '\n'
+                        info += k + ': ' + v + '\n';
                     }
                 }
                 return info;
