@@ -153,3 +153,31 @@ class TestHealth:
             assert h.env.players[i + 3].health == min(init_health[i] + E, PlayerConfig.max_health) - D
             assert h.env.reward_parser.last_costs[i] > h.env.reward_parser.last_costs[i + 3] or (i == 2)
         assert h.get_error_log() == ''
+
+
+class TestItemRefresh:
+
+    def test(self):
+        h = Helper()
+        P = ITEMS.gold.harvest_num
+        h.init_tiles({
+            (0, 0): (Item.peanut, P),
+        })
+        h.init_pos({
+            0: (0, 0),
+        })
+        h.reset()
+
+        for i in range(ITEMS.peanut.collect_time):
+            assert h.get_tile_item((0, 0)) == (Item.peanut, P)
+            assert h.env.gettile((0, 0)).item.refresh_remain is None
+            h.step({
+                0: ((Action.collect, None), None, None),
+            })
+        for i in reversed(range(ITEMS.peanut.refresh_time)):
+            assert h.get_tile_item((0, 0)) == (Item.peanut, 0)
+            assert h.env.gettile((0, 0)).item.refresh_remain == i
+            h.step({})
+
+        assert h.get_tile_item((0, 0)) == (Item.peanut, ITEMS.peanut.reserve_num)
+        assert h.env.gettile((0, 0)).item.refresh_remain is None

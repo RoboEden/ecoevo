@@ -5,6 +5,7 @@ Economy Evolution Environment for Currency Emergence Research
 ## Change log
 ### pre-release
 - FIX health decrease bug
+- FIX item refresh time bug
 - ADD more test case
 
 ### version 0.1.4
