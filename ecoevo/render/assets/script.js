@@ -134,20 +134,32 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
             }
         },
         updateSelectedIds: function (selectedData, json_all_persona) {
-            if (selectedData == undefined) {
-                return JSON.stringify([]);
+            const triggered_id = window.dash_clientside.callback_context.triggered[0].prop_id.split(".")[0];
+            if (triggered_id === "reset-danger-button") {
+                selectedData = undefined;
             }
-            else if ("points" in selectedData) {
-                const all_persona = Object.keys(JSON.parse(json_all_persona));
-                let selected_ids = [];
-                for (const points of Object.values(selectedData.points)) {
-                    if (all_persona.includes(points["customdata"][0])) {
-                        selected_ids.push(points["customdata"][1]);
-                    }
+            else {
+                if (selectedData == undefined) {
+                    return JSON.stringify([]);
                 }
-                return JSON.stringify(selected_ids);
+                else if ("points" in selectedData) {
+                    const all_persona = Object.keys(JSON.parse(json_all_persona));
+                    let selected_ids = [];
+                    for (const points of Object.values(selectedData.points)) {
+                        if (Object.keys(points).includes("customdata")) {
+                            let player_persona = points["customdata"][0]
+                            let player_id = points["customdata"][1]
+                            if (all_persona.includes(player_persona)) {
+                                selected_ids.push(player_id);
+                            }
+                        }
+                    }
+                    return JSON.stringify(selected_ids);
+                }
+                else {
+                    return window.dash_clientside.no_update;
+                }
             }
-            else { return window.dash_clientside.no_update; }
         },
         displaySelectedActions: function (json_selected_ids, json_ctrl_next_actions) {
             const selected_ids = JSON.parse(json_selected_ids);
@@ -198,31 +210,22 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
                 document.getElementById("basic-player-health").innerText = player.health;
                 document.getElementById("basic-player-collect-remain").innerText = String(player.collect_remain);
                 document.getElementById("basic-player-trade-result").innerText = player.trade_result;
-
                 updateProgressBar(player.backpack, ALL_ITEM_DATA, 'backpack')
                 updateProgressBar(player.stomach, ALL_ITEM_DATA, 'stomach')
 
-                let persona_data = ALL_PERSONA_DATA[player.persona];
+                const last = player.last_action
+                document.getElementById("primary-action-provider").innerText = last.main_action.primary;
+                document.getElementById("secondary-action-provider").innerText = last.main_action.secondary;
+                document.getElementById("sell-offer-provider").innerText = `${last.sell_offer.sell_item}, ${last.sell_offer.sell_num}`;
+                document.getElementById("buy-offer-provider").innerText = `${last.buy_offer.buy_item}, ${last.buy_offer.buy_num}`;
+
+                const persona_data = ALL_PERSONA_DATA[player.persona];
                 radar_chart.data.labels = Object.keys(persona_data.preference);
                 radar_chart.data.datasets[0].data = normalizeData(Object.values(persona_data.preference), 0.1);
                 radar_chart.data.datasets[1].data = normalizeData(Object.values(persona_data.ability), 10);
                 radar_chart.update();
 
                 document.getElementById("reward-provider").innerText = env_output_data.rewards[id];
-                if (Object.keys(env_output_data.info).length) {
-                    let info = env_output_data.info;
-                    document.getElementById("primary-action-provider").innerText = info.executed_main_actions[id][0];
-                    document.getElementById("secondary-action-provider").innerText = info.executed_main_actions[id][1];
-                    let sell_offer, buy_offer;
-                    if (Object.keys(info.success_trades).includes(id)) {
-                        sell_offer = info.success_trades[id][0];
-                        buy_offer = info.success_trades[id][1];
-                    }
-                    document.getElementById("sell-offer-provider").innerText = sell_offer;
-                    document.getElementById("buy-offer-provider").innerText = buy_offer;
-                }
-
-                // coarse print `info`
                 let info = '';
                 for (const [k, v] of Object.entries(env_output_data.info)) {
                     if (!(['executed_main_actions', 'success_trades'].includes(k))) {

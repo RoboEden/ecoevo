@@ -53,6 +53,7 @@ class WebApp:
         self.app.clientside_callback(
             ClientsideFunction('clientside', 'updateSelectedIds'),
             Output('selected-ids', 'data'),
+            Input('reset-danger-button', 'submit_n_clicks'),
             Input('game-screen', 'selectedData'),
             State('all-persona', 'data'),
         )

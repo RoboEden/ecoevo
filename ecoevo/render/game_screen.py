@@ -152,5 +152,5 @@ class GameScreen:
                     line_color='rgba(255,255,255,0)',
                     hoveron='fills',
                     showlegend=False,
-                    name=f"""{id_foo}: {offer_foo}<br>{id_bar}: {offer_bar}""",
+                    name=f"""{id_foo}: {players[id_foo].last_action.buy_offer}<br>{id_bar}: {players[id_bar].last_action.buy_offer}""",
                 ))

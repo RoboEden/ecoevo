@@ -81,7 +81,7 @@ info_panel = html.Div([
                           id='stomach-list-group-item'),
         dbc.Popover('Stomach', target='stomach-list-group-item', trigger='hover'),
     ]),
-    html.Label('Last action'),
+    html.Label('Last Action'),
     html.Div(
         dbc.Table(
             [
@@ -126,7 +126,7 @@ info_panel = html.Div([
 all_primary_action = ['idle', 'move', 'collect', 'consume']
 control_panel = html.Div([
     html.Div('Control Panel', className="card-header"),
-    html.Label('Next step actions'),
+    html.Label('Next Actions'),
     html.Div([
         dash_table.DataTable(
             columns=columns,

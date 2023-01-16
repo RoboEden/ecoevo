@@ -49,6 +49,7 @@ class EcoEvo:
         self.players = []
         self.curr_step = 0
         self.reward_parser.reset()
+        self.trader.dict_flow = {}
         points = self.cfg.init_points or self.entity_manager.sample(len(self.cfg.personae))
         for id, persona in enumerate(self.cfg.personae):
             player = Player(persona=persona, id=id, pos=points[id])
@@ -59,7 +60,7 @@ class EcoEvo:
         obs = {player.id: self.get_obs(player) for player in self.players}
         self.info = {}
 
-        self.shuffled_ids = list(range(self.num_player))
+        self.shuffled_ids = [player.id for player in self.players]
 
         return obs, deepcopy(self.info)
 
@@ -94,12 +95,18 @@ class EcoEvo:
                 player.trade(sell_offer, buy_offer)
                 player.trade_result = TradeResult.success
                 success_trades[id] = (sell_offer, buy_offer)
+                player.last_action.sell_offer.sell_item = sell_offer[0]
+                player.last_action.sell_offer.sell_num = sell_offer[1]
+                player.last_action.buy_offer.buy_item = buy_offer[0]
+                player.last_action.buy_offer.buy_num = buy_offer[1]
 
         # validate and execute main action
         executed_main_actions = {}
         for id in self.shuffled_ids:
             player = self.players[id]
             action = actions[id]
+            player.last_action.main_action.primary = action[0][0]
+            player.last_action.main_action.secondary = action[0][1]
             if self.is_main_action_valid(player, action):
                 self.entity_manager.execute_main_action(player, action)
                 executed_main_actions[id] = action[0]
@@ -122,8 +129,6 @@ class EcoEvo:
                 }
                 for player in self.players
             })
-        self.info['executed_main_actions'] = executed_main_actions
-        self.info['success_trades'] = success_trades
         self.info['transaction_graph'] = transaction_graph
 
         # refresh items
