@@ -278,6 +278,15 @@ class TestItemRefresh:
         assert h.get_bag(0) == {Item.peanut: LOOP * P}
 
 
+class TestMap:
+
+    def test_random_map(self):
+        h = Helper(random_generate_map=True)
+        h.reset()
+        # TODO
+        assert h.get_error_log() == ''
+
+
 class TestObs:
 
     def test_rel_pos_coord_max(self):

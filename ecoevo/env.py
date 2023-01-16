@@ -54,7 +54,7 @@ class EcoEvo:
             player = Player(persona=persona, id=id, pos=points[id])
             self.players.append(player)
 
-        self.entity_manager.reset_map(self.players)
+        self.entity_manager.reset_map(self.players, random_generate=self.cfg.random_generate_map)
 
         obs = {player.id: self.get_obs(player) for player in self.players}
         self.info = {}

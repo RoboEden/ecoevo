@@ -25,9 +25,10 @@ ITEMS = ecoevo.entities.items.Bag()
 
 class Helper:
 
-    def __init__(self):
+    def __init__(self, random_generate_map=False):
         self.env = EcoEvo()
         self.cfg = EnvConfig
+        self.cfg.random_generate_map = random_generate_map
         self.error_log = io.StringIO()
         logger.add(self.error_log, level='ERROR')
 

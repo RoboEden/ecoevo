@@ -6,7 +6,7 @@ import numpy as np
 import tree
 
 from ecoevo.config import DataPath, MapConfig
-from ecoevo.entities import Item, Player, load_item
+from ecoevo.entities import ALL_ITEM_DATA, Item, Player, load_item
 from ecoevo.types import Action, ActionType, PosType
 
 
@@ -41,12 +41,31 @@ class EntityManager:
                     array[(x, y)] = item
         return array
 
-    def reset_map(self, players: List[Player]) -> None:
+    def reset_map(self, players: List[Player], random_generate: bool) -> None:
         self.map = {}
-        for pos, item in self.item_array.items():
+        array = self.random_item_array() if random_generate else self.item_array
+
+        for pos, item in array.items():
             self.map[pos] = Tile(item=item, player=None)
         for player in players:
             self.add_player(player)
+
+    def random_item_array(self) -> Dict[PosType, Item]:
+        assert len(ALL_ITEM_DATA) * MapConfig.generate_num_block_resource <= MapConfig.width * MapConfig.height
+        a = np.repeat(np.arange(len(ALL_ITEM_DATA)), MapConfig.generate_num_block_resource)
+        a = np.pad(a, (0, MapConfig.width * MapConfig.height - len(a)), constant_values=-1)
+        np.random.shuffle(a)
+        a = np.reshape(a, (MapConfig.width, MapConfig.height))
+        array = {}
+        item_names = list(ALL_ITEM_DATA.keys())
+        for pos in np.argwhere(a >= 0):
+            pos = tuple(pos)
+            item_id = a[pos]
+            if item_id >= 0:
+                item = load_item(item_names[item_id])
+                item.num = item.reserve_num
+                array[pos] = item
+        return array
 
     def sample(self, num: int) -> List[PosType]:
         points = []

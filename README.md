@@ -4,6 +4,7 @@ Economy Evolution Environment for Currency Emergence Research
 
 ## Change log
 ### pre-release
+- ADD random generate map on env reset
 - FIX health decrease bug
 - FIX item refresh time bug
 - ADD more test case
