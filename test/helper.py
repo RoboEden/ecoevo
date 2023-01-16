@@ -1,12 +1,12 @@
 import io
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple
 
 from loguru import logger
 
 import ecoevo.entities.items
 from ecoevo import EcoEvo
 from ecoevo.config import EnvConfig, MapConfig
-from ecoevo.types import Action, ActionType, IdType, Move, OfferType, PosType
+from ecoevo.types import Action, ActionType, IdType, Move, PosType
 
 
 class Item:
@@ -34,8 +34,6 @@ class Helper:
     def reset(self):
         self.obs, self.info = self.env.reset()
 
-        return self
-
     def init_pos(self, pos_dict: Dict[IdType, PosType]):
         """ {id: pos ...} """
         visited = set()
@@ -55,9 +53,7 @@ class Helper:
                 visited.add(pos)
             self.cfg.init_points.append(pos)
 
-        return self
-
-    def init_tiles(self, tile_dict: Dict[PosType, OfferType]):
+    def init_tiles(self, tile_dict: Dict[PosType, Tuple[str, int]]):
         """ {pos: (item, amount)...} """
         map_item = [['empty'] * MapConfig.height for _ in range(MapConfig.width)]
         map_amount = [[0] * MapConfig.height for _ in range(MapConfig.width)]
@@ -70,8 +66,6 @@ class Helper:
             amount=map_amount,
         )
 
-        return self
-
     def step(self, action_dict: Dict[IdType, ActionType]):
         """ {id: action}... """
         actions = [(('idle', None), None, None) for _ in range(self.env.num_player)]
@@ -80,13 +74,34 @@ class Helper:
 
         self.obs, self.rewards, self.done, self.info = self.env.step(actions)
 
-        return self
+    def set_bag(self, id: IdType, bag: Dict[str, int]):
+        """ {(item, num)...} """
+        for item in ITEMS.dict():
+            self.env.players[id].backpack[item].num = 0
+        for item, num in bag.items():
+            self.env.players[id].backpack[item].num = num
 
-    def get_tile_item(self, pos: PosType) -> Optional[OfferType]:
+    def get_tile_item(self, pos: PosType) -> Optional[Tuple[str, int]]:
         """ pos """
         tile = self.env.gettile(pos)
         item = tile.item if tile else None
         return (item.name, item.num) if item else None
+
+    def get_bag(self, id: IdType) -> Dict[str, int]:
+        """ id """
+        bag = {}
+        for item in self.env.players[id].backpack.dict().values():
+            if item.num > 0:
+                bag[item.name] = item.num
+        return bag
+
+    def get_stomach(self, id: IdType) -> Dict[str, int]:
+        """ id """
+        stomach = {}
+        for item in self.env.players[id].stomach.dict().values():
+            if item.num > 0:
+                stomach[item.name] = item.num
+        return stomach
 
     def get_error_log(self) -> str:
         return self.error_log.getvalue()
