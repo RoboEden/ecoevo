@@ -114,7 +114,7 @@ class EntityManager:
             assert item.num >= 0
             if item.num == 0:
                 if item.refresh_remain is None:
-                    item.refresh_remain = item.refresh_time
+                    item.refresh_remain = item.refresh_time - 1
                 elif item.refresh_remain > 0:
                     item.refresh_remain -= 1
                 else:
