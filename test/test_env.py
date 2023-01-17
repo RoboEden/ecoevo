@@ -65,6 +65,9 @@ class TestMove:
 
         assert h.env.players[0].pos == (0, 0)
         assert h.env.gettile((0, 0)).player.id == 0
+        assert h.get_error_log() == ''
+        assert 'towards map boarder' in h.get_warning_log()
+        assert 'hit player' not in h.get_warning_log()
 
     def test_conflict(self):
         h = Helper()
@@ -280,10 +283,40 @@ class TestItemRefresh:
 
 class TestMap:
 
-    def test_random_map(self):
-        h = Helper(random_generate_map=True)
+    def test_fix_map(self):
+        h = Helper()
         h.reset()
-        # TODO
+        m1 = h.get_map_items()
+        h.reset()
+        m2 = h.get_map_items()
+
+        assert m1 == m2
+        assert h.get_error_log() == ''
+
+    def test_random_map_difference(self):
+        h = Helper()
+        h.cfg.random_generate_map = True
+        h.reset()
+        m1 = h.get_map_items()
+        h.reset()
+        m2 = h.get_map_items()
+
+        assert m1 != m2
+        assert h.get_error_log() == ''
+
+    def test_random_map_resource_num(self):
+        h = Helper()
+        h.cfg.random_generate_map = True
+
+        for loop in range(5):
+            h.reset()
+            count = {item: 0 for item in ITEMS.dict()}
+            for _, (item, num) in h.get_map_items().items():
+                if item != 'empty':
+                    assert num == ITEMS[item].reserve_num
+                    count[item] += 1
+            assert count == {item: MapConfig.generate_num_block_resource for item in ITEMS.dict()}
+
         assert h.get_error_log() == ''
 
 

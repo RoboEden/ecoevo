@@ -25,11 +25,12 @@ ITEMS = ecoevo.entities.items.Bag()
 
 class Helper:
 
-    def __init__(self, random_generate_map=False):
+    def __init__(self):
         self.env = EcoEvo()
         self.cfg = EnvConfig
-        self.cfg.random_generate_map = random_generate_map
+        self.warning_log = io.StringIO()
         self.error_log = io.StringIO()
+        logger.add(self.warning_log, level='WARNING')
         logger.add(self.error_log, level='ERROR')
 
     def reset(self):
@@ -56,6 +57,8 @@ class Helper:
 
     def init_tiles(self, tile_dict: Dict[PosType, Tuple[str, int]]):
         """ {pos: (item, amount)...} """
+        self.cfg.random_generate_map = False
+
         map_item = [['empty'] * MapConfig.height for _ in range(MapConfig.width)]
         map_amount = [[0] * MapConfig.height for _ in range(MapConfig.width)]
         for pos, offer in tile_dict.items():
@@ -82,11 +85,17 @@ class Helper:
         for item, num in bag.items():
             self.env.players[id].backpack[item].num = num
 
-    def get_tile_item(self, pos: PosType) -> Optional[Tuple[str, int]]:
+    def get_tile_item(self, pos: PosType) -> Tuple[str, int]:
         """ pos """
         tile = self.env.gettile(pos)
         item = tile.item if tile else None
-        return (item.name, item.num) if item else None
+        return (item.name, item.num) if item else ('empty', 0)
+
+    def get_map_items(self) -> Dict[PosType, Optional[Tuple[str, int]]]:
+        map_items = {}
+        for pos in self.env.entity_manager.map:
+            map_items[pos] = self.get_tile_item(pos)
+        return map_items
 
     def get_bag(self, id: IdType) -> Dict[str, int]:
         """ id """
@@ -103,6 +112,9 @@ class Helper:
             if item.num > 0:
                 stomach[item.name] = item.num
         return stomach
+
+    def get_warning_log(self) -> str:
+        return self.warning_log.getvalue()
 
     def get_error_log(self) -> str:
         return self.error_log.getvalue()
