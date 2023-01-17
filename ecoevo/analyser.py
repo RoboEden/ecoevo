@@ -101,13 +101,12 @@ class Analyser(object):
         """
 
         # the number of trades
-        trade_times = round(len(transaction_graph) / 2)
+        trade_times = len(transaction_graph) // 2
 
         # trade times and amounts of each items
         list_item = list(ALL_ITEM_DATA.keys())
         item_trade_times, item_trade_amount = {item: 0 for item in list_item}, {item: 0 for item in list_item}
-        for (i, j) in transaction_graph.keys():
-            item_name, item_num = transaction_graph[i, j]
+        for (i, j), (item_name, item_num) in transaction_graph.items():
             item_trade_times[item_name] += 1
             item_trade_amount[item_name] += item_num
 
