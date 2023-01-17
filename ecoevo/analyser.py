@@ -11,13 +11,14 @@ class Analyser(object):
 
     @staticmethod
     def get_info(done: bool, info: Dict[str, int or float], players: List[Player],
-                 matched_deals: Dict[IdType, DealType], executed_main_actions: Dict[int, Tuple[str, str]],
-                 reward_info: Dict[int, Dict]) -> Dict[str, int or float]:
+                 transaction_graph: Dict[Tuple[IdType, IdType], OfferType],
+                 executed_main_actions: Dict[int, Tuple[str, str]], reward_info: Dict[int,
+                                                                                      Dict]) -> Dict[str, int or float]:
         """
         :param done:  if episode done
         :param info:  info of last step
         :param players:  list of all players
-        :param matched_deals:  matched deals
+        :param transaction_graph:  trade item flows
         :param actions_valid:  validated actions dictionary, player id to action tuple
         :param reward_info:  reward info dictionary: rewards, utilities and costs
 
@@ -45,7 +46,7 @@ class Analyser(object):
         num_player = len(players)
 
         # trade info
-        trade_times, item_trade_times, item_trade_amount = Analyser.get_trade_data(matched_deals=matched_deals)
+        trade_times, item_trade_times, item_trade_amount = Analyser.get_trade_data(transaction_graph=transaction_graph)
         info['trade_times'] += trade_times / num_player
         for item in ALL_ITEM_DATA.keys():
             info['{}_trade_times'.format(item)] += item_trade_times[item] / num_player
@@ -87,11 +88,12 @@ class Analyser(object):
         return info
 
     @staticmethod
-    def get_trade_data(matched_deals: Dict[IdType, DealType]) -> Tuple[int, Dict[str, int], Dict[str, int]]:
+    def get_trade_data(
+            transaction_graph: Dict[Tuple[IdType, IdType], OfferType]) -> Tuple[int, Dict[str, int], Dict[str, int]]:
         """
         tarder parser
 
-        :param matched_deals:  matched deals
+        :param transaction_graph:  trade item flows
 
         :return: trade_times:  total trade times
         :return: item_trade_times:  trade times of each item
@@ -99,14 +101,13 @@ class Analyser(object):
         """
 
         # the number of trades
-        trade_times = round(len(matched_deals) / 2)
+        trade_times = len(transaction_graph) // 2
 
         # trade times and amounts of each items
         list_item = list(ALL_ITEM_DATA.keys())
         item_trade_times, item_trade_amount = {item: 0 for item in list_item}, {item: 0 for item in list_item}
-        for player_id in matched_deals:
-            _, _, (buy_name, buy_num) = matched_deals[player_id]
-            item_trade_times[buy_name] += 1
-            item_trade_amount[buy_name] += buy_num
+        for (i, j), (item_name, item_num) in transaction_graph.items():
+            item_trade_times[item_name] += 1
+            item_trade_amount[item_name] += item_num
 
         return trade_times, item_trade_times, item_trade_amount
