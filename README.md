@@ -2,7 +2,13 @@
 
 Economy Evolution Environment for Currency Emergence Research
 
-## Ghange log
+## Change log
+### pre-release
+- ADD random generate map on env reset
+- FIX health decrease bug
+- FIX item refresh time bug
+- ADD more test case
+
 ### version 0.1.4
 - ADD transaction_graph in env step info
 - FIX test helper bug

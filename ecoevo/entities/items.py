@@ -1,8 +1,10 @@
-import yaml
-from yaml.loader import SafeLoader
-from pydantic import BaseModel
 from typing import Dict, Optional
-from ecoevo.config import PlayerConfig, DataPath
+
+import yaml
+from pydantic import BaseModel
+from yaml.loader import SafeLoader
+
+from ecoevo.config import DataPath, PlayerConfig
 
 with open(DataPath.item_yaml) as file:
     ALL_ITEM_DATA = dict(yaml.load(file, Loader=SafeLoader))
@@ -18,15 +20,15 @@ class Item(BaseModel):
         return int(ALL_ITEM_DATA[self.name]['supply'])
 
     @property
-    def refresh_time(self) -> float:
-        return float(ALL_ITEM_DATA[self.name]['refresh_time'])
+    def refresh_time(self) -> int:
+        return int(ALL_ITEM_DATA[self.name]['refresh_time'])
 
     @property
     def collect_time(self) -> int:
         return int(ALL_ITEM_DATA[self.name]['collect_time'])
 
     @property
-    def capacity(self) -> float:
+    def capacity(self) -> int:
         return int(ALL_ITEM_DATA[self.name]['capacity'])
 
     @property

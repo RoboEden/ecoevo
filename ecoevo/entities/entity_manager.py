@@ -6,7 +6,7 @@ import numpy as np
 import tree
 
 from ecoevo.config import DataPath, MapConfig
-from ecoevo.entities import Item, Player, load_item
+from ecoevo.entities import ALL_ITEM_DATA, Item, Player, load_item
 from ecoevo.types import Action, ActionType, PosType
 
 
@@ -41,12 +41,25 @@ class EntityManager:
                     array[(x, y)] = item
         return array
 
-    def reset_map(self, players: List[Player]) -> None:
+    def reset_map(self, players: List[Player], random_generate: bool) -> None:
         self.map = {}
-        for pos, item in self.item_array.items():
+        array = self.random_item_array() if random_generate else self.item_array
+
+        for pos, item in array.items():
             self.map[pos] = Tile(item=item, player=None)
         for player in players:
             self.add_player(player)
+
+    def random_item_array(self) -> Dict[PosType, Item]:
+        item_names = list(ALL_ITEM_DATA.keys())
+        block_num = len(item_names) * MapConfig.generate_num_block_resource
+        assert block_num <= MapConfig.width * MapConfig.height
+        array = {}
+        for i, pos in enumerate(self.sample(block_num)):
+            item = load_item(item_names[i % len(item_names)])
+            item.num = item.reserve_num
+            array[pos] = item
+        return array
 
     def sample(self, num: int) -> List[PosType]:
         points = []
@@ -114,7 +127,7 @@ class EntityManager:
             assert item.num >= 0
             if item.num == 0:
                 if item.refresh_remain is None:
-                    item.refresh_remain = item.refresh_time
+                    item.refresh_remain = item.refresh_time - 1
                 elif item.refresh_remain > 0:
                     item.refresh_remain -= 1
                 else:

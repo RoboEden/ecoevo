@@ -1,5 +1,5 @@
 import io
-from typing import Tuple
+from typing import Dict, Optional, Tuple
 
 from loguru import logger
 
@@ -20,7 +20,7 @@ class Item:
     pumpkin = 'pumpkin'
 
 
-ALL_ITEMS = ecoevo.entities.items.Bag()
+ITEMS = ecoevo.entities.items.Bag()
 
 
 class Helper:
@@ -28,20 +28,18 @@ class Helper:
     def __init__(self):
         self.env = EcoEvo()
         self.cfg = EnvConfig
+        self.warning_log = io.StringIO()
         self.error_log = io.StringIO()
+        logger.add(self.warning_log, level='WARNING')
         logger.add(self.error_log, level='ERROR')
 
     def reset(self):
         self.obs, self.info = self.env.reset()
 
-        return self
-
-    def init_points(self, *lst: Tuple[PosType, IdType]):
-        """ (pos, id)... """
-        pos_dict = {}
+    def init_pos(self, pos_dict: Dict[IdType, PosType]):
+        """ {id: pos ...} """
         visited = set()
-        for pos, id in lst:
-            pos_dict[id] = pos
+        for id, pos in pos_dict.items():
             assert pos not in visited
             visited.add(pos)
         visited.add(None)
@@ -57,23 +55,14 @@ class Helper:
                 visited.add(pos)
             self.cfg.init_points.append(pos)
 
-        return self
+    def init_tiles(self, tile_dict: Dict[PosType, Tuple[str, int]]):
+        """ {pos: (item, amount)...} """
+        self.cfg.random_generate_map = False
 
-    def set_bag(self, *lst: Tuple[IdType, str, int]):
-        """ (id, item, amount)... """
-        for id in range(self.env.num_player):
-            for item in self.env.players[id].backpack.dict().values():
-                item.num = 0
-        for id, item, amount in lst:
-            self.env.players[id].backpack.dict()[item].num = amount
-
-        return self
-
-    def init_tiles(self, *lst: Tuple[PosType, Item, int]):
-        """ (pos, item, amount)... """
         map_item = [['empty'] * MapConfig.height for _ in range(MapConfig.width)]
         map_amount = [[0] * MapConfig.height for _ in range(MapConfig.width)]
-        for pos, item, amount in lst:
+        for pos, offer in tile_dict.items():
+            item, amount = offer
             map_item[pos[0]][pos[1]] = item
             map_amount[pos[0]][pos[1]] = amount
         self.env.entity_manager.data = dict(
@@ -81,60 +70,51 @@ class Helper:
             amount=map_amount,
         )
 
-        return self
-
-    def step(self, *lst: Tuple[IdType, ActionType]):
-        """ (id, action)... """
+    def step(self, action_dict: Dict[IdType, ActionType]):
+        """ {id: action}... """
         actions = [(('idle', None), None, None) for _ in range(self.env.num_player)]
-        for id, action in lst:
+        for id, action in action_dict.items():
             actions[id] = action
 
         self.obs, self.rewards, self.done, self.info = self.env.step(actions)
 
-        return self
+    def set_bag(self, id: IdType, bag: Dict[str, int]):
+        """ {(item, num)...} """
+        for item in ITEMS.dict():
+            self.env.players[id].backpack[item].num = 0
+        for item, num in bag.items():
+            self.env.players[id].backpack[item].num = num
 
-    def assert_tiles(self, *lst: Tuple[PosType, str, int]):
-        """ (pos, item, amount) """
-        map_dict = {}
-        for pos, item, amount in lst:
-            map_dict[pos] = (item, amount)
-        for x in range(MapConfig.width):
-            for y in range(MapConfig.height):
-                pos = (x, y)
-                tile = self.env.entity_manager.map.get(pos)
-                if tile is None or tile.item is None:
-                    assert pos not in map_dict, pos
-                else:
-                    assert pos in map_dict, pos
-                    item, amount = map_dict[pos]
-                    assert tile.item.name == item, pos
-                    assert tile.item.num == amount, pos
+    def get_tile_item(self, pos: PosType) -> Tuple[str, int]:
+        """ pos """
+        tile = self.env.gettile(pos)
+        item = tile.item if tile else None
+        return (item.name, item.num) if item else ('empty', 0)
 
-        return self
+    def get_map_items(self) -> Dict[PosType, Optional[Tuple[str, int]]]:
+        map_items = {}
+        for pos in self.env.entity_manager.map:
+            map_items[pos] = self.get_tile_item(pos)
+        return map_items
 
-    def assert_bag(self, *lst: Tuple[IdType, str, int]):
-        """ (id, item, amount)... """
-        amount_dict = {}
-        for id, item, amount in lst:
-            amount_dict[(id, item)] = amount
+    def get_bag(self, id: IdType) -> Dict[str, int]:
+        """ id """
+        bag = {}
+        for item in self.env.players[id].backpack.dict().values():
+            if item.num > 0:
+                bag[item.name] = item.num
+        return bag
 
-        for id in range(self.env.num_player):
-            for item_name, item in self.env.players[id].backpack.dict().items():
-                answer = amount_dict.get((id, item_name))
-                if answer is None:
-                    assert item.num == 0, (id, item_name)
-                else:
-                    assert item.num == answer, (id, item_name)
+    def get_stomach(self, id: IdType) -> Dict[str, int]:
+        """ id """
+        stomach = {}
+        for item in self.env.players[id].stomach.dict().values():
+            if item.num > 0:
+                stomach[item.name] = item.num
+        return stomach
 
-        return self
+    def get_warning_log(self) -> str:
+        return self.warning_log.getvalue()
 
-    def assert_pos_player(self, *lst: Tuple[PosType, IdType]):
-        for pos, id in lst:
-            assert self.env.players[id].pos == pos
-
-        return self
-
-    def assert_no_error_log(self):
-        assert self.error_log.getvalue() == ''
-
-        return self
+    def get_error_log(self) -> str:
+        return self.error_log.getvalue()

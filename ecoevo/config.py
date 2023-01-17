@@ -16,6 +16,7 @@ class EnvConfig:
         *(['stone_picker'] * num_person_type),
         *(['pumpkin_farmer'] * num_person_type),
     ]
+    random_generate_map = True
 
     init_points = None
 
@@ -23,6 +24,8 @@ class EnvConfig:
 class MapConfig:
     width = 32
     height = 32
+
+    generate_num_block_resource = 32
 
 
 class PlayerConfig:
