@@ -345,3 +345,61 @@ class TestObs:
         assert h.obs[2][(V + 1, V)].player.id == 0
         assert h.obs[2][(V + 1, V - 1)].player.id == 1
         assert h.obs[2][(V, V)].player.id == 2
+
+
+class TestInfo:
+
+    def test_trade_time_and_amount_per_item(self):
+        LIST = list(ITEMS.dict().keys())
+        CYCLE = 5
+        STEP = len(LIST) * CYCLE
+        AMOUNT = [i + 1 for i in range(len(LIST))]
+
+        h = Helper()
+        h.cfg.total_step = STEP
+        h.init_pos({
+            0: (0, 0),
+            1: (0, 1),
+        })
+        h.reset()
+
+        for step in range(STEP):
+            index = [step % len(LIST), (step + 1) % len(LIST)]
+            items = [LIST[i] for i in index]
+            nums = [AMOUNT[i] for i in index]
+            for i in range(2):
+                h.set_bag(i, {items[i]: nums[i]})
+
+            h.step({
+                0: ((Action.idle, None), (items[0], -nums[0]), (items[1], nums[1])),
+                1: ((Action.idle, None), (items[1], -nums[1]), (items[0], nums[0])),
+            })
+
+        assert h.info['trade_times'] == STEP / h.env.num_player
+        for item, amount in zip(LIST, AMOUNT):
+            assert h.info[item + '_trade_times'] == CYCLE * 2 / h.env.num_player
+            assert h.info[item + '_trade_amount'] == CYCLE * 2 * amount / h.env.num_player
+
+    def test_trade_time_and_amount_multiple_partner(self):
+        S1, S2 = 7, 3
+        M = 2
+
+        h = Helper()
+        h.cfg.total_step = 1
+        h.init_pos({})
+        h.reset()
+
+        h.set_bag(0, {Item.gold: (S1 + S2) * M})
+        h.set_bag(1, {Item.sand: S1})
+        h.set_bag(2, {Item.sand: S2})
+        h.step({
+            0: ((Action.idle, None), (Item.gold, -(S1 + S2) * M), (Item.sand, S1 + S2)),
+            1: ((Action.idle, None), (Item.sand, -S1), (Item.gold, S1 * M)),
+            2: ((Action.idle, None), (Item.sand, -S2), (Item.gold, S2 * M)),
+        })
+
+        assert h.info['trade_times'] == 2 / h.env.num_player
+        assert h.info[Item.gold + '_trade_times'] == 2 / h.env.num_player
+        assert h.info[Item.sand + '_trade_times'] == 2 / h.env.num_player
+        assert h.info[Item.gold + '_trade_amount'] == (S1 + S2) * M / h.env.num_player
+        assert h.info[Item.sand + '_trade_amount'] == (S1 + S2) / h.env.num_player
