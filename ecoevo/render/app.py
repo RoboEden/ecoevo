@@ -60,12 +60,14 @@ class WebApp:
         self.app.clientside_callback(
             ClientsideFunction('clientside', 'displaySelectedActions'),
             Output('datatable-interactivity', 'data'),
+            Input('reset-danger-button', 'submit_n_clicks'),
             Input('selected-ids', 'data'),
             Input('ctrl-next-actions', 'data'),
         )
         self.app.clientside_callback(
             ClientsideFunction('clientside', 'displaySelectedPlayer'),
             Output('info-provider', 'children'),
+            Input('reset-danger-button', 'submit_n_clicks'),
             Input('selected-ids', 'data'),
             Input('env-output-data', 'data'),
             State('all-item-data', 'data'),
@@ -93,13 +95,13 @@ class WebApp:
             Output('output-provider', 'children'),
             Output('env-output-data', 'data'),
             Output('raw-next-actions', 'data'),
-            Input('step-button-state', 'n_clicks'),
             Input('reset-danger-button', 'submit_n_clicks'),
+            Input('step-button-state', 'n_clicks'),
             State('ctrl-next-actions', 'data'),
         )
         def serverside_callback(
-            step_n_clicks,
             reset_n_clicks,
+            step_n_clicks,
             jsonified_ctrl_next_actions,
         ):
             if ctx.triggered_id == 'step-button-state':

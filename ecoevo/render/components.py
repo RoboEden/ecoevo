@@ -50,12 +50,12 @@ info_panel = html.Div([
                 ])),
             html.Tbody([
                 html.Tr([
-                    html.Td("null", id='basic-player-persona'),
-                    html.Td("null", id='basic-player-id'),
-                    html.Td("null", id='basic-player-pos'),
-                    html.Td("null", id='basic-player-health'),
-                    html.Td("null", id='basic-player-collect-remain'),
-                    html.Td("null", id='basic-player-trade-result'),
+                    html.Td(id='basic-player-persona'),
+                    html.Td(id='basic-player-id'),
+                    html.Td(id='basic-player-pos'),
+                    html.Td(id='basic-player-health'),
+                    html.Td(id='basic-player-collect-remain'),
+                    html.Td(id='basic-player-trade-result'),
                 ])
             ])
         ],
@@ -94,10 +94,10 @@ info_panel = html.Div([
                     ])),
                 html.Tbody([
                     html.Tr([
-                        html.Td("null", id='primary-action-provider'),
-                        html.Td("null", id='secondary-action-provider'),
-                        html.Td("null", id='sell-offer-provider'),
-                        html.Td("null", id='buy-offer-provider'),
+                        html.Td(id='primary-action-provider'),
+                        html.Td(id='secondary-action-provider'),
+                        html.Td(id='sell-offer-provider'),
+                        html.Td(id='buy-offer-provider'),
                     ])
                 ])
             ],

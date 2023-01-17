@@ -143,6 +143,8 @@ class GameScreen:
                 xs = x + x[::-1]
                 ys = y_upper + y_lower[::-1]
 
+            buy_foo = players[id_foo].last_action.buy_offer
+            buy_bar = players[id_bar].last_action.buy_offer
             self.fig.add_trace(
                 go.Scatter(
                     x=xs,
@@ -152,5 +154,6 @@ class GameScreen:
                     line_color='rgba(255,255,255,0)',
                     hoveron='fills',
                     showlegend=False,
-                    name=f"""{id_foo}: {players[id_foo].last_action.buy_offer}<br>{id_bar}: {players[id_bar].last_action.buy_offer}""",
+                    name=
+                    f"""Player {id_foo}: {buy_foo.buy_item} +{buy_foo.buy_num} <br>Player {id_bar}: {buy_bar.buy_item} +{buy_bar.buy_num} """,
                 ))
