@@ -51,16 +51,12 @@ class EntityManager:
             self.add_player(player)
 
     def random_item_array(self) -> Dict[PosType, Item]:
-        assert len(ALL_ITEM_DATA) * MapConfig.generate_num_block_resource <= MapConfig.width * MapConfig.height
-        a = np.repeat(np.arange(len(ALL_ITEM_DATA)), MapConfig.generate_num_block_resource)
-        a = np.pad(a, (0, MapConfig.width * MapConfig.height - len(a)), constant_values=-1)
-        np.random.shuffle(a)
-        a = np.reshape(a, (MapConfig.width, MapConfig.height))
-        array = {}
         item_names = list(ALL_ITEM_DATA.keys())
-        for pos in np.argwhere(a >= 0):
-            pos = tuple(pos)
-            item = load_item(item_names[a[pos]])
+        block_num = len(item_names) * MapConfig.generate_num_block_resource
+        assert block_num <= MapConfig.width * MapConfig.height
+        array = {}
+        for i, pos in enumerate(self.sample(block_num)):
+            item = load_item(item_names[i % len(item_names)])
             item.num = item.reserve_num
             array[pos] = item
         return array
