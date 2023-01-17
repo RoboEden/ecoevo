@@ -50,12 +50,12 @@ info_panel = html.Div([
                 ])),
             html.Tbody([
                 html.Tr([
-                    html.Td("null", id='basic-player-persona'),
-                    html.Td("null", id='basic-player-id'),
-                    html.Td("null", id='basic-player-pos'),
-                    html.Td("null", id='basic-player-health'),
-                    html.Td("null", id='basic-player-collect-remain'),
-                    html.Td("null", id='basic-player-trade-result'),
+                    html.Td(id='basic-player-persona'),
+                    html.Td(id='basic-player-id'),
+                    html.Td(id='basic-player-pos'),
+                    html.Td(id='basic-player-health'),
+                    html.Td(id='basic-player-collect-remain'),
+                    html.Td(id='basic-player-trade-result'),
                 ])
             ])
         ],
@@ -81,7 +81,7 @@ info_panel = html.Div([
                           id='stomach-list-group-item'),
         dbc.Popover('Stomach', target='stomach-list-group-item', trigger='hover'),
     ]),
-    html.Label('Last action'),
+    html.Label('Last Action'),
     html.Div(
         dbc.Table(
             [
@@ -94,10 +94,10 @@ info_panel = html.Div([
                     ])),
                 html.Tbody([
                     html.Tr([
-                        html.Td("null", id='primary-action-provider'),
-                        html.Td("null", id='secondary-action-provider'),
-                        html.Td("null", id='sell-offer-provider'),
-                        html.Td("null", id='buy-offer-provider'),
+                        html.Td(id='primary-action-provider'),
+                        html.Td(id='secondary-action-provider'),
+                        html.Td(id='sell-offer-provider'),
+                        html.Td(id='buy-offer-provider'),
                     ])
                 ])
             ],
@@ -126,7 +126,7 @@ info_panel = html.Div([
 all_primary_action = ['idle', 'move', 'collect', 'consume']
 control_panel = html.Div([
     html.Div('Control Panel', className="card-header"),
-    html.Label('Next step actions'),
+    html.Label('Next Actions'),
     html.Div([
         dash_table.DataTable(
             columns=columns,

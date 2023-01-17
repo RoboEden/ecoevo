@@ -14,9 +14,9 @@ class Action:
     collect = 'collect'
     consume = 'consume'
 
-    
+
 class TradeResult:
-    absent  = 'absent'
+    absent = 'absent'
     illegal = 'illegal'
     failed = 'failed'
     success = 'success'
@@ -30,3 +30,26 @@ MainActionType = Tuple[str, Optional[str]]
 DealType = Tuple[PosType, OfferType, OfferType]
 
 ActionType = Tuple[MainActionType, OfferType, OfferType]
+
+from pydantic import BaseModel, Field
+
+
+class SellOffer(BaseModel):
+    sell_item: Optional[str]
+    sell_num: Optional[int]
+
+
+class BuyOffer(BaseModel):
+    buy_item: Optional[str]
+    buy_num: Optional[int]
+
+
+class MainAction(BaseModel):
+    primary: str = Field(default='idle')
+    secondary: Optional[str]
+
+
+class xAction(BaseModel):
+    main_action: MainAction = Field(default_factory=MainAction)
+    sell_offer: SellOffer = Field(default_factory=SellOffer)
+    buy_offer: BuyOffer = Field(default_factory=BuyOffer)

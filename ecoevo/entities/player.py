@@ -7,7 +7,7 @@ from yaml.loader import SafeLoader
 
 from ecoevo.config import DataPath, MapConfig, PlayerConfig
 from ecoevo.entities.items import Bag, Item
-from ecoevo.types import IdType, Move, OfferType, PosType, TradeResult
+from ecoevo.types import IdType, Move, OfferType, PosType, TradeResult, xAction
 
 with open(DataPath.player_yaml) as file:
     ALL_PERSONAE = yaml.load(file, Loader=SafeLoader)
@@ -21,6 +21,7 @@ class Player(BaseModel):
     stomach: Bag = Field(default_factory=Bag)
     health: int = Field(default=PlayerConfig.max_health)
     collect_remain: Optional[str]
+    last_action: xAction = Field(default_factory=xAction)
     trade_result: str = Field(default=TradeResult.absent)
 
     @property

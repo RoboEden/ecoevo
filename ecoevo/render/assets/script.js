@@ -37,15 +37,15 @@ function normalizeData(my_array, val_max) {
 
 function updateProgressBar(bag, ALL_ITEM_DATA, id_prefix) {
     var used_volume = 0
-    for (const [name, item] of Object.entries(bag)) {
+    for (const [name, item] of Object.entries(bag ?? ALL_ITEM_DATA)) {
         var node = document.getElementById(`${id_prefix}-${name}-bar`);
-        const vol = item.num * ALL_ITEM_DATA[name].capacity;
+        const vol = bag ? (item.num * ALL_ITEM_DATA[name].capacity) : 0;
         used_volume += vol;
         node.style = `width: ${vol}%; background-color: ${itemToColor[name]};`;
         node.ariaValueNow = `${vol}`;
         node.title = `${capitalize(name)}\n volume: ${vol}\n num: ${item.num}`;
     }
-    for (const [name, item] of Object.entries(bag)) {
+    for (const name of Object.keys(bag ?? ALL_ITEM_DATA)) {
         var node = document.getElementById(`${id_prefix}-${name}-bar`);
         node.ariaValueMax = `${used_volume}`;
     }
@@ -133,101 +133,110 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
                 return [options, options[0].value];
             }
         },
-        updateSelectedIds: function (selectedData, json_all_persona) {
-            if (selectedData == undefined) {
+        updateSelectedIds: function (reset_n_clicks, selectedData, json_all_persona) {
+            selectedData = selectedData ?? {}
+            const triggerd = window.dash_clientside.callback_context.triggered;
+            if (!(triggerd.length)) {
                 return JSON.stringify([]);
             }
-            else if ("points" in selectedData) {
-                const all_persona = Object.keys(JSON.parse(json_all_persona));
-                let selected_ids = [];
-                for (const points of Object.values(selectedData.points)) {
-                    if (all_persona.includes(points["customdata"][0])) {
-                        selected_ids.push(points["customdata"][1]);
-                    }
+            else {
+                const triggered_id = triggerd[0].prop_id.split(".")[0];
+                if (triggered_id === "reset-danger-button") {
+                    return JSON.stringify([]);
                 }
-                return JSON.stringify(selected_ids);
+                else if ("points" in selectedData) {
+                    const all_persona = Object.keys(JSON.parse(json_all_persona));
+                    let selected_ids = [];
+                    for (const points of Object.values(selectedData.points)) {
+                        if (Object.keys(points).includes("customdata")) {
+                            let player_persona = points["customdata"][0]
+                            let player_id = points["customdata"][1]
+                            if (all_persona.includes(player_persona)) {
+                                selected_ids.push(player_id);
+                            }
+                        }
+                    }
+                    return JSON.stringify(selected_ids);
+                }
+                else {
+                    return window.dash_clientside.no_update;
+                }
             }
-            else { return window.dash_clientside.no_update; }
         },
-        displaySelectedActions: function (json_selected_ids, json_ctrl_next_actions) {
-            const selected_ids = JSON.parse(json_selected_ids);
-            if (selected_ids.length === 0) {
+        displaySelectedActions: function (reset_n_clicks, json_selected_ids, json_ctrl_next_actions) {
+            const triggerd = window.dash_clientside.callback_context.triggered;
+            if (!(triggerd.length)) {
                 return window.dash_clientside.no_update;
             }
-            let buy_offer, main_action, primary_action, secondary_action, sell_offer;
-            let ctrl_next_actions = JSON.parse(json_ctrl_next_actions);
-            let data_table = [];
-
-            for (const id of selected_ids) {
-                let _action = ctrl_next_actions[id];
-                [main_action, sell_offer, buy_offer] = _action;
-                [primary_action, secondary_action] = main_action;
-                data_table.push({
-                    "id": id,
-                    "primary action": primary_action,
-                    "secondary action": secondary_action,
-                    "sell offer": String(sell_offer),
-                    "buy offer": String(buy_offer),
-                });
+            else {
+                const triggered_id = triggerd[0].prop_id.split(".")[0];
+                if (triggered_id === "reset-danger-button") {
+                    return [];
+                }
+                else {
+                    const selected_ids = JSON.parse(json_selected_ids);
+                    let buy_offer, main_action, primary_action, secondary_action, sell_offer;
+                    let ctrl_next_actions = JSON.parse(json_ctrl_next_actions);
+                    let data_table = [];
+                    for (const id of selected_ids) {
+                        let _action = ctrl_next_actions[id];
+                        [main_action, sell_offer, buy_offer] = _action;
+                        [primary_action, secondary_action] = main_action;
+                        data_table.push({
+                            "id": id,
+                            "primary action": primary_action,
+                            "secondary action": secondary_action,
+                            "sell offer": String(sell_offer),
+                            "buy offer": String(buy_offer),
+                        });
+                    }
+                    return data_table;
+                }
             }
-            return data_table;
         },
-        displaySelectedPlayer: function (json_selected_ids, json_env_output_data, json_all_item_data, json_all_persona) {
+        displaySelectedPlayer: function (reset_n_clicks, json_selected_ids, json_env_output_data, json_all_item_data, json_all_persona) {
             const selected_ids = JSON.parse(json_selected_ids);
-            const ALL_ITEM_DATA = JSON.parse(json_all_item_data);
-            const all_items = Object.keys(ALL_ITEM_DATA);
-            const ALL_PERSONA_DATA = JSON.parse(json_all_persona);
-
-            const radar_ctx = document.getElementById("radar-chart");
-            let radar_chart = Chart.getChart(radar_ctx);
-            if (radar_chart === undefined) {
-                radar_chart = radarChart(radar_ctx, all_items);
-            }
-
-            if (selected_ids.length === 0) {
-                return window.dash_clientside.no_update;
-            }
             const env_output_data = JSON.parse(json_env_output_data);
+            const ALL_ITEM_DATA = JSON.parse(json_all_item_data);
+            const ALL_PERSONA_DATA = JSON.parse(json_all_persona);
+            const radar_ctx = document.getElementById("radar-chart");
+
+            let radar_chart = Chart.getChart(radar_ctx) ?? radarChart(radar_ctx, Object.keys(ALL_ITEM_DATA));
+            const triggered_id = window.dash_clientside.callback_context.triggered[0].prop_id.split(".")[0];
             const id = selected_ids[0];
             const json_player = env_output_data.players[id];
-            if (json_player !== undefined) {
-                const player = JSON.parse(json_player)
-                document.getElementById("basic-player-persona").innerText = player.persona;
-                document.getElementById("basic-player-id").innerText = player.id;
-                document.getElementById("basic-player-pos").innerText = player.pos;
-                document.getElementById("basic-player-health").innerText = player.health;
-                document.getElementById("basic-player-collect-remain").innerText = String(player.collect_remain);
-                document.getElementById("basic-player-trade-result").innerText = player.trade_result;
 
-                updateProgressBar(player.backpack, ALL_ITEM_DATA, 'backpack')
-                updateProgressBar(player.stomach, ALL_ITEM_DATA, 'stomach')
+            let player;
+            if (selected_ids.length && triggered_id !== "reset-danger-button") {
+                player = json_player ? JSON.parse(json_player) : json_player;
+            }
+            document.getElementById("basic-player-persona").innerText = player?.persona ?? "null";
+            document.getElementById("basic-player-id").innerText = player?.id ?? "null";
+            document.getElementById("basic-player-pos").innerText = player?.pos ?? "null";
+            document.getElementById("basic-player-health").innerText = player?.health ?? "null";
+            document.getElementById("basic-player-collect-remain").innerText = player?.collect_remain ? String(player.collect_remain) : "null";
+            document.getElementById("basic-player-trade-result").innerText = player?.trade_result ?? "null";
+            updateProgressBar(player?.backpack, ALL_ITEM_DATA, 'backpack')
+            updateProgressBar(player?.stomach, ALL_ITEM_DATA, 'stomach')
 
-                let persona_data = ALL_PERSONA_DATA[player.persona];
-                radar_chart.data.labels = Object.keys(persona_data.preference);
-                radar_chart.data.datasets[0].data = normalizeData(Object.values(persona_data.preference), 0.1);
-                radar_chart.data.datasets[1].data = normalizeData(Object.values(persona_data.ability), 10);
-                radar_chart.update();
+            const last = player?.last_action
+            document.getElementById("primary-action-provider").innerText = last?.main_action.primary ?? "null";
+            document.getElementById("secondary-action-provider").innerText = last?.main_action.secondary ?? "null";
+            document.getElementById("sell-offer-provider").innerText = `${last?.sell_offer.sell_item ?? "null"}, ${last?.sell_offer.sell_num ?? "null"}`;
+            document.getElementById("buy-offer-provider").innerText = `${last?.buy_offer.buy_item ?? "null"}, ${last?.buy_offer.buy_num ?? "null"}`;
 
-                document.getElementById("reward-provider").innerText = env_output_data.rewards[id];
-                if (Object.keys(env_output_data.info).length) {
-                    let info = env_output_data.info;
-                    document.getElementById("primary-action-provider").innerText = info.executed_main_actions[id][0];
-                    document.getElementById("secondary-action-provider").innerText = info.executed_main_actions[id][1];
-                    let sell_offer, buy_offer;
-                    if (Object.keys(info.success_trades).includes(id)) {
-                        sell_offer = info.success_trades[id][0];
-                        buy_offer = info.success_trades[id][1];
-                    }
-                    document.getElementById("sell-offer-provider").innerText = sell_offer;
-                    document.getElementById("buy-offer-provider").innerText = buy_offer;
-                }
+            radar_chart = Chart.getChart("radar-chart");
+            radar_chart.data.labels = Object.keys(ALL_ITEM_DATA);
+            radar_chart.data.datasets[0].data = (player?.persona) ? normalizeData(Object.values(ALL_PERSONA_DATA[player.persona].preference), 0.1) : [];
+            radar_chart.data.datasets[1].data = (player?.persona) ? normalizeData(Object.values(ALL_PERSONA_DATA[player.persona].ability), 10) : [];
+            radar_chart.update();
 
-                // coarse print `info`
-                let info = '';
-                for (const [k, v] of Object.entries(env_output_data.info)) {
-                    if (!(['executed_main_actions', 'success_trades'].includes(k))) {
-                        info += k + ': ' + v + '\n'
-                    }
+            document.getElementById("reward-provider").innerText = env_output_data.rewards[id];
+
+            let info = '';
+            for (const [k, v] of Object.entries(env_output_data.info)) {
+                if (!(['executed_main_actions', 'success_trades'].includes(k))) {
+                    info += k + ': ' + v + '\n';
                 }
                 return info;
             }
@@ -251,7 +260,7 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
             }
             else {
                 const raw_next_actions = JSON.parse(json_raw_next_actions);
-                let written_actions = (json_written_actions !== undefined) ? JSON.parse(json_written_actions) : {};
+                let written_actions = json_written_actions ? JSON.parse(json_written_actions) : {};
                 if (triggered_id === "write-button-state") {
                     const selected_ids = JSON.parse(json_selected_ids);
                     let sell_offer = sell_item !== 'None' ? [sell_item, -sell_num] : undefined;
