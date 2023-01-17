@@ -60,11 +60,9 @@ class EntityManager:
         item_names = list(ALL_ITEM_DATA.keys())
         for pos in np.argwhere(a >= 0):
             pos = tuple(pos)
-            item_id = a[pos]
-            if item_id >= 0:
-                item = load_item(item_names[item_id])
-                item.num = item.reserve_num
-                array[pos] = item
+            item = load_item(item_names[a[pos]])
+            item.num = item.reserve_num
+            array[pos] = item
         return array
 
     def sample(self, num: int) -> List[PosType]:
