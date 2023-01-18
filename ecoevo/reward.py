@@ -7,7 +7,7 @@ from ecoevo.entities import ALL_ITEM_DATA, ALL_PERSONAE, Player
 from ecoevo.types import TradeResult
 
 
-def cal_utility(volumes: Dict[str, int], den: int = 10, coef_disposable: int = 2, coef_luxury: int = 3) -> float:
+def cal_utility(volumes: Dict[str, int], den: int = 10, coef_disposable: int = 2, coef_luxury: int = 1) -> float:
     """
     calculate total utility, log method
 
@@ -49,7 +49,7 @@ class RewardParser:
         for _, item_name in enumerate(self.item_names):
             volumes[item_name] = player.stomach[item_name].num * player.stomach[item_name].capacity
 
-        return cal_utility(volumes=volumes, coef_disposable=5, coef_luxury=5)
+        return cal_utility(volumes=volumes, coef_disposable=2, coef_luxury=1)
 
     def cost(self, player: Player) -> float:
         penalty_flag = player.health <= rc.threshold
