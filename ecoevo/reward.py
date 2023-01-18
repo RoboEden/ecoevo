@@ -49,7 +49,7 @@ class RewardParser:
         for _, item_name in enumerate(self.item_names):
             volumes[item_name] = player.stomach[item_name].num * player.stomach[item_name].capacity
 
-        return cal_utility(volumes=volumes, coef_disposable=3, coef_luxury=3)
+        return cal_utility(volumes=volumes, coef_disposable=5, coef_luxury=5)
 
     def cost(self, player: Player) -> float:
         penalty_flag = player.health <= rc.threshold
