@@ -3,6 +3,23 @@ from helper import ITEMS, Action, Helper, Item, Move
 from ecoevo.config import EnvConfig, MapConfig, PlayerConfig
 
 
+class TestEnvBasic:
+
+    def test_step_and_done(self):
+        STEP = 3
+        h = Helper()
+        h.cfg.total_step = STEP
+        h.reset()
+
+        for step in range(STEP):
+            assert step == 0 or h.done == False
+            assert h.env.curr_step == step
+            h.step({})
+
+        assert h.done == True
+        assert h.env.curr_step == STEP
+
+
 class TestCollect:
 
     def test_success(self):
@@ -345,3 +362,92 @@ class TestObs:
         assert h.obs[2][(V + 1, V)].player.id == 0
         assert h.obs[2][(V + 1, V - 1)].player.id == 1
         assert h.obs[2][(V, V)].player.id == 2
+
+
+class TestInfo:
+
+    def test_trade_time_and_amount_per_item(self):
+        LIST = list(ITEMS.dict().keys())
+        CYCLE = 5
+        STEP = len(LIST) * CYCLE
+        AMOUNT = [i + 1 for i in range(len(LIST))]
+
+        h = Helper()
+        h.cfg.total_step = STEP
+        h.init_pos({
+            0: (0, 0),
+            1: (0, 1),
+        })
+        h.reset()
+
+        for step in range(STEP):
+            index = [step % len(LIST), (step + 1) % len(LIST)]
+            items = [LIST[i] for i in index]
+            nums = [AMOUNT[i] for i in index]
+            for i in range(2):
+                h.set_bag(i, {items[i]: nums[i]})
+
+            h.step({
+                0: ((Action.idle, None), (items[0], -nums[0]), (items[1], nums[1])),
+                1: ((Action.idle, None), (items[1], -nums[1]), (items[0], nums[0])),
+            })
+
+        assert h.info['trade_times'] == STEP / h.env.num_player
+        for item, amount in zip(LIST, AMOUNT):
+            assert h.info[item + '_trade_times'] == CYCLE * 2 / h.env.num_player
+            assert h.info[item + '_trade_amount'] == CYCLE * 2 * amount / h.env.num_player
+
+    def test_trade_time_and_amount_multiple_partner(self):
+        S1, S2 = 7, 3
+        M = 2
+
+        h = Helper()
+        h.cfg.total_step = 1
+        h.init_pos({})
+        h.reset()
+
+        h.set_bag(0, {Item.gold: (S1 + S2) * M})
+        h.set_bag(1, {Item.sand: S1})
+        h.set_bag(2, {Item.sand: S2})
+        h.step({
+            0: ((Action.idle, None), (Item.gold, -(S1 + S2) * M), (Item.sand, S1 + S2)),
+            1: ((Action.idle, None), (Item.sand, -S1), (Item.gold, S1 * M)),
+            2: ((Action.idle, None), (Item.sand, -S2), (Item.gold, S2 * M)),
+        })
+
+        assert h.info['trade_times'] == 2 / h.env.num_player
+        assert h.info[Item.gold + '_trade_times'] == 2 / h.env.num_player
+        assert h.info[Item.sand + '_trade_times'] == 2 / h.env.num_player
+        assert h.info[Item.gold + '_trade_amount'] == (S1 + S2) * M / h.env.num_player
+        assert h.info[Item.sand + '_trade_amount'] == (S1 + S2) / h.env.num_player
+
+    def test_utility(self):
+        import math
+        STEP = 2
+        CONSUME = {
+            0: [Item.gold] * 2,
+            1: [Item.pineapple] * 2,
+            2: [Item.gold, Item.pineapple],
+        }
+        PC = ITEMS.pineapple.consume_num
+        G = 100
+        P = PC * 2
+
+        h = Helper()
+        h.cfg.total_step = STEP
+        h.reset()
+
+        for i in range(3):
+            h.set_bag(i, {Item.gold: G, Item.pineapple: P})
+
+        for step in range(STEP):
+            h.step({id: ((Action.consume, CONSUME[id][step]), None, None) for id in range(3)})
+
+        utilities = h.env.reward_parser.last_utilities
+        assert utilities[0] == math.log(G * 2 * ITEMS.gold.capacity / 10 + 1)
+        assert utilities[1] == math.log(P * ITEMS.pineapple.capacity / 10 + 1) * 2
+        assert utilities[2] == math.log(G * ITEMS.gold.capacity / 10 +
+                                        1) + math.log(PC * ITEMS.pineapple.capacity / 10 + 1) * 2
+        assert h.info['final_avr_utility'] == sum(utilities.values()) / h.env.num_player
+        assert h.info['final_max_utility'] == max(utilities.values())
+        assert h.info['final_min_utility'] == min(utilities.values())
