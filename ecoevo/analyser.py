@@ -10,11 +10,14 @@ class Analyser(object):
         pass
 
     @staticmethod
-    def get_info(done: bool, info: Dict[str, int or float], players: List[Player],
+    def get_info(step: int, done: bool, info: Dict[str, int or float], players: List[Player],
                  transaction_graph: Dict[Tuple[IdType, IdType], OfferType],
                  executed_main_actions: Dict[int, Tuple[str, str]], reward_info: Dict[int,
                                                                                       Dict]) -> Dict[str, int or float]:
         """
+        get infos
+
+        :param step:  current step
         :param done:  if episode done
         :param info:  info of last step
         :param players:  list of all players
@@ -42,6 +45,8 @@ class Analyser(object):
         for key in info_keys:
             if key not in info:
                 info[key] = 0
+
+        info['curr_step'] = step
 
         num_player = len(players)
 
