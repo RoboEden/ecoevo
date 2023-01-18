@@ -5,7 +5,7 @@ class EnvConfig:
     total_step = 1000
     trade_radius = 32
     visual_radius = 7
-    num_person_type = 4
+    num_person_type = 16
     personae = [
         *(['gold_digger'] * num_person_type),
         *(['hazelnut_farmer'] * num_person_type),
