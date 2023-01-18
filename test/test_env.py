@@ -3,6 +3,23 @@ from helper import ITEMS, Action, Helper, Item, Move
 from ecoevo.config import EnvConfig, MapConfig, PlayerConfig
 
 
+class TestEnvBasic:
+
+    def test_step_and_done(self):
+        STEP = 3
+        h = Helper()
+        h.cfg.total_step = STEP
+        h.reset()
+
+        for step in range(STEP):
+            assert step == 0 or h.done == False
+            assert h.env.curr_step == step
+            h.step({})
+
+        assert h.done == True
+        assert h.env.curr_step == STEP
+
+
 class TestCollect:
 
     def test_success(self):
@@ -403,3 +420,34 @@ class TestInfo:
         assert h.info[Item.sand + '_trade_times'] == 2 / h.env.num_player
         assert h.info[Item.gold + '_trade_amount'] == (S1 + S2) * M / h.env.num_player
         assert h.info[Item.sand + '_trade_amount'] == (S1 + S2) / h.env.num_player
+
+    def test_utility(self):
+        import math
+        STEP = 2
+        CONSUME = {
+            0: [Item.gold] * 2,
+            1: [Item.pineapple] * 2,
+            2: [Item.gold, Item.pineapple],
+        }
+        PC = ITEMS.pineapple.consume_num
+        G = 100
+        P = PC * 2
+
+        h = Helper()
+        h.cfg.total_step = STEP
+        h.reset()
+
+        for i in range(3):
+            h.set_bag(i, {Item.gold: G, Item.pineapple: P})
+
+        for step in range(STEP):
+            h.step({id: ((Action.consume, CONSUME[id][step]), None, None) for id in range(3)})
+
+        utilities = h.env.reward_parser.last_utilities
+        assert utilities[0] == math.log(G * 2 * ITEMS.gold.capacity / 10 + 1)
+        assert utilities[1] == math.log(P * ITEMS.pineapple.capacity / 10 + 1) * 2
+        assert utilities[2] == math.log(G * ITEMS.gold.capacity / 10 +
+                                        1) + math.log(PC * ITEMS.pineapple.capacity / 10 + 1) * 2
+        assert h.info['final_avr_utility'] == sum(utilities.values()) / h.env.num_player
+        assert h.info['final_max_utility'] == max(utilities.values())
+        assert h.info['final_min_utility'] == min(utilities.values())
