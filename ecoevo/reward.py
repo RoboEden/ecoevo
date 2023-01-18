@@ -69,8 +69,4 @@ class RewardParser:
         # reward
         reward = du - cost
 
-        # TODO: trade reward
-        reward_trade = 0.1 if player.trade_result == TradeResult.success else 0
-        reward += reward_trade
-
         return reward

@@ -26,8 +26,8 @@ class Trader(object):
         self.trade_radius = trade_radius
 
         # mode
-        self.mode = 'ip'  # IP model
-        # self.mode = 'heu'  # heuristic method
+        # self.mode = 'ip'  # IP model
+        self.mode = 'heu'  # heuristic method
 
         # env info
         self.players: List[Player] = []
