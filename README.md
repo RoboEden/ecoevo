@@ -4,22 +4,22 @@ Economy Evolution Environment for Currency Emergence Research
 
 ## Change log
 ### version 0.1.5
-render:
-- ADD last_action and info
-- FIX trade_line still exists after reset
-- FIX trade_line displays incompletely
-env:
-- ADD random generate map on env reset
-- ADD Beldon's utility
-- MOD improve test framework
-- MOD parameters: bag volume 1e8; trade radius 7
-- MOD log utility coefficients: disposable 3; luxury 3
-- MOD add more test case
-- FIX health decrease bug
-- FIX item refresh time bug
-- FIX analyser trade times
-- FIX total step results to be 1 more than expected
-- FIX analyser info current step
+- render:
+  - ADD last_action and info
+  - FIX trade_line still exists after reset
+  - FIX trade_line displays incompletely
+- env:
+  - ADD random generate map on env reset
+  - ADD Beldon's utility
+  - MOD improve test framework
+  - MOD parameters: bag volume 1e8; trade radius 7
+  - MOD log utility coefficients: disposable 3; luxury 3
+  - MOD add more test case
+  - FIX health decrease bug
+  - FIX item refresh time bug
+  - FIX analyser trade times
+  - FIX total step results to be 1 more than expected
+  - FIX analyser info current step
 
 ### version 0.1.4
 - ADD transaction_graph in env step info
