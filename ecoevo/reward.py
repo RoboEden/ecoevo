@@ -7,7 +7,47 @@ from ecoevo.entities import ALL_ITEM_DATA, ALL_PERSONAE, Player
 from ecoevo.types import TradeResult
 
 
-def cal_utility(volumes: Dict[str, int], den: int = 10, coef_disposable: int = 2, coef_luxury: int = 1) -> float:
+def cal_utility(volumes: Dict[str, int]) -> float:
+    """
+    calculate total utility, log method
+
+    :param volumes:  count dict based on item names
+
+    :return: utility:  total utility
+    """
+
+    # lists of different type of items
+    list_dis_nec = [
+        item for item in ALL_ITEM_DATA if ALL_ITEM_DATA[item]['disposable'] and not ALL_ITEM_DATA[item]['luxury']
+    ]
+    list_dis_lux = [
+        item for item in ALL_ITEM_DATA if ALL_ITEM_DATA[item]['disposable'] and ALL_ITEM_DATA[item]['luxury']
+    ]
+    list_dur_nec = [
+        item for item in ALL_ITEM_DATA if not ALL_ITEM_DATA[item]['disposable'] and not ALL_ITEM_DATA[item]['luxury']
+    ]
+    list_dur_lux = [
+        item for item in ALL_ITEM_DATA if not ALL_ITEM_DATA[item]['disposable'] and ALL_ITEM_DATA[item]['luxury']
+    ]
+
+    # print('c', rc.c_dis_lux, rc.c_dis_nec)
+    utility = (sum(
+        (volumes[item] + 100)**rc.rho_nec * rc.alpha_nec
+        for item in list_dis_nec) + rc.c_dis_nec)**(rc.eta_dis_nec / rc.rho_nec) - (sum(
+            (100)**rc.rho_nec * rc.alpha_nec for item in list_dis_nec) + rc.c_dis_nec)**(rc.eta_dis_nec / rc.rho_nec)
+    utility += (sum(
+        (volumes[item] + 100)**rc.rho_lux * rc.alpha_lux
+        for item in list_dis_lux) + rc.c_dis_lux)**(rc.eta_dis_lux / rc.rho_lux) - (sum(
+            (100)**rc.rho_lux * rc.alpha_lux for item in list_dis_lux) + rc.c_dis_lux)**(rc.eta_dis_lux / rc.rho_lux)
+    utility += (sum(volumes[item] for item in list_dur_nec) +
+                rc.c_dur_nec)**rc.eta_dur_nec * rc.lambda_nec - (rc.c_dur_nec)**rc.eta_dur_nec * rc.lambda_nec
+    utility += (sum(volumes[item] for item in list_dur_lux) +
+                rc.c_dur_lux)**rc.eta_dur_lux * rc.lambda_lux - (rc.c_dur_nec)**rc.eta_dur_nec * rc.lambda_nec
+
+    return utility
+
+
+def cal_utility_log(volumes: Dict[str, int], den: int = 10, coef_disposable: int = 2, coef_luxury: int = 1) -> float:
     """
     calculate total utility, log method
 
@@ -39,6 +79,10 @@ class RewardParser:
         self.last_costs = {}
         self.total_costs = {}
 
+        # utility calculation method
+        self.ultility_mode = 'base'
+        # self.ultility_mode = 'log'
+
     def reset(self) -> None:
         self.last_utilities = {}
         self.last_costs = {}
@@ -49,7 +93,10 @@ class RewardParser:
         for _, item_name in enumerate(self.item_names):
             volumes[item_name] = player.stomach[item_name].num * player.stomach[item_name].capacity
 
-        return cal_utility(volumes=volumes, coef_disposable=3, coef_luxury=3)
+        utility = cal_utility_log(volumes=volumes, coef_disposable=3,
+                                  coef_luxury=3) if self.ultility_mode == 'log' else cal_utility(volumes=volumes)
+
+        return utility
 
     def cost(self, player: Player) -> float:
         penalty_flag = player.health <= rc.threshold
