@@ -30,7 +30,6 @@ def cal_utility(volumes: Dict[str, int]) -> float:
         item for item in ALL_ITEM_DATA if not ALL_ITEM_DATA[item]['disposable'] and ALL_ITEM_DATA[item]['luxury']
     ]
 
-    # print('c', rc.c_dis_lux, rc.c_dis_nec)
     utility = (sum(
         (volumes[item] + 100)**rc.rho_nec * rc.alpha_nec
         for item in list_dis_nec) + rc.c_dis_nec)**(rc.eta_dis_nec / rc.rho_nec) - (sum(
