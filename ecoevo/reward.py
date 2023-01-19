@@ -9,7 +9,7 @@ from ecoevo.types import TradeResult
 
 def cal_utility(volumes: Dict[str, int]) -> float:
     """
-    calculate total utility, log method
+    calculate total utility, baseline
 
     :param volumes:  count dict based on item names
 

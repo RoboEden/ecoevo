@@ -173,8 +173,7 @@ class EcoEvo:
 
         # check buy item bag volume
         buy_item_volume = player.backpack[buy_item_name].capacity * buy_num
-        remain_volume = player.backpack.remain_volume + sell_item.num * player.backpack[sell_item_name].capacity
-        if remain_volume < buy_item_volume:
+        if player.backpack.remain_volume < buy_item_volume:
             return False
 
         return True
