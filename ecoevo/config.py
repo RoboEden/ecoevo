@@ -3,7 +3,7 @@ import pathlib
 
 class EnvConfig:
     total_step = 1000
-    trade_radius = 4
+    trade_radius = 7
     visual_radius = 7
     num_person_type = 16
     personae = [
@@ -29,15 +29,23 @@ class MapConfig:
 
 
 class PlayerConfig:
-    bag_volume = 1e4
+    bag_volume = 1e8
     max_health = 100
-    comsumption_per_step = 5
+    comsumption_per_step = 2
 
 
 class RewardConfig:
     threshold = 0
     weight_coef = 0
     penalty = 0
+
+    # dis for disposable, dur for durable; nec for necessity, lux for luxury
+    alpha_nec, alpha_lux = 0.21, 0.21
+    rho_nec, rho_lux = -0.21, -0.15
+    eta_dis_nec, eta_dis_lux = 0.98, 1
+    lambda_nec, lambda_lux = 200, 239
+    eta_dur_nec, eta_dur_lux = 0.06, 0.08
+    c_dis_nec, c_dis_lux, c_dur_nec, c_dur_lux = 0.41, 0.31, 100, 100
 
 
 class DataPath:
