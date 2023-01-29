@@ -41,19 +41,22 @@ class Analyser(object):
             f"avr_{trade_result}_per_step" for trade_result in ['absent', 'illegal', 'failed', 'success']
         ]
         price_keys = []
+        exchange_cnt_keys = []
         for buy_item_name in ALL_ITEM_DATA:
             for sell_item_name in ALL_ITEM_DATA:
                 if buy_item_name == sell_item_name:
                     continue
                 key_name = f"{buy_item_name}_{sell_item_name}_price"
                 price_keys.append(key_name)
+                exchange_cnt_keys.append(f"{buy_item_name}_{sell_item_name}_cnt")
 
         info_keys += trade_result_keys
         info_keys += price_keys
+        info_keys += exchange_cnt_keys
 
-        for key in info_keys:
-            if key not in info:
-                info[key] = 0
+        for price_key in info_keys:
+            if price_key not in info:
+                info[price_key] = 0
 
         info['curr_step'] = step
 
@@ -77,14 +80,18 @@ class Analyser(object):
             _, sell_offer, buy_offer = deal
             sell_name, sell_num = sell_offer
             buy_name, buy_num = buy_offer
+
             price = abs(buy_num) / abs(sell_num)
-            key = f"{buy_name}_{sell_name}_price"
-            info[key] += price
+            price_key = f"{buy_name}_{sell_name}_price"
+            info[price_key] += price
+
+            cnt_key = f"{buy_name}_{sell_name}_cnt"
+            info[cnt_key] += 1
 
         if done:
             keys = trade_result_keys + price_keys
-            for key in keys:
-                info[key] /= info['curr_step']
+            for price_key in keys:
+                info[price_key] /= info['curr_step']
 
         # consume times
         for pid in executed_main_actions:
