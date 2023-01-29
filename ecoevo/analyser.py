@@ -54,9 +54,9 @@ class Analyser(object):
         info_keys += price_keys
         info_keys += exchange_cnt_keys
 
-        for price_key in info_keys:
-            if price_key not in info:
-                info[price_key] = 0
+        for key in info_keys:
+            if key not in info:
+                info[key] = 0
 
         info['curr_step'] = step
 
@@ -90,8 +90,8 @@ class Analyser(object):
 
         if done:
             keys = trade_result_keys + price_keys
-            for price_key in keys:
-                info[price_key] /= info['curr_step']
+            for key in keys:
+                info[key] /= info['curr_step']
 
         # consume times
         for pid in executed_main_actions:
