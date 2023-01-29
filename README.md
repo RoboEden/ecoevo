@@ -3,6 +3,11 @@
 Economy Evolution Environment for Currency Emergence Research
 
 ## Change log
+### version 0.1.6.dev
+- env:
+  - ADD price info and item exchange cnt info
+  - FIX refresh item should be executed before obs generation
+
 ### version 0.1.5
 - render:
   - ADD last_action and info

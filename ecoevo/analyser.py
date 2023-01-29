@@ -7,11 +7,39 @@ from ecoevo.types import Action, DealType, IdType, OfferType
 class Analyser(object):
 
     def __init__(self) -> None:
-        pass
+        # keys
+        info_keys = ['curr_step'] + \
+                    ['trade_times'] + \
+                    ['{}_trade_times'.format(item) for item in ALL_ITEM_DATA.keys()] + \
+                    ['{}_trade_amount'.format(item) for item in ALL_ITEM_DATA.keys()] + \
+                    ['{}_consume_times'.format(item) for item in ALL_ITEM_DATA.keys()] + \
+                    ['{}_final_consume_amount'.format(item) for item in ALL_ITEM_DATA.keys()] + \
+                    ['final_avr_utility', 'final_max_utility', 'final_min_utility'] + \
+                    ['final_avr_cost', 'final_max_cost', 'final_min_cost']
+        trade_result_keys = [
+            f"avr_{trade_result}_per_step" for trade_result in ['absent', 'illegal', 'failed', 'success']
+        ]
+        price_keys = []
+        exchange_cnt_keys = []
+        for buy_item_name in ALL_ITEM_DATA:
+            for sell_item_name in ALL_ITEM_DATA:
+                if buy_item_name == sell_item_name:
+                    continue
+                key_name = f"{buy_item_name}_{sell_item_name}_price"
+                price_keys.append(key_name)
+                exchange_cnt_keys.append(f"{buy_item_name}_{sell_item_name}_cnt")
 
-    @staticmethod
-    def get_info(step: int, done: bool, info: Dict[str, int or float], players: List[Player],
-                 transaction_graph: Dict[Tuple[IdType, IdType], OfferType],
+        info_keys += trade_result_keys
+        info_keys += price_keys
+        info_keys += exchange_cnt_keys
+
+        self.trade_result_keys = trade_result_keys
+        self.price_keys = price_keys
+        self.exchange_cnt_keys = exchange_cnt_keys
+        self.info_keys = info_keys
+
+    def get_info(self, step: int, done: bool, info: Dict[str, int or float], players: List[Player],
+                 matched_deals: Dict[IdType, DealType], transaction_graph: Dict[Tuple[IdType, IdType], OfferType],
                  executed_main_actions: Dict[int, Tuple[str, str]], reward_info: Dict[int,
                                                                                       Dict]) -> Dict[str, int or float]:
         """
@@ -28,21 +56,7 @@ class Analyser(object):
         :return: info:  info of current step
         """
 
-        # check keys
-        info_keys = ['curr_step'] + \
-                    ['trade_times'] + \
-                    ['{}_trade_times'.format(item) for item in ALL_ITEM_DATA.keys()] + \
-                    ['{}_trade_amount'.format(item) for item in ALL_ITEM_DATA.keys()] + \
-                    ['{}_consume_times'.format(item) for item in ALL_ITEM_DATA.keys()] + \
-                    ['{}_final_consume_amount'.format(item) for item in ALL_ITEM_DATA.keys()] + \
-                    ['final_avr_utility', 'final_max_utility', 'final_min_utility'] + \
-                    ['final_avr_cost', 'final_max_cost', 'final_min_cost']
-        trade_result_keys = [
-            f"avr_{trade_result}_per_step" for trade_result in ['absent', 'illegal', 'failed', 'success']
-        ]
-        info_keys += trade_result_keys
-
-        for key in info_keys:
+        for key in self.info_keys:
             if key not in info:
                 info[key] = 0
 
@@ -63,9 +77,32 @@ class Analyser(object):
             info_key = f"avr_{player.trade_result}_per_step"
             info[info_key] += 1
 
+        # price info
+        for id, deal in matched_deals.items():
+            _, sell_offer, buy_offer = deal
+            sell_name, sell_num = sell_offer
+            buy_name, buy_num = buy_offer
+
+            price = abs(buy_num) / abs(sell_num)
+            price_key = f"{buy_name}_{sell_name}_price"
+            info[price_key] += price
+
+            cnt_key = f"{buy_name}_{sell_name}_cnt"
+            info[cnt_key] += 1
+
         if done:
-            for key in trade_result_keys:
-                info[key] /= info['curr_step'] + 1
+            for key in self.trade_result_keys:
+                info[key] /= info['curr_step']
+
+            for buy_item_name in ALL_ITEM_DATA:
+                for sell_item_name in ALL_ITEM_DATA:
+                    if buy_item_name == sell_item_name:
+                        continue
+                    price_key = f"{buy_item_name}_{sell_item_name}_price"
+                    cnt_key = f"{buy_item_name}_{sell_item_name}_cnt"
+                    cnt = info[cnt_key]
+                    if cnt > 0:
+                        info[price_key] /= cnt
 
         # consume times
         for pid in executed_main_actions:
