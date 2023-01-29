@@ -77,7 +77,7 @@ class Analyser(object):
             _, sell_offer, buy_offer = deal
             sell_name, sell_num = sell_offer
             buy_name, buy_num = buy_offer
-            price = buy_num / sell_num
+            price = abs(buy_num) / abs(sell_num)
             key = f"{buy_name}_{sell_name}_price"
             info[key] += price
 
