@@ -7,28 +7,7 @@ from ecoevo.types import Action, DealType, IdType, OfferType
 class Analyser(object):
 
     def __init__(self) -> None:
-        pass
-
-    @staticmethod
-    def get_info(step: int, done: bool, info: Dict[str, int or float], players: List[Player],
-                 matched_deals: Dict[IdType, DealType], transaction_graph: Dict[Tuple[IdType, IdType], OfferType],
-                 executed_main_actions: Dict[int, Tuple[str, str]], reward_info: Dict[int,
-                                                                                      Dict]) -> Dict[str, int or float]:
-        """
-        get infos
-
-        :param step:  current step
-        :param done:  if episode done
-        :param info:  info of last step
-        :param players:  list of all players
-        :param transaction_graph:  trade item flows
-        :param actions_valid:  validated actions dictionary, player id to action tuple
-        :param reward_info:  reward info dictionary: rewards, utilities and costs
-
-        :return: info:  info of current step
-        """
-
-        # check keys
+        # keys
         info_keys = ['curr_step'] + \
                     ['trade_times'] + \
                     ['{}_trade_times'.format(item) for item in ALL_ITEM_DATA.keys()] + \
@@ -54,7 +33,30 @@ class Analyser(object):
         info_keys += price_keys
         info_keys += exchange_cnt_keys
 
-        for key in info_keys:
+        self.trade_result_keys = trade_result_keys
+        self.price_keys = price_keys
+        self.exchange_cnt_keys = exchange_cnt_keys
+        self.info_keys = info_keys
+
+    def get_info(self, step: int, done: bool, info: Dict[str, int or float], players: List[Player],
+                 matched_deals: Dict[IdType, DealType], transaction_graph: Dict[Tuple[IdType, IdType], OfferType],
+                 executed_main_actions: Dict[int, Tuple[str, str]], reward_info: Dict[int,
+                                                                                      Dict]) -> Dict[str, int or float]:
+        """
+        get infos
+
+        :param step:  current step
+        :param done:  if episode done
+        :param info:  info of last step
+        :param players:  list of all players
+        :param transaction_graph:  trade item flows
+        :param actions_valid:  validated actions dictionary, player id to action tuple
+        :param reward_info:  reward info dictionary: rewards, utilities and costs
+
+        :return: info:  info of current step
+        """
+
+        for key in self.info_keys:
             if key not in info:
                 info[key] = 0
 
@@ -89,9 +91,18 @@ class Analyser(object):
             info[cnt_key] += 1
 
         if done:
-            keys = trade_result_keys + price_keys
-            for key in keys:
+            for key in self.trade_result_keys:
                 info[key] /= info['curr_step']
+
+            for buy_item_name in ALL_ITEM_DATA:
+                for sell_item_name in ALL_ITEM_DATA:
+                    if buy_item_name == sell_item_name:
+                        continue
+                    price_key = f"{buy_item_name}_{sell_item_name}_price"
+                    cnt_key = f"{buy_item_name}_{sell_item_name}_cnt"
+                    cnt = info[cnt_key]
+                    if cnt > 0:
+                        info[price_key] /= cnt
 
         # consume times
         for pid in executed_main_actions:

@@ -49,6 +49,7 @@ class EcoEvo:
         self.players = []
         self.curr_step = 0
         self.reward_parser.reset()
+        self.analyser = Analyser()
         self.trader.dict_flow = {}
         points = self.cfg.init_points or self.entity_manager.sample(len(self.cfg.personae))
         for id, persona in enumerate(self.cfg.personae):
@@ -123,7 +124,7 @@ class EcoEvo:
         obs = {player.id: self.get_obs(player) for player in self.players}
         rewards = {player.id: self.reward_parser.parse(player) for player in self.players}
         done = self.curr_step >= self.cfg.total_step
-        self.info = Analyser.get_info(
+        self.info = self.analyser.get_info(
             self.curr_step, done, self.info, self.players, matched_deals, transaction_graph, executed_main_actions, {
                 player.id: {
                     'reward': rewards[player.id],
