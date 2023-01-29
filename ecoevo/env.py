@@ -116,6 +116,9 @@ class EcoEvo:
             player = self.players[id]
             player.health = max(0, player.health - PlayerConfig.comsumption_per_step)
 
+        # refresh items
+        self.entity_manager.refresh_item()
+
         # generate obs, reward, info
         obs = {player.id: self.get_obs(player) for player in self.players}
         rewards = {player.id: self.reward_parser.parse(player) for player in self.players}
@@ -130,9 +133,6 @@ class EcoEvo:
                 for player in self.players
             })
         self.info['transaction_graph'] = transaction_graph
-
-        # refresh items
-        self.entity_manager.refresh_item()
 
         return obs, rewards, done, deepcopy(self.info)
 
