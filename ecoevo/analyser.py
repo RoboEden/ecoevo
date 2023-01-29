@@ -11,7 +11,7 @@ class Analyser(object):
 
     @staticmethod
     def get_info(step: int, done: bool, info: Dict[str, int or float], players: List[Player],
-                 transaction_graph: Dict[Tuple[IdType, IdType], OfferType],
+                 matched_deals: Dict[IdType, DealType], transaction_graph: Dict[Tuple[IdType, IdType], OfferType],
                  executed_main_actions: Dict[int, Tuple[str, str]], reward_info: Dict[int,
                                                                                       Dict]) -> Dict[str, int or float]:
         """
@@ -40,7 +40,16 @@ class Analyser(object):
         trade_result_keys = [
             f"avr_{trade_result}_per_step" for trade_result in ['absent', 'illegal', 'failed', 'success']
         ]
+        price_keys = []
+        for buy_item_name in ALL_ITEM_DATA:
+            for sell_item_name in ALL_ITEM_DATA:
+                if buy_item_name == sell_item_name:
+                    continue
+                key_name = f"{buy_item_name}_{sell_item_name}_price"
+                price_keys.append(key_name)
+
         info_keys += trade_result_keys
+        info_keys += price_keys
 
         for key in info_keys:
             if key not in info:
@@ -63,9 +72,19 @@ class Analyser(object):
             info_key = f"avr_{player.trade_result}_per_step"
             info[info_key] += 1
 
+        # price info
+        for id, deal in matched_deals.items():
+            _, sell_offer, buy_offer = deal
+            sell_name, sell_num = sell_offer
+            buy_name, buy_num = buy_offer
+            price = buy_num / sell_num
+            key = f"{buy_name}_{sell_name}_price"
+            info[key] += price
+
         if done:
-            for key in trade_result_keys:
-                info[key] /= info['curr_step'] + 1
+            keys = trade_result_keys + price_keys
+            for key in keys:
+                info[key] /= info['curr_step']
 
         # consume times
         for pid in executed_main_actions:

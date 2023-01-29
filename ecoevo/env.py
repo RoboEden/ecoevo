@@ -124,7 +124,7 @@ class EcoEvo:
         rewards = {player.id: self.reward_parser.parse(player) for player in self.players}
         done = self.curr_step >= self.cfg.total_step
         self.info = Analyser.get_info(
-            self.curr_step, done, self.info, self.players, transaction_graph, executed_main_actions, {
+            self.curr_step, done, self.info, self.players, matched_deals, transaction_graph, executed_main_actions, {
                 player.id: {
                     'reward': rewards[player.id],
                     'utility': self.reward_parser.last_utilities[player.id],
