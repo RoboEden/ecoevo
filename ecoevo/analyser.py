@@ -136,8 +136,8 @@ class Analyser(object):
                     continue
                 item_name = tile.item.name
                 ability = player.ability[item_name]
-                max_ability = max(player.ability.values())
-                if ability == max_ability:
+                min_ability = min(player.ability.values())
+                if ability == min_ability:
                     info[match_cnt_key] += 1
 
         if done:
