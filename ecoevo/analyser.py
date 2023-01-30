@@ -3,23 +3,9 @@ from typing import Dict, List, Tuple
 from ecoevo.entities import ALL_ITEM_DATA, ALL_PERSONAE, Player, EntityManager
 from ecoevo.types import Action, DealType, IdType, OfferType
 
-
-class PersonaCollectKeys:
-
-    def __init__(self, persona: str) -> None:
-        self.persona = persona
-
-    @property
-    def cnt_key(self) -> str:
-        return f"{self.persona}_collect_cnt"
-
-    @property
-    def match_cnt_key(self) -> str:
-        return f"{self.persona}_collect_match_cnt"
-
-    @property
-    def match_ratio_key(self) -> str:
-        return f"{self.persona}_collect_match_ratio"
+persona_collect_cnt_key = "{persona}_collect_cnt"
+persona_collect_match_cnt_key = "{persona}_collect_match_cnt"
+persona_collect_match_ratio_key = "{persona}_collect_match_ratio"
 
 
 class Analyser(object):
@@ -49,8 +35,10 @@ class Analyser(object):
 
         # persona collect
         for persona in ALL_PERSONAE:
-            keys = PersonaCollectKeys(persona)
-            info_keys += [keys.cnt_key, keys.match_cnt_key, keys.match_ratio_key]
+            cnt_key = persona_collect_cnt_key.format(persona=persona)
+            match_cnt_key = persona_collect_match_cnt_key.format(persona=persona)
+            match_ratio_key = persona_collect_match_ratio_key.format(persona=persona)
+            info_keys += [cnt_key, match_cnt_key, match_ratio_key]
 
         info_keys += trade_result_keys
         info_keys += price_keys
@@ -139,15 +127,18 @@ class Analyser(object):
                 player = players[pid]
                 pos = player.pos
                 persona = player.persona
-                keys = PersonaCollectKeys(persona)
-                info[keys.cnt_key] += 1
+                cnt_key = persona_collect_cnt_key.format(persona=persona)
+                match_cnt_key = persona_collect_match_cnt_key.format(persona=persona)
+                info[cnt_key] += 1
 
                 tile = entity_manager.map[pos]
+                if tile.item is None:
+                    continue
                 item_name = tile.item.name
                 ability = player.ability[item_name]
                 max_ability = max(player.ability.values())
                 if ability == max_ability:
-                    info[keys.match_cnt_key] += 1
+                    info[match_cnt_key] += 1
 
         if done:
             # final consume amount
@@ -157,9 +148,11 @@ class Analyser(object):
 
             # persona collect match ratio
             for persona in ALL_PERSONAE:
-                keys = PersonaCollectKeys(persona=persona)
-                if info[keys.cnt_key] > 0:
-                    info[keys.match_ratio_key] = info[keys.match_cnt_key] / info[keys.cnt_key]
+                cnt_key = persona_collect_cnt_key.format(persona=persona)
+                match_cnt_key = persona_collect_match_cnt_key.format(persona=persona)
+                match_ratio_key = persona_collect_match_ratio_key.format(persona=persona)
+                if info[cnt_key] > 0:
+                    info[match_ratio_key] = info[match_cnt_key] / info[cnt_key]
 
         # final utility
         utilities = {pid: reward_info[pid]['utility'] for pid in reward_info}
