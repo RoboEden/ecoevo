@@ -3,6 +3,10 @@
 Economy Evolution Environment for Currency Emergence Research
 
 ## Change log
+### version 0.1.6.dev1
+- env:
+  - ADD persona collect match ratio info
+
 ### version 0.1.6.dev
 - env:
   - ADD price info and item exchange cnt info
