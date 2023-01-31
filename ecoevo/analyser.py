@@ -1,7 +1,11 @@
 from typing import Dict, List, Tuple
 
-from ecoevo.entities import ALL_ITEM_DATA, Player
+from ecoevo.entities import ALL_ITEM_DATA, ALL_PERSONAE, Player, EntityManager
 from ecoevo.types import Action, DealType, IdType, OfferType
+
+persona_collect_cnt_key = "{persona}_collect_cnt"
+persona_collect_match_cnt_key = "{persona}_collect_match_cnt"
+persona_collect_match_ratio_key = "{persona}_collect_match_ratio"
 
 
 class Analyser(object):
@@ -29,6 +33,13 @@ class Analyser(object):
                 price_keys.append(key_name)
                 exchange_cnt_keys.append(f"{buy_item_name}_{sell_item_name}_cnt")
 
+        # persona collect
+        for persona in ALL_PERSONAE:
+            cnt_key = persona_collect_cnt_key.format(persona=persona)
+            match_cnt_key = persona_collect_match_cnt_key.format(persona=persona)
+            match_ratio_key = persona_collect_match_ratio_key.format(persona=persona)
+            info_keys += [cnt_key, match_cnt_key, match_ratio_key]
+
         info_keys += trade_result_keys
         info_keys += price_keys
         info_keys += exchange_cnt_keys
@@ -39,7 +50,8 @@ class Analyser(object):
         self.info_keys = info_keys
 
     def get_info(self, step: int, done: bool, info: Dict[str, int or float], players: List[Player],
-                 matched_deals: Dict[IdType, DealType], transaction_graph: Dict[Tuple[IdType, IdType], OfferType],
+                 entity_manager: EntityManager, matched_deals: Dict[IdType, DealType],
+                 transaction_graph: Dict[Tuple[IdType, IdType], OfferType],
                  executed_main_actions: Dict[int, Tuple[str, str]], reward_info: Dict[int,
                                                                                       Dict]) -> Dict[str, int or float]:
         """
@@ -104,17 +116,40 @@ class Analyser(object):
                     if cnt > 0:
                         info[price_key] /= cnt
 
-        # consume times
         for pid in executed_main_actions:
             (action_type, action_item) = executed_main_actions[pid]
+            # consume times
             if action_type == Action.consume:
                 info['{}_consume_times'.format(action_item)] += 1 / num_player
 
-        # final consume amount
+            # persona collect info
+            player = players[pid]
+            if action_type == Action.collect and player.collect_remain is None:
+                cnt_key = persona_collect_cnt_key.format(persona=player.persona)
+                info[cnt_key] += 1
+
+                tile = entity_manager.map[player.pos]
+                if tile.item is None:
+                    continue
+                ability = player.ability[tile.item.name]
+                min_ability = min(player.ability.values())
+                if ability == min_ability:
+                    match_cnt_key = persona_collect_match_cnt_key.format(persona=player.persona)
+                    info[match_cnt_key] += 1
+
         if done:
+            # final consume amount
             for player in players:
                 for item in ALL_ITEM_DATA.keys():
                     info['{}_final_consume_amount'.format(item)] += player.stomach[item].num / num_player
+
+            # persona collect match ratio
+            for persona in ALL_PERSONAE:
+                cnt_key = persona_collect_cnt_key.format(persona=persona)
+                match_cnt_key = persona_collect_match_cnt_key.format(persona=persona)
+                match_ratio_key = persona_collect_match_ratio_key.format(persona=persona)
+                if info[cnt_key] > 0:
+                    info[match_ratio_key] = info[match_cnt_key] / info[cnt_key]
 
         # final utility
         utilities = {pid: reward_info[pid]['utility'] for pid in reward_info}
