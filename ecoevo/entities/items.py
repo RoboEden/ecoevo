@@ -101,14 +101,3 @@ class Bag(BaseModel):
     @property
     def remain_volume(self) -> float:
         return PlayerConfig.bag_volume - self.used_volume
-
-
-class ScoreForEachItem(BaseModel):
-    gold: float
-    hazelnut: float
-    coral: float
-    sand: float
-    pineapple: float
-    peanut: float
-    stone: float
-    pumpkin: float

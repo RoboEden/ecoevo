@@ -1,8 +1,11 @@
 # Economy-Evolution
 
 Economy Evolution Environment for Currency Emergence Research
-
 ## Change log
+### version 0.1.6.dev2
+- render:
+  - FIX trade line trade amount display bug
+  - FIX "Last Action" display. Now show proposed action.
 ### version 0.1.6.dev1
 - env:
   - ADD persona collect match ratio info
@@ -35,9 +38,10 @@ Economy Evolution Environment for Currency Emergence Research
 - FIX test helper bug
 
 ### version 0.1.3
-- TODO
-### version 0.1.2
+- ADD WebApp for render
+- ADD control panel for WebApp
 
+### version 0.1.2
 - Add sanity check for `Player`
 - Fix bug when render sell offer
 

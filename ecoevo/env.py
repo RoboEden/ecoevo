@@ -78,11 +78,16 @@ class EcoEvo:
             if sell_offer is None or buy_offer is None:
                 actions[id] = (main_action, None, None)
                 player.trade_result = TradeResult.absent
-            elif self.is_trade_valid(player, action):
-                player.trade_result = TradeResult.failed  # may changed to success later if the deal is matched
             else:
-                actions[id] = (main_action, None, None)
-                player.trade_result = TradeResult.illegal
+                if self.is_trade_valid(player, action):
+                    player.trade_result = TradeResult.failed  # may changed to success later if the deal is matched
+                else:
+                    actions[id] = (main_action, None, None)
+                    player.trade_result = TradeResult.illegal
+                player.last_action.sell_offer.sell_item = sell_offer[0]
+                player.last_action.sell_offer.sell_num = sell_offer[1]
+                player.last_action.buy_offer.buy_item = buy_offer[0]
+                player.last_action.buy_offer.buy_num = buy_offer[1]
 
         # match trade
         matched_deals, transaction_graph = self.trader.parse(self.players, actions)
@@ -96,10 +101,6 @@ class EcoEvo:
                 player.trade(sell_offer, buy_offer)
                 player.trade_result = TradeResult.success
                 success_trades[id] = (sell_offer, buy_offer)
-                player.last_action.sell_offer.sell_item = sell_offer[0]
-                player.last_action.sell_offer.sell_num = sell_offer[1]
-                player.last_action.buy_offer.buy_item = buy_offer[0]
-                player.last_action.buy_offer.buy_num = buy_offer[1]
 
         # validate and execute main action
         executed_main_actions = {}
