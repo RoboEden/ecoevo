@@ -79,7 +79,7 @@ class GameScreen:
         self.fig.update_xaxes(visible=False)
         self.fig.update_yaxes(visible=False)
 
-    def update(self, map: Dict[PosType, Tile], dict_flow: Dict[Tuple[IdType, IdType], Tuple[OfferType, OfferType]],
+    def update(self, map: Dict[PosType, Tile], dict_flow: Dict[Tuple[IdType, IdType], OfferType],
                players: List[Player]):
         self.update_item_trace(map)
         self.update_player_trace(map)
@@ -122,17 +122,22 @@ class GameScreen:
                                customdata=customdata,
                                selector=dict(type="scatter", name="player-trace"))
 
-    def update_trade_trace(self, dict_flow: Dict[Tuple[IdType, IdType], Tuple[OfferType, OfferType]],
-                           players: List[Player]):
+    def update_trade_trace(self, dict_flow: Dict[Tuple[IdType, IdType], OfferType], players: List[Player]):
         self.fig.data = self.fig.data[0:3]
-        for (id_foo, id_bar), (offer_foo, offer_bar) in dict_flow.items():
+        visited = []
+        for (id_foo, id_bar), offer_foo in dict_flow.items():
+            if (id_foo, id_bar) in visited:
+                continue
             x = [players[id_foo].pos[0], players[id_bar].pos[0]]
             y = [players[id_foo].pos[1], players[id_bar].pos[1]]
+            item_foo, num_foo = offer_foo
+            item_bar, num_bar = dict_flow[(id_bar, id_foo)]
+            visited.append((id_foo, id_bar))
+            visited.append((id_bar, id_foo))
             if x[0] == x[1]:
                 line_width = self.trade_line_width
                 x_left = [_x + line_width / 2 for _x in x]
                 x_right = [_x - line_width / 2 for _x in x]
-
                 xs = x_left + x_right[::-1]
                 ys = y + y[::-1]
             else:
@@ -143,8 +148,6 @@ class GameScreen:
                 xs = x + x[::-1]
                 ys = y_upper + y_lower[::-1]
 
-            buy_foo = players[id_foo].last_action.buy_offer
-            buy_bar = players[id_bar].last_action.buy_offer
             self.fig.add_trace(
                 go.Scatter(
                     x=xs,
@@ -155,5 +158,5 @@ class GameScreen:
                     hoveron='fills',
                     showlegend=False,
                     name=
-                    f"""Player {id_foo}: {buy_foo.buy_item} +{buy_foo.buy_num} <br>Player {id_bar}: {buy_bar.buy_item} +{buy_bar.buy_num} """,
+                    f"""【player {id_foo}】 {item_bar} +{num_bar}, {item_foo} -{num_foo} <br>【player {id_bar}】 {item_foo} +{num_foo}, {item_bar} -{num_bar} """,
                 ))

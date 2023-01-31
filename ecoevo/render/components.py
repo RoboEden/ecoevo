@@ -81,7 +81,7 @@ info_panel = html.Div([
                           id='stomach-list-group-item'),
         dbc.Popover('Stomach', target='stomach-list-group-item', trigger='hover'),
     ]),
-    html.Label('Last Action'),
+    html.Label('Last Action Proposed'),
     html.Div(
         dbc.Table(
             [
