@@ -123,21 +123,18 @@ class Analyser(object):
                 info['{}_consume_times'.format(action_item)] += 1 / num_player
 
             # persona collect info
-            if action_type == Action.collect:
-                player = players[pid]
-                pos = player.pos
-                persona = player.persona
-                cnt_key = persona_collect_cnt_key.format(persona=persona)
-                match_cnt_key = persona_collect_match_cnt_key.format(persona=persona)
+            player = players[pid]
+            if action_type == Action.collect and player.collect_remain is None:
+                cnt_key = persona_collect_cnt_key.format(persona=player.persona)
                 info[cnt_key] += 1
 
-                tile = entity_manager.map[pos]
+                tile = entity_manager.map[player.pos]
                 if tile.item is None:
                     continue
-                item_name = tile.item.name
-                ability = player.ability[item_name]
+                ability = player.ability[tile.item.name]
                 min_ability = min(player.ability.values())
                 if ability == min_ability:
+                    match_cnt_key = persona_collect_match_cnt_key.format(persona=player.persona)
                     info[match_cnt_key] += 1
 
         if done:
