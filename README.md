@@ -2,6 +2,12 @@
 
 Economy Evolution Environment for Currency Emergence Research
 ## Change log
+
+### version 0.1.6.dev3
+- env:
+  - ADD item utility and related stastics
+  - MOD analyser key generate
+  - ADD utility plot script
 ### version 0.1.6.dev2
 - render:
   - FIX trade line trade amount display bug
