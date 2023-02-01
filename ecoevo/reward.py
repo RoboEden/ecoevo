@@ -101,7 +101,7 @@ class RewardParser:
         self.last_costs = {}
         self.total_costs = {}
 
-    def utility(self, player: Player) -> float:
+    def utility(self, player: Player) -> Tuple[float, Dict[str, float]]:
         volumes = {}
         for _, item_name in enumerate(self.item_names):
             volumes[item_name] = player.stomach[item_name].num * player.stomach[item_name].capacity
