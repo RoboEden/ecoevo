@@ -1,11 +1,19 @@
 from typing import Dict, List, Tuple
 
+import numpy as np
+
 from ecoevo.entities import ALL_ITEM_DATA, ALL_PERSONAE, EntityManager, Player
 from ecoevo.types import Action, DealType, IdType, OfferType
 
 persona_collect_cnt_key = "{}_collect_cnt"
 persona_collect_match_cnt_key = "{}_collect_match_cnt"
 persona_collect_match_ratio_key = "{}_collect_match_ratio"
+item_final_utility_avg_key = "{}_final_utility_avg"
+item_final_utility_std_key = "{}_final_utility_std"
+final_iustd_avg_key = "final_iustd_avg"
+final_iustd_std_key = "final_iustd_std"
+final_iustd_min_key = "final_iustd_min"
+final_iustd_max_key = "final_iustd_max"
 
 
 def persona_key(key_format: str):
@@ -31,7 +39,9 @@ class Analyser(object):
                 ['final_avr_utility', 'final_max_utility', 'final_min_utility'] + \
                 ['final_avr_cost', 'final_max_cost', 'final_min_cost'] + \
                 item_key('{}_trade_times') + item_key('{}_trade_amount') + \
-                item_key('{}_consume_times') + item_key('{}_final_consume_amount')
+                item_key('{}_consume_times') + item_key('{}_final_consume_amount') + \
+                item_key(item_final_utility_avg_key) + item_key(item_final_utility_std_key) + \
+                [final_iustd_avg_key, final_iustd_std_key, final_iustd_min_key, final_iustd_max_key]
 
     trade_result_keys = [f"avr_{trade_result}_per_step" for trade_result in ['absent', 'illegal', 'failed', 'success']]
     info_keys += trade_result_keys
@@ -144,16 +154,28 @@ class Analyser(object):
                 if info[cnt_key] > 0:
                     info[match_ratio_key] = info[match_cnt_key] / info[cnt_key]
 
-        # final utility
-        utilities = {pid: reward_info[pid]['utility'] for pid in reward_info}
-        costs = {pid: reward_info[pid]['cost'] for pid in reward_info}
-        if done:
-            info['final_avr_utility'] = sum(utilities.values()) / len(players)
-            info['final_max_utility'] = max(utilities.values())
-            info['final_min_utility'] = min(utilities.values())
-            info['final_avr_cost'] = sum(costs.values()) / len(players)
-            info['final_max_cost'] = max(costs.values())
-            info['final_min_cost'] = min(costs.values())
+            # item final utility avg and std
+            for item in ALL_ITEM_DATA:
+                item_final_utility = np.array([r['item_utility'][item] for r in reward_info.values()])
+                info[item_final_utility_avg_key.format(item)] = np.mean(item_final_utility)
+                info[item_final_utility_std_key.format(item)] = np.std(item_final_utility)
+
+            # player final iustd(item utility std)
+            player_final_iustd = np.array([np.std(list(r['item_utility'].values())) for r in reward_info.values()])
+            info[final_iustd_avg_key] = np.mean(player_final_iustd)
+            info[final_iustd_std_key] = np.std(player_final_iustd)
+            info[final_iustd_min_key] = np.amin(player_final_iustd)
+            info[final_iustd_max_key] = np.amax(player_final_iustd)
+
+            # final utility
+            player_final_utility = np.array([r['utility'] for r in reward_info.values()])
+            player_final_cost = np.array([r['cost'] for r in reward_info.values()])
+            info['final_avr_utility'] = np.mean(player_final_utility)
+            info['final_max_utility'] = np.amax(player_final_utility)
+            info['final_min_utility'] = np.amin(player_final_utility)
+            info['final_avr_cost'] = np.mean(player_final_cost)
+            info['final_max_cost'] = np.amax(player_final_cost)
+            info['final_min_cost'] = np.amin(player_final_cost)
 
         return info
 

@@ -43,17 +43,17 @@ def cal_utility(volumes: Dict[str, int]) -> Tuple[float, Dict[str, float]]:
     utility_dur_lux = (sum(volumes[item] for item in list_dur_lux) +
                        rc.c_dur_lux)**rc.eta_dur_lux * rc.lambda_lux - (rc.c_dur_nec)**rc.eta_dur_nec * rc.lambda_nec
 
-    utility_item = {}
+    item_utility = {}
     for item in list_dis_nec:
-        utility_item[item] = utility_dis_nec / len(list_dis_nec)
+        item_utility[item] = utility_dis_nec / len(list_dis_nec)
     for item in list_dis_lux:
-        utility_item[item] = utility_dis_lux / len(list_dis_lux)
+        item_utility[item] = utility_dis_lux / len(list_dis_lux)
     for item in list_dur_nec:
-        utility_item[item] = utility_dur_nec / len(list_dur_nec)
+        item_utility[item] = utility_dur_nec / len(list_dur_nec)
     for item in list_dur_lux:
-        utility_item[item] = utility_dur_lux / len(list_dur_lux)
+        item_utility[item] = utility_dur_lux / len(list_dur_lux)
 
-    return sum(utility_item.values()), utility_item
+    return sum(item_utility.values()), item_utility
 
 
 def cal_utility_log(volumes: Dict[str, int],
@@ -71,14 +71,14 @@ def cal_utility_log(volumes: Dict[str, int],
     :return: utility:  total utility
     """
 
-    utility_item = {}
+    item_utility = {}
     for item, vol in volumes.items():
         vol /= den
         vol *= coef_luxury if ALL_ITEM_DATA[item]['luxury'] else 1
         u = np.log(vol + 1) * coef_disposable if ALL_ITEM_DATA[item]['disposable'] else np.log(vol + 1)
-        utility_item[item] = u
+        item_utility[item] = u
 
-    return sum(utility_item.values()), utility_item
+    return sum(item_utility.values()), item_utility
 
 
 class RewardParser:
@@ -97,7 +97,7 @@ class RewardParser:
 
     def reset(self) -> None:
         self.last_utilities = {}
-        self.last_utility_items = {}
+        self.last_item_utilities = {}
         self.last_costs = {}
         self.total_costs = {}
 
@@ -106,11 +106,11 @@ class RewardParser:
         for _, item_name in enumerate(self.item_names):
             volumes[item_name] = player.stomach[item_name].num * player.stomach[item_name].capacity
 
-        utility, utility_item = cal_utility_log(volumes=volumes, coef_disposable=3,
+        utility, item_utility = cal_utility_log(volumes=volumes, coef_disposable=3,
                                                 coef_luxury=3) if self.ultility_mode == 'log' else cal_utility(
                                                     volumes=volumes)
 
-        return utility, utility_item
+        return utility, item_utility
 
     def cost(self, player: Player) -> float:
         penalty_flag = player.health <= rc.threshold
@@ -119,11 +119,11 @@ class RewardParser:
 
     def parse(self, player: Player) -> float:
         # utility
-        u, u_item = self.utility(player)
+        u, item_u = self.utility(player)
         last_u = self.last_utilities[player.id] if player.id in self.last_utilities else u
         du = u - last_u
         self.last_utilities[player.id] = u
-        self.last_utility_items[player.id] = u_item
+        self.last_item_utilities[player.id] = item_u
 
         # cost
         cost = self.cost(player)
