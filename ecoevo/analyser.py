@@ -1,53 +1,56 @@
 from typing import Dict, List, Tuple
 
-from ecoevo.entities import ALL_ITEM_DATA, ALL_PERSONAE, Player, EntityManager
+import numpy as np
+
+from ecoevo.entities import ALL_ITEM_DATA, ALL_PERSONAE, EntityManager, Player
 from ecoevo.types import Action, DealType, IdType, OfferType
 
-persona_collect_cnt_key = "{persona}_collect_cnt"
-persona_collect_match_cnt_key = "{persona}_collect_match_cnt"
-persona_collect_match_ratio_key = "{persona}_collect_match_ratio"
+persona_collect_cnt_key = "{}_collect_cnt"
+persona_collect_match_cnt_key = "{}_collect_match_cnt"
+persona_collect_match_ratio_key = "{}_collect_match_ratio"
+item_final_utility_avg_key = "{}_final_utility_avg"
+item_final_utility_std_key = "{}_final_utility_std"
+final_iustd_avg_key = "final_iustd_avg"
+final_iustd_std_key = "final_iustd_std"
+final_iustd_min_key = "final_iustd_min"
+final_iustd_max_key = "final_iustd_max"
+
+
+def persona_key(key_format: str):
+    return [key_format.format(persona) for persona in ALL_PERSONAE]
+
+
+def item_key(key_format: str):
+    return [key_format.format(item) for item in ALL_ITEM_DATA]
+
+
+def different_item_pair_key(key_format: str):
+    r = []
+    for a in ALL_ITEM_DATA:
+        for b in ALL_ITEM_DATA:
+            if a != b:
+                r.append(key_format.format(a, b))
+    return r
 
 
 class Analyser(object):
+    # keys
+    info_keys = ['curr_step', 'trade_times'] + \
+                ['final_avr_utility', 'final_max_utility', 'final_min_utility'] + \
+                ['final_avr_cost', 'final_max_cost', 'final_min_cost'] + \
+                item_key('{}_trade_times') + item_key('{}_trade_amount') + \
+                item_key('{}_consume_times') + item_key('{}_final_consume_amount') + \
+                item_key(item_final_utility_avg_key) + item_key(item_final_utility_std_key) + \
+                [final_iustd_avg_key, final_iustd_std_key, final_iustd_min_key, final_iustd_max_key]
 
-    def __init__(self) -> None:
-        # keys
-        info_keys = ['curr_step'] + \
-                    ['trade_times'] + \
-                    ['{}_trade_times'.format(item) for item in ALL_ITEM_DATA.keys()] + \
-                    ['{}_trade_amount'.format(item) for item in ALL_ITEM_DATA.keys()] + \
-                    ['{}_consume_times'.format(item) for item in ALL_ITEM_DATA.keys()] + \
-                    ['{}_final_consume_amount'.format(item) for item in ALL_ITEM_DATA.keys()] + \
-                    ['final_avr_utility', 'final_max_utility', 'final_min_utility'] + \
-                    ['final_avr_cost', 'final_max_cost', 'final_min_cost']
-        trade_result_keys = [
-            f"avr_{trade_result}_per_step" for trade_result in ['absent', 'illegal', 'failed', 'success']
-        ]
-        price_keys = []
-        exchange_cnt_keys = []
-        for buy_item_name in ALL_ITEM_DATA:
-            for sell_item_name in ALL_ITEM_DATA:
-                if buy_item_name == sell_item_name:
-                    continue
-                key_name = f"{buy_item_name}_{sell_item_name}_price"
-                price_keys.append(key_name)
-                exchange_cnt_keys.append(f"{buy_item_name}_{sell_item_name}_cnt")
+    trade_result_keys = [f"avr_{trade_result}_per_step" for trade_result in ['absent', 'illegal', 'failed', 'success']]
+    info_keys += trade_result_keys
 
-        # persona collect
-        for persona in ALL_PERSONAE:
-            cnt_key = persona_collect_cnt_key.format(persona=persona)
-            match_cnt_key = persona_collect_match_cnt_key.format(persona=persona)
-            match_ratio_key = persona_collect_match_ratio_key.format(persona=persona)
-            info_keys += [cnt_key, match_cnt_key, match_ratio_key]
-
-        info_keys += trade_result_keys
-        info_keys += price_keys
-        info_keys += exchange_cnt_keys
-
-        self.trade_result_keys = trade_result_keys
-        self.price_keys = price_keys
-        self.exchange_cnt_keys = exchange_cnt_keys
-        self.info_keys = info_keys
+    info_keys += different_item_pair_key('{}_{}_price')
+    info_keys += different_item_pair_key('{}_{}_cnt')
+    info_keys += persona_key(persona_collect_cnt_key)
+    info_keys += persona_key(persona_collect_match_cnt_key)
+    info_keys += persona_key(persona_collect_match_ratio_key)
 
     def get_info(self, step: int, done: bool, info: Dict[str, int or float], players: List[Player],
                  entity_manager: EntityManager, matched_deals: Dict[IdType, DealType],
@@ -125,7 +128,7 @@ class Analyser(object):
             # persona collect info
             player = players[pid]
             if action_type == Action.collect and player.collect_remain is None:
-                cnt_key = persona_collect_cnt_key.format(persona=player.persona)
+                cnt_key = persona_collect_cnt_key.format(player.persona)
                 info[cnt_key] += 1
 
                 tile = entity_manager.map[player.pos]
@@ -134,7 +137,7 @@ class Analyser(object):
                 ability = player.ability[tile.item.name]
                 min_ability = min(player.ability.values())
                 if ability == min_ability:
-                    match_cnt_key = persona_collect_match_cnt_key.format(persona=player.persona)
+                    match_cnt_key = persona_collect_match_cnt_key.format(player.persona)
                     info[match_cnt_key] += 1
 
         if done:
@@ -145,22 +148,34 @@ class Analyser(object):
 
             # persona collect match ratio
             for persona in ALL_PERSONAE:
-                cnt_key = persona_collect_cnt_key.format(persona=persona)
-                match_cnt_key = persona_collect_match_cnt_key.format(persona=persona)
-                match_ratio_key = persona_collect_match_ratio_key.format(persona=persona)
+                cnt_key = persona_collect_cnt_key.format(persona)
+                match_cnt_key = persona_collect_match_cnt_key.format(persona)
+                match_ratio_key = persona_collect_match_ratio_key.format(persona)
                 if info[cnt_key] > 0:
                     info[match_ratio_key] = info[match_cnt_key] / info[cnt_key]
 
-        # final utility
-        utilities = {pid: reward_info[pid]['utility'] for pid in reward_info}
-        costs = {pid: reward_info[pid]['cost'] for pid in reward_info}
-        if done:
-            info['final_avr_utility'] = sum(utilities.values()) / len(players)
-            info['final_max_utility'] = max(utilities.values())
-            info['final_min_utility'] = min(utilities.values())
-            info['final_avr_cost'] = sum(costs.values()) / len(players)
-            info['final_max_cost'] = max(costs.values())
-            info['final_min_cost'] = min(costs.values())
+            # item final utility avg and std
+            for item in ALL_ITEM_DATA:
+                item_final_utility = np.array([r['item_utility'][item] for r in reward_info.values()])
+                info[item_final_utility_avg_key.format(item)] = np.mean(item_final_utility)
+                info[item_final_utility_std_key.format(item)] = np.std(item_final_utility)
+
+            # player final iustd(item utility std)
+            player_final_iustd = np.array([np.std(list(r['item_utility'].values())) for r in reward_info.values()])
+            info[final_iustd_avg_key] = np.mean(player_final_iustd)
+            info[final_iustd_std_key] = np.std(player_final_iustd)
+            info[final_iustd_min_key] = np.amin(player_final_iustd)
+            info[final_iustd_max_key] = np.amax(player_final_iustd)
+
+            # final utility
+            player_final_utility = np.array([r['utility'] for r in reward_info.values()])
+            player_final_cost = np.array([r['cost'] for r in reward_info.values()])
+            info['final_avr_utility'] = np.mean(player_final_utility)
+            info['final_max_utility'] = np.amax(player_final_utility)
+            info['final_min_utility'] = np.amin(player_final_utility)
+            info['final_avr_cost'] = np.mean(player_final_cost)
+            info['final_max_cost'] = np.amax(player_final_cost)
+            info['final_min_cost'] = np.amin(player_final_cost)
 
         return info
 
