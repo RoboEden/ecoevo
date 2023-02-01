@@ -1,53 +1,46 @@
 from typing import Dict, List, Tuple
 
-from ecoevo.entities import ALL_ITEM_DATA, ALL_PERSONAE, Player, EntityManager
+from ecoevo.entities import ALL_ITEM_DATA, ALL_PERSONAE, EntityManager, Player
 from ecoevo.types import Action, DealType, IdType, OfferType
 
-persona_collect_cnt_key = "{persona}_collect_cnt"
-persona_collect_match_cnt_key = "{persona}_collect_match_cnt"
-persona_collect_match_ratio_key = "{persona}_collect_match_ratio"
+persona_collect_cnt_key = "{}_collect_cnt"
+persona_collect_match_cnt_key = "{}_collect_match_cnt"
+persona_collect_match_ratio_key = "{}_collect_match_ratio"
+
+
+def persona_key(key_format: str):
+    return [key_format.format(persona) for persona in ALL_PERSONAE]
+
+
+def item_key(key_format: str):
+    return [key_format.format(item) for item in ALL_ITEM_DATA]
+
+
+def different_item_pair_key(key_format: str):
+    r = []
+    for a in ALL_ITEM_DATA:
+        for b in ALL_ITEM_DATA:
+            if a != b:
+                r.append(key_format.format(a, b))
+    return r
 
 
 class Analyser(object):
+    # keys
+    info_keys = ['curr_step', 'trade_times'] + \
+                ['final_avr_utility', 'final_max_utility', 'final_min_utility'] + \
+                ['final_avr_cost', 'final_max_cost', 'final_min_cost'] + \
+                item_key('{}_trade_times') + item_key('{}_trade_amount') + \
+                item_key('{}_consume_times') + item_key('{}_final_consume_amount')
 
-    def __init__(self) -> None:
-        # keys
-        info_keys = ['curr_step'] + \
-                    ['trade_times'] + \
-                    ['{}_trade_times'.format(item) for item in ALL_ITEM_DATA.keys()] + \
-                    ['{}_trade_amount'.format(item) for item in ALL_ITEM_DATA.keys()] + \
-                    ['{}_consume_times'.format(item) for item in ALL_ITEM_DATA.keys()] + \
-                    ['{}_final_consume_amount'.format(item) for item in ALL_ITEM_DATA.keys()] + \
-                    ['final_avr_utility', 'final_max_utility', 'final_min_utility'] + \
-                    ['final_avr_cost', 'final_max_cost', 'final_min_cost']
-        trade_result_keys = [
-            f"avr_{trade_result}_per_step" for trade_result in ['absent', 'illegal', 'failed', 'success']
-        ]
-        price_keys = []
-        exchange_cnt_keys = []
-        for buy_item_name in ALL_ITEM_DATA:
-            for sell_item_name in ALL_ITEM_DATA:
-                if buy_item_name == sell_item_name:
-                    continue
-                key_name = f"{buy_item_name}_{sell_item_name}_price"
-                price_keys.append(key_name)
-                exchange_cnt_keys.append(f"{buy_item_name}_{sell_item_name}_cnt")
+    trade_result_keys = [f"avr_{trade_result}_per_step" for trade_result in ['absent', 'illegal', 'failed', 'success']]
+    info_keys += trade_result_keys
 
-        # persona collect
-        for persona in ALL_PERSONAE:
-            cnt_key = persona_collect_cnt_key.format(persona=persona)
-            match_cnt_key = persona_collect_match_cnt_key.format(persona=persona)
-            match_ratio_key = persona_collect_match_ratio_key.format(persona=persona)
-            info_keys += [cnt_key, match_cnt_key, match_ratio_key]
-
-        info_keys += trade_result_keys
-        info_keys += price_keys
-        info_keys += exchange_cnt_keys
-
-        self.trade_result_keys = trade_result_keys
-        self.price_keys = price_keys
-        self.exchange_cnt_keys = exchange_cnt_keys
-        self.info_keys = info_keys
+    info_keys += different_item_pair_key('{}_{}_price')
+    info_keys += different_item_pair_key('{}_{}_cnt')
+    info_keys += persona_key(persona_collect_cnt_key)
+    info_keys += persona_key(persona_collect_match_cnt_key)
+    info_keys += persona_key(persona_collect_match_ratio_key)
 
     def get_info(self, step: int, done: bool, info: Dict[str, int or float], players: List[Player],
                  entity_manager: EntityManager, matched_deals: Dict[IdType, DealType],
@@ -125,7 +118,7 @@ class Analyser(object):
             # persona collect info
             player = players[pid]
             if action_type == Action.collect and player.collect_remain is None:
-                cnt_key = persona_collect_cnt_key.format(persona=player.persona)
+                cnt_key = persona_collect_cnt_key.format(player.persona)
                 info[cnt_key] += 1
 
                 tile = entity_manager.map[player.pos]
@@ -134,7 +127,7 @@ class Analyser(object):
                 ability = player.ability[tile.item.name]
                 min_ability = min(player.ability.values())
                 if ability == min_ability:
-                    match_cnt_key = persona_collect_match_cnt_key.format(persona=player.persona)
+                    match_cnt_key = persona_collect_match_cnt_key.format(player.persona)
                     info[match_cnt_key] += 1
 
         if done:
@@ -145,9 +138,9 @@ class Analyser(object):
 
             # persona collect match ratio
             for persona in ALL_PERSONAE:
-                cnt_key = persona_collect_cnt_key.format(persona=persona)
-                match_cnt_key = persona_collect_match_cnt_key.format(persona=persona)
-                match_ratio_key = persona_collect_match_ratio_key.format(persona=persona)
+                cnt_key = persona_collect_cnt_key.format(persona)
+                match_cnt_key = persona_collect_match_cnt_key.format(persona)
+                match_ratio_key = persona_collect_match_ratio_key.format(persona)
                 if info[cnt_key] > 0:
                     info[match_ratio_key] = info[match_cnt_key] / info[cnt_key]
 
