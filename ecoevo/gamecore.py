@@ -130,7 +130,8 @@ class GameCore:
                 player.id: {
                     'reward': rewards[player.id],
                     'utility': self.reward_parser.last_utilities[player.id],
-                    'cost': self.reward_parser.total_costs[player.id]
+                    'item_utility': self.reward_parser.last_item_utilities[player.id],
+                    'cost': self.reward_parser.total_costs[player.id],
                 }
                 for player in self.players
             })
