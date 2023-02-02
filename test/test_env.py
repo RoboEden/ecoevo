@@ -13,11 +13,11 @@ class TestEnvBasic:
 
         for step in range(STEP):
             assert step == 0 or h.done == False
-            assert h.env.curr_step == step
+            assert h.gamecore.curr_step == step
             h.step({})
 
         assert h.done == True
-        assert h.env.curr_step == STEP
+        assert h.gamecore.curr_step == STEP
 
 
 class TestCollect:
@@ -31,7 +31,7 @@ class TestCollect:
         })
         h.reset()
 
-        for _ in range(h.env.players[0].ability[Item.gold]):
+        for _ in range(h.gamecore.players[0].ability[Item.gold]):
             assert h.get_tile_item((8, 8)) == (Item.gold, G)
             h.step({
                 0: ((Action.collect, None), None, None),
@@ -39,7 +39,7 @@ class TestCollect:
 
         assert h.get_tile_item((8, 8)) == (Item.gold, 1)
         assert h.get_error_log() == ''
-        assert h.env.players[0].collect_remain is None
+        assert h.gamecore.players[0].collect_remain is None
 
     def test_exceed_volumn_after_trade(self):
         # 潜在风险：trade之后collect之前没有做背包容量检查
@@ -80,8 +80,8 @@ class TestMove:
             0: ((Action.move, Move.down), None, None),
         })
 
-        assert h.env.players[0].pos == (0, 0)
-        assert h.env.gettile((0, 0)).player.id == 0
+        assert h.gamecore.players[0].pos == (0, 0)
+        assert h.gamecore.gettile((0, 0)).player.id == 0
         assert h.get_error_log() == ''
         assert 'towards map boarder' in h.get_warning_log()
         assert 'hit player' not in h.get_warning_log()
@@ -100,9 +100,9 @@ class TestMove:
         })
 
         assert h.get_error_log() == ''
-        assert h.env.gettile((16, 14)).player.id in [0, 1]
-        assert h.env.players[0].pos in [(16, 13), (16, 14)]
-        assert h.env.players[1].pos in [(16, 14), (16, 15)]
+        assert h.gamecore.gettile((16, 14)).player.id in [0, 1]
+        assert h.gamecore.players[0].pos in [(16, 13), (16, 14)]
+        assert h.gamecore.players[1].pos in [(16, 14), (16, 15)]
 
 
 class TestConsume:
@@ -155,7 +155,7 @@ class TestTrade:
         assert len(transaction_graph) == 2
 
     def test_main_action_partial_fail(self):
-        # trader 和 env 关于action的验证不一致，导致交易和step里面的action_valid不一致
+        # trader 和 gamecore 关于action的验证不一致，导致交易和step里面的action_valid不一致
         h = Helper()
         h.init_pos({
             0: (8, 8),
@@ -251,18 +251,18 @@ class TestHealth:
         init_health = [1, D, D + 1]
         actions = {}
         for i in range(3):
-            h.env.players[i].health = init_health[i]
-            h.env.players[i + 3].health = init_health[i]
-            h.env.players[i + 3].backpack.pineapple.num = ITEMS.pineapple.consume_num
+            h.gamecore.players[i].health = init_health[i]
+            h.gamecore.players[i + 3].health = init_health[i]
+            h.gamecore.players[i + 3].backpack.pineapple.num = ITEMS.pineapple.consume_num
             actions[i + 3] = ((Action.consume, Item.pineapple), None, None)
 
         h.step(actions)
 
         E = ITEMS.pineapple.consume_num * ITEMS.pineapple.supply
         for i in range(3):
-            assert h.env.players[i].health == max(init_health[i] - D, 0)
-            assert h.env.players[i + 3].health == min(init_health[i] + E, PlayerConfig.max_health) - D
-            assert h.env.reward_parser.last_costs[i] > h.env.reward_parser.last_costs[i + 3] or (i == 2)
+            assert h.gamecore.players[i].health == max(init_health[i] - D, 0)
+            assert h.gamecore.players[i + 3].health == min(init_health[i] + E, PlayerConfig.max_health) - D
+            assert h.gamecore.reward_parser.last_costs[i] > h.gamecore.reward_parser.last_costs[i + 3] or (i == 2)
         assert h.get_error_log() == ''
 
 
@@ -283,18 +283,18 @@ class TestItemRefresh:
         for loop in range(LOOP):
             for i in range(ITEMS.peanut.collect_time):
                 assert h.get_tile_item((0, 0)) == (Item.peanut, P)
-                assert h.env.gettile((0, 0)).item.refresh_remain is None
+                assert h.gamecore.gettile((0, 0)).item.refresh_remain is None
                 assert h.get_bag(0) == {Item.peanut: loop * P} or loop == 0 and h.get_bag(0) == {}
                 h.step({
                     0: ((Action.collect, None), None, None),
                 })
             for i in reversed(range(ITEMS.peanut.refresh_time)):
                 assert h.get_tile_item((0, 0)) == (Item.peanut, 0)
-                assert h.env.gettile((0, 0)).item.refresh_remain == i
+                assert h.gamecore.gettile((0, 0)).item.refresh_remain == i
                 assert h.get_bag(0) == {Item.peanut: (loop + 1) * P}
                 h.step({})
         assert h.get_tile_item((0, 0)) == (Item.peanut, ITEMS.peanut.reserve_num)
-        assert h.env.gettile((0, 0)).item.refresh_remain is None
+        assert h.gamecore.gettile((0, 0)).item.refresh_remain is None
         assert h.get_bag(0) == {Item.peanut: LOOP * P}
 
 
@@ -340,7 +340,7 @@ class TestMap:
 class TestObs:
 
     def test_rel_pos_coord_max(self):
-        # env的get_obs里的MapSize.width和MapSize.height应该减一
+        # gamecore的get_obs里的MapSize.width和MapSize.height应该减一
         X, Y = MapConfig.width, MapConfig.height
         V = EnvConfig.visual_radius
         h = Helper()
@@ -392,10 +392,10 @@ class TestInfo:
                 1: ((Action.idle, None), (items[1], -nums[1]), (items[0], nums[0])),
             })
 
-        assert h.info['trade_times'] == STEP / h.env.num_player
+        assert h.info['trade_times'] == STEP / h.gamecore.num_player
         for item, amount in zip(LIST, AMOUNT):
-            assert h.info[item + '_trade_times'] == CYCLE * 2 / h.env.num_player
-            assert h.info[item + '_trade_amount'] == CYCLE * 2 * amount / h.env.num_player
+            assert h.info[item + '_trade_times'] == CYCLE * 2 / h.gamecore.num_player
+            assert h.info[item + '_trade_amount'] == CYCLE * 2 * amount / h.gamecore.num_player
 
     def test_trade_time_and_amount_multiple_partner(self):
         S1, S2 = 7, 3
@@ -415,11 +415,11 @@ class TestInfo:
             2: ((Action.idle, None), (Item.sand, -S2), (Item.gold, S2 * M)),
         })
 
-        assert h.info['trade_times'] == 2 / h.env.num_player
-        assert h.info[Item.gold + '_trade_times'] == 2 / h.env.num_player
-        assert h.info[Item.sand + '_trade_times'] == 2 / h.env.num_player
-        assert h.info[Item.gold + '_trade_amount'] == (S1 + S2) * M / h.env.num_player
-        assert h.info[Item.sand + '_trade_amount'] == (S1 + S2) / h.env.num_player
+        assert h.info['trade_times'] == 2 / h.gamecore.num_player
+        assert h.info[Item.gold + '_trade_times'] == 2 / h.gamecore.num_player
+        assert h.info[Item.sand + '_trade_times'] == 2 / h.gamecore.num_player
+        assert h.info[Item.gold + '_trade_amount'] == (S1 + S2) * M / h.gamecore.num_player
+        assert h.info[Item.sand + '_trade_amount'] == (S1 + S2) / h.gamecore.num_player
 
     def test_utility(self):
         import math
@@ -443,11 +443,11 @@ class TestInfo:
         for step in range(STEP):
             h.step({id: ((Action.consume, CONSUME[id][step]), None, None) for id in range(3)})
 
-        utilities = h.env.reward_parser.last_utilities
+        utilities = h.gamecore.reward_parser.last_utilities
         assert utilities[0] == math.log(G * 2 * ITEMS.gold.capacity / 10 + 1)
         assert utilities[1] == math.log(P * ITEMS.pineapple.capacity / 10 + 1) * 2
         assert utilities[2] == math.log(G * ITEMS.gold.capacity / 10 +
                                         1) + math.log(PC * ITEMS.pineapple.capacity / 10 + 1) * 2
-        assert h.info['final_avr_utility'] == sum(utilities.values()) / h.env.num_player
+        assert h.info['final_avr_utility'] == sum(utilities.values()) / h.gamecore.num_player
         assert h.info['final_max_utility'] == max(utilities.values())
         assert h.info['final_min_utility'] == min(utilities.values())

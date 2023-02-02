@@ -4,7 +4,7 @@ from typing import Dict, Optional, Tuple
 from loguru import logger
 
 import ecoevo.entities.items
-from ecoevo import EcoEvo
+from ecoevo.gamecore import GameCore
 from ecoevo.config import EnvConfig, MapConfig
 from ecoevo.types import Action, ActionType, IdType, Move, PosType
 
@@ -26,7 +26,7 @@ ITEMS = ecoevo.entities.items.Bag()
 class Helper:
 
     def __init__(self):
-        self.env = EcoEvo()
+        self.gamecore = GameCore()
         self.cfg = EnvConfig
         self.warning_log = io.StringIO()
         self.error_log = io.StringIO()
@@ -34,7 +34,7 @@ class Helper:
         logger.add(self.error_log, level='ERROR')
 
     def reset(self):
-        self.obs, self.info = self.env.reset()
+        self.obs, self.info = self.gamecore.reset()
 
     def init_pos(self, pos_dict: Dict[IdType, PosType]):
         """ {id: pos ...} """
@@ -65,42 +65,42 @@ class Helper:
             item, amount = offer
             map_item[pos[0]][pos[1]] = item
             map_amount[pos[0]][pos[1]] = amount
-        self.env.entity_manager.data = dict(
+        self.gamecore.entity_manager.data = dict(
             tiles=map_item,
             amount=map_amount,
         )
 
     def step(self, action_dict: Dict[IdType, ActionType]):
         """ {id: action}... """
-        actions = [(('idle', None), None, None) for _ in range(self.env.num_player)]
+        actions = [(('idle', None), None, None) for _ in range(self.gamecore.num_player)]
         for id, action in action_dict.items():
             actions[id] = action
 
-        self.obs, self.rewards, self.done, self.info = self.env.step(actions)
+        self.obs, self.rewards, self.done, self.info = self.gamecore.step(actions)
 
     def set_bag(self, id: IdType, bag: Dict[str, int]):
         """ {(item, num)...} """
         for item in ITEMS.dict():
-            self.env.players[id].backpack[item].num = 0
+            self.gamecore.players[id].backpack[item].num = 0
         for item, num in bag.items():
-            self.env.players[id].backpack[item].num = num
+            self.gamecore.players[id].backpack[item].num = num
 
     def get_tile_item(self, pos: PosType) -> Tuple[str, int]:
         """ pos """
-        tile = self.env.gettile(pos)
+        tile = self.gamecore.gettile(pos)
         item = tile.item if tile else None
         return (item.name, item.num) if item else ('empty', 0)
 
     def get_map_items(self) -> Dict[PosType, Optional[Tuple[str, int]]]:
         map_items = {}
-        for pos in self.env.entity_manager.map:
+        for pos in self.gamecore.entity_manager.map:
             map_items[pos] = self.get_tile_item(pos)
         return map_items
 
     def get_bag(self, id: IdType) -> Dict[str, int]:
         """ id """
         bag = {}
-        for item in self.env.players[id].backpack.dict().values():
+        for item in self.gamecore.players[id].backpack.dict().values():
             if item.num > 0:
                 bag[item.name] = item.num
         return bag
@@ -108,7 +108,7 @@ class Helper:
     def get_stomach(self, id: IdType) -> Dict[str, int]:
         """ id """
         stomach = {}
-        for item in self.env.players[id].stomach.dict().values():
+        for item in self.gamecore.players[id].stomach.dict().values():
             if item.num > 0:
                 stomach[item.name] = item.num
         return stomach
