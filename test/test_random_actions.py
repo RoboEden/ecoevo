@@ -43,11 +43,11 @@ def test_random_actions():
     env = EcoEvo(logging_level="DEBUG")
 
     # Reset
-    obs, infos = env.reset()
+    obs, info = env.reset()
     print('num_player:', env.num_player)
 
     # Step teset
     actions = [(('consume', 'peanut'), ('gold', -5), ('peanut', 20))] * env.num_player
     for _ in range(env.cfg.total_step):
         actions = [sample_action() for _ in range(env.num_player)]
-        obs, reward, done, infos = env.step(actions)
+        obs, reward, done, info = env.step(actions)

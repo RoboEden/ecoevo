@@ -58,7 +58,7 @@ class Analyser(object):
                  executed_main_actions: Dict[int, Tuple[str, str]], reward_info: Dict[int,
                                                                                       Dict]) -> Dict[str, int or float]:
         """
-        get infos
+        get info
 
         :param step:  current step
         :param done:  if episode done
