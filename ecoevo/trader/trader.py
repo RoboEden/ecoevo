@@ -246,7 +246,7 @@ class Trader(object):
         idx_pos, idx_sell, idx_buy = 0, 1, 2
         idx_item_name, idx_item_num = 0, 1
 
-        # deal infos during processing, transfer tuples to lists
+        # deal info during processing, transfer tuples to lists
         dict_deal = {}
         for i in self.legal_deals:
             dict_deal[i] = [

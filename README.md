@@ -3,11 +3,18 @@
 Economy Evolution Environment for Currency Emergence Research
 ## Change log
 
+### version 0.1.6.dev4
+- env:
+  - ADD render_mode
+  - DEPRECATE `num_player`
+  - UPDATE README.md
+
 ### version 0.1.6.dev3
 - env:
   - ADD item utility and related stastics
   - MOD analyser key generate
   - ADD utility plot script
+
 ### version 0.1.6.dev2
 - render:
   - FIX trade line trade amount display bug
@@ -74,16 +81,26 @@ pip install dist/ecoevo-0.1.0-py3-none-any.whl
 ```python
 from ecoevo import EcoEvo
 
-env = EcoEvo()
-obs, infos = env.reset()
+env = EcoEvo(render_mode=False)
+obs, info = env.reset()
 done = False
 while not done:
-    actions = my_policy(obs, infos) # your policy goes here
-    obs, rewards, done, infos = env.step(actions)
+    actions = your_policy(obs, info)
+    obs, rewards, done, info = env.step(actions)
 ```
 You can change game setting such as `total_step` (the game durateion) and  `personae` (the num of players withhold each persona) in [`config.py`](ecoevo/config.py).
 
 Note that for now change `MapConfig` is not effective.
+
+## Render
+
+To render, set `render_mode` to `True`. Default is `False`
+
+Run the same code above and open the web app from your browser on `http://127.0.0.1:8050/`
+
+>**_Under render mode:_**
+>- Method `reset` is blocked till the web app is open in the browser.
+>- Method `step` is blocked till step button is clicked.
 
 ## Items
 First of all, here is a list of all avaliable `item_name`
@@ -145,7 +162,7 @@ Note that "sell offer" stands *before* "buy offer" in the ternary tuple, followi
 ```
 
 ## Output
-The gamecore outputs `obs`, `rewards`, `done`, `infos` when step. See details below.
+The gamecore outputs `obs`, `rewards`, `done`, `info` when step. See details below.
 
 - `obs`: `Dict[IdType, Dict[PosType, Tile]]`
 
@@ -163,9 +180,9 @@ The gamecore outputs `obs`, `rewards`, `done`, `infos` when step. See details be
 - `done`: `bool`
 
   Returns to `True` if the current game is over.
-- `infos`: `Dict[IdType, dict]`
+- `info`: `Dict[IdType, dict]`
 
-  Returns infos of each player.
+  Returns info of each player.
 ### Output Examples
 - `obs`
     ```Python
@@ -205,7 +222,7 @@ The gamecore outputs `obs`, `rewards`, `done`, `infos` when step. See details be
     ```python
     False
     ```
-- `infos`
+- `info`
     ```python
     {
         0: {
@@ -242,39 +259,6 @@ The gamecore outputs `obs`, `rewards`, `done`, `infos` when step. See details be
         ...
     }
     ```
-## Render
-See the example below:
-
-> **_NOTE:_**
-> For a `RollOut` object
-> - `self.env` must be an `EcoEvo` object
-> - Implement your own `self.get_actions()`.  You can get current `obs` by calling `self.get_current_obs()` method.
-```python
-import ecoevo
-from ecoevo.render import WebApp
-
-
-class MyRollOut(ecoevo.RollOut):
-
-    def __init__(self):
-        super().__init__()
-        self.env = ecoevo.EcoEvo()
-
-    def get_actions(self):
-        obs = self.get_current_obs()
-        return [(('idle', None), None, None)
-                for i in range(self.env.num_player)]
-
-
-my_rollout = MyRollOut()
-web_app = WebApp(my_rollout)
-
-if __name__ == '__main__':
-    web_app.run_server()
-```
-
-Run the python code above and open the render web from your browser on `http://127.0.0.1:8050/`
-
 
 ## FAQ
 - Can agent execute more than 1 action per step?
