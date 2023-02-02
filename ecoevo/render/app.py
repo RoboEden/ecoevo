@@ -1,3 +1,4 @@
+import copy
 import json
 import queue
 import threading
@@ -127,13 +128,15 @@ class WebApp:
                 self._env.trader.dict_flow,
                 self._env.players,
             )
-            if 'transaction_graph' in info:
-                info.pop('transaction_graph')
+
+            _info = copy.deepcopy(info)
+            if 'transaction_graph' in _info:
+                _info.pop('transaction_graph')
 
             env_output_data = {
                 'obs': None,
                 'rewards': rewards,
-                'info': info,
+                'info': _info,
                 'players': [player.json() for player in self._env.players]
             }
 
