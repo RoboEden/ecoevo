@@ -16,7 +16,7 @@ class EnvConfig:
         *(['stone_picker'] * num_person_type),
         *(['pumpkin_farmer'] * num_person_type),
     ]
-    random_generate_map = True
+    random_generate_map = False
 
     init_points = None
 
