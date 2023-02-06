@@ -51,4 +51,4 @@ class RewardConfig:
 class DataPath:
     item_yaml = pathlib.Path(__file__).parent / "data" / "items.yaml"
     player_yaml = pathlib.Path(__file__).parent / "data" / "player.yaml"
-    map_json = pathlib.Path(__file__).parent / "data" / "base.json"
+    map_json = pathlib.Path(__file__).parent / "data" / "food.json"
