@@ -384,7 +384,7 @@ class Trader(object):
 
         # consider remaining backpack volume of player 1
         ratio_2 = sell_num_2 / buy_num_2
-        buy_num_1_ratio = math.floor(actual_buy_num_2 * ratio_2)
+        buy_num_1_ratio = max(math.floor(actual_buy_num_2 * ratio_2), 1)  # avoid sell num being 0
         capacity_1 = ALL_ITEM_DATA[buy_item_1]['capacity']
         buy_num_1_ub = math.floor(remain_volume_1 / capacity_1)
         actual_buy_num_1 = min(buy_num_1_ratio, sell_num_2, buy_num_1_ub)
