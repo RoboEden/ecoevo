@@ -2,24 +2,25 @@ from typing import Tuple, Optional
 
 
 class Move:
-    up = 'up'
-    down = 'down'
-    left = 'left'
-    right = 'right'
+    up = "up"
+    down = "down"
+    left = "left"
+    right = "right"
 
 
 class Action:
-    idle = 'idle'
-    move = 'move'
-    collect = 'collect'
-    consume = 'consume'
+    idle = "idle"
+    move = "move"
+    collect = "collect"
+    consume = "consume"
+    drop = "drop"
 
 
 class TradeResult:
-    absent = 'absent'
-    illegal = 'illegal'
-    failed = 'failed'
-    success = 'success'
+    absent = "absent"
+    illegal = "illegal"
+    failed = "failed"
+    success = "success"
 
 
 IdType = int
@@ -45,7 +46,7 @@ class BuyOffer(BaseModel):
 
 
 class MainAction(BaseModel):
-    primary: str = Field(default='idle')
+    primary: str = Field(default="idle")
     secondary: Optional[str]
 
 
