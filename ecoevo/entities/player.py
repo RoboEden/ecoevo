@@ -72,6 +72,9 @@ class Player(BaseModel):
                 f'''Player {self.id} cannot consume {item_name} (num: {item_in_bag.num} disposable: {item_in_bag.disposable})
                 due to insuffient amount.''')
 
+    def destroy(self, item_name: str):
+        self.backpack[item_name].num = 0
+
     def next_pos(
         self,
         direction: str,

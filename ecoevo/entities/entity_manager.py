@@ -111,6 +111,8 @@ class EntityManager:
             player.collect(self.map[player.pos].item)
         elif primary_action == Action.consume:
             player.consume(secondary_action)
+        elif primary_action == Action.destroy:
+            player.destroy(secondary_action)
         else:
             raise ValueError(f'Failed to parse primary action. Player {player.id}: {primary_action} ')
 

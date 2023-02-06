@@ -237,6 +237,14 @@ class GameCore:
                 logger.warning(
                     f'Player {player.id} cannot consume "{consume_item_name}" since num no more than {least_num}.')
                 return False
+        # check destroy
+        elif primary_action == Action.destroy:
+            if secondary_action is None:
+                return False
+            destroy_item_name = secondary_action
+            if player.backpack[destroy_item_name].num <= 0:
+                logger.debug(f"Player {player.id} do not have any {destroy_item_name}")
+                return False
         else:
             logger.warning(f'Failed to parse primary action. Player {player.id}: {primary_action} ')
             return False
