@@ -3,6 +3,10 @@
 Economy Evolution Environment for Currency Emergence Research
 ## Change log
 
+### version 0.1.7
+- env:
+  - ADD wipeout action
+
 ### version 0.1.6.dev5
 - env:
   - FIX item utility not passed to analyser
