@@ -54,3 +54,9 @@ include-package-data = true
 [tool.yapf]
     column_limit = 120
     indent_width = 4
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+testpaths = [
+    "test",
+]

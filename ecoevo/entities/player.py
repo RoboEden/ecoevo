@@ -49,10 +49,8 @@ class Player(BaseModel):
                 self.collect_remain = None
 
         else:
-            logger.critical(
-                f"""Player {self.id} cannot collect {item.name} (harvest_num: {item.harvest_num})
-            due to insuffient backpack remain {self.backpack.remain_volume}."""
-            )
+            logger.critical(f"""Player {self.id} cannot collect {item.name} (harvest_num: {item.harvest_num})
+            due to insuffient backpack remain {self.backpack.remain_volume}.""")
 
     def consume(self, item_name: str):
         item_in_bag = self.backpack[item_name]
@@ -75,8 +73,7 @@ class Player(BaseModel):
         else:
             logger.critical(
                 f"""Player {self.id} cannot consume {item_name} (num: {item_in_bag.num} disposable: {item_in_bag.disposable})
-                due to insuffient amount."""
-            )
+                due to insuffient amount.""")
 
     def wipeout(self, item_name: str):
         self.backpack[item_name].num = 0
@@ -95,9 +92,7 @@ class Player(BaseModel):
         elif direction == Move.left:
             x = max(x - 1, 0)
         else:
-            raise ValueError(
-                f"Failed to parse direction. Player {self.id}: {direction}"
-            )
+            raise ValueError(f"Failed to parse direction. Player {self.id}: {direction}")
         return (x, y)
 
     def trade(self, sell_offer: OfferType, buy_offer: OfferType):
@@ -111,7 +106,5 @@ class Player(BaseModel):
                 if self.backpack.remain_volume >= 0:
                     break
                 self.backpack[buy_item_name].num -= 1
-            logger.critical(
-                f"""Player lost num {lost_num} with trade {sell_offer}, {buy_offer}
-             due to insuffient backpack remain"""
-            )
+            logger.critical(f"""Player lost num {lost_num} with trade {sell_offer}, {buy_offer}
+             due to insuffient backpack remain""")
