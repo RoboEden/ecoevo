@@ -1,5 +1,8 @@
 # Change log
 
+## version 0.1.7.dev1
+- FIX error in unit test
+
 ## version 0.1.6
   - ADD wipeout action
   - FIX item utility not passed to analyser

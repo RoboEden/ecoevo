@@ -11,9 +11,9 @@ class TestInitPoints:
             5: (0, 0),
         })
         h.reset()
-        assert h.env.players[0].pos == (8, 8)
-        assert h.env.players[5].pos == (0, 0)
-        assert h.env.players[1].pos == (0, 1)
+        assert h.gamecore.players[0].pos == (8, 8)
+        assert h.gamecore.players[5].pos == (0, 0)
+        assert h.gamecore.players[1].pos == (0, 1)
 
 
 class TestGetErrorLog:
