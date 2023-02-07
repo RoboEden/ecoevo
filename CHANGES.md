@@ -1,5 +1,9 @@
 # Change log
 
+## version 0.1.7.dev2
+- MOD critical logging level to warning level
+- ADD tool.pytest.ini_options
+
 ## version 0.1.7.dev1
 - FIX error in unit test
 
