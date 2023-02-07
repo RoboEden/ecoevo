@@ -42,7 +42,7 @@ def sample_action(max_sell_num: int = 100000, max_buy_num: int = 100000) -> Acti
 
 def test_random_actions():
     # Init env
-    env = EcoEvo(logging_level="WARNING")
+    env = EcoEvo(logging_level="ERROR")
 
     # Reset
     obs, info = env.reset()
