@@ -49,7 +49,7 @@ class Player(BaseModel):
                 self.collect_remain = None
 
         else:
-            logger.warning(f"""Player {self.id} cannot collect {item.name} (harvest_num: {item.harvest_num})
+            logger.critical(f"""Player {self.id} cannot collect {item.name} (harvest_num: {item.harvest_num})
             due to insuffient backpack remain {self.backpack.remain_volume}.""")
 
     def consume(self, item_name: str):
@@ -71,7 +71,7 @@ class Player(BaseModel):
                 PlayerConfig.max_health,
             )
         else:
-            logger.warning(
+            logger.critical(
                 f"""Player {self.id} cannot consume {item_name} (num: {item_in_bag.num} disposable: {item_in_bag.disposable})
                 due to insuffient amount.""")
 
@@ -106,5 +106,5 @@ class Player(BaseModel):
                 if self.backpack.remain_volume >= 0:
                     break
                 self.backpack[buy_item_name].num -= 1
-            logger.warning(f"""Player lost num {lost_num} with trade {sell_offer}, {buy_offer}
+            logger.critical(f"""Player lost num {lost_num} with trade {sell_offer}, {buy_offer}
              due to insuffient backpack remain""")
