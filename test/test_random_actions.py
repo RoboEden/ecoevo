@@ -3,7 +3,7 @@ from ecoevo.types import ActionType, MainActionType, Action, OfferType
 from ecoevo.entities.items import ALL_ITEM_DATA
 import random
 
-primary_actions = ["idle", "move", "collect", "consume"]
+primary_actions = ["idle", "move", "collect", "consume", "wipeout"]
 directions = ["up", "down", "right", "left"]
 item_names = list(ALL_ITEM_DATA.keys())
 
@@ -16,6 +16,8 @@ def sample_main_action() -> MainActionType:
     elif primary_action == Action.move:
         secondary_action = random.sample(directions, 1)[0]
     elif primary_action == Action.consume:
+        secondary_action = random.sample(item_names, 1)[0]
+    elif primary_action == Action.wipeout:
         secondary_action = random.sample(item_names, 1)[0]
 
     main_action = (primary_action, secondary_action)
@@ -40,14 +42,13 @@ def sample_action(max_sell_num: int = 100000, max_buy_num: int = 100000) -> Acti
 
 def test_random_actions():
     # Init env
-    env = EcoEvo(logging_level="DEBUG")
+    env = EcoEvo(logging_level="WARNING")
 
     # Reset
     obs, info = env.reset()
-    print('num_player:', len(obs))
+    print("num_player:", len(obs))
 
     # Step teset
-    actions = [(('consume', 'peanut'), ('gold', -5), ('peanut', 20))] * len(obs)
     for _ in range(env._env.cfg.total_step):
         actions = [sample_action() for _ in range(len(obs))]
         obs, reward, done, info = env.step(actions)

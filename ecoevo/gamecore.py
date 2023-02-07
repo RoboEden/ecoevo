@@ -14,8 +14,9 @@ from ecoevo.types import Action, ActionType, IdType, PosType, TradeResult
 
 
 class GameCore:
-
-    def __init__(self, config=EnvConfig, logging_level="WARNING", logging_path="out.log"):
+    def __init__(
+        self, config=EnvConfig, logging_level="WARNING", logging_path="out.log"
+    ):
         self.cfg = config
         self.entity_manager = EntityManager()
         self.trader = Trader(self.cfg.trade_radius)
@@ -50,12 +51,16 @@ class GameCore:
         self.reward_parser.reset()
         self.analyser = Analyser()
         self.trader.dict_flow = {}
-        points = self.cfg.init_points or self.entity_manager.sample(len(self.cfg.personae))
+        points = self.cfg.init_points or self.entity_manager.sample(
+            len(self.cfg.personae)
+        )
         for id, persona in enumerate(self.cfg.personae):
             player = Player(persona=persona, id=id, pos=points[id])
             self.players.append(player)
 
-        self.entity_manager.reset_map(self.players, random_generate=self.cfg.random_generate_map)
+        self.entity_manager.reset_map(
+            self.players, random_generate=self.cfg.random_generate_map
+        )
 
         obs = {player.id: self.get_obs(player) for player in self.players}
         self.info = {}
@@ -66,7 +71,9 @@ class GameCore:
 
     def step(
         self, actions: List[ActionType]
-    ) -> Tuple[Dict[IdType, Dict[PosType, Tile]], Dict[IdType, float], bool, Dict[IdType, dict]]:
+    ) -> Tuple[
+        Dict[IdType, Dict[PosType, Tile]], Dict[IdType, float], bool, Dict[IdType, dict]
+    ]:
         random.shuffle(self.shuffled_ids)
         self.curr_step += 1
 
@@ -79,7 +86,9 @@ class GameCore:
                 player.trade_result = TradeResult.absent
             else:
                 if self.is_trade_valid(player, action):
-                    player.trade_result = TradeResult.failed  # may changed to success later if the deal is matched
+                    player.trade_result = (
+                        TradeResult.failed
+                    )  # may changed to success later if the deal is matched
                 else:
                     actions[id] = (main_action, None, None)
                     player.trade_result = TradeResult.illegal
@@ -122,20 +131,30 @@ class GameCore:
 
         # generate obs, reward, info
         obs = {player.id: self.get_obs(player) for player in self.players}
-        rewards = {player.id: self.reward_parser.parse(player) for player in self.players}
+        rewards = {
+            player.id: self.reward_parser.parse(player) for player in self.players
+        }
         done = self.curr_step >= self.cfg.total_step
         self.info = self.analyser.get_info(
-            self.curr_step, done, self.info, self.players, self.entity_manager, matched_deals, transaction_graph,
-            executed_main_actions, {
+            self.curr_step,
+            done,
+            self.info,
+            self.players,
+            self.entity_manager,
+            matched_deals,
+            transaction_graph,
+            executed_main_actions,
+            {
                 player.id: {
-                    'reward': rewards[player.id],
-                    'utility': self.reward_parser.last_utilities[player.id],
-                    'item_utility': self.reward_parser.last_item_utilities[player.id],
-                    'cost': self.reward_parser.total_costs[player.id],
+                    "reward": rewards[player.id],
+                    "utility": self.reward_parser.last_utilities[player.id],
+                    "item_utility": self.reward_parser.last_item_utilities[player.id],
+                    "cost": self.reward_parser.total_costs[player.id],
                 }
                 for player in self.players
-            })
-        self.info['transaction_graph'] = transaction_graph
+            },
+        )
+        self.info["transaction_graph"] = transaction_graph
 
         return obs, rewards, done, deepcopy(self.info)
 
@@ -192,18 +211,18 @@ class GameCore:
         # check move
         elif primary_action == Action.move:
             if secondary_action is None:
-                logger.critical(f'Player {player.id} move with no direction')
+                logger.critical(f"Player {player.id} move with no direction")
                 return False
             next_pos = player.next_pos(secondary_action)
             if player.pos == next_pos:
-                logger.warning(f'Player {player.id} move towards map boarder')
+                logger.warning(f"Player {player.id} move towards map boarder")
                 return False
             tile = self.gettile(next_pos)
             if tile:
                 if tile.player is not None:
                     hitted_player = tile.player
                     logger.warning(
-                        f'Player {player.id} at {player.pos} tried to hit player {hitted_player.id} at {hitted_player.pos}'
+                        f"Player {player.id} at {player.pos} tried to hit player {hitted_player.id} at {hitted_player.pos}"
                     )
                     return False
 
@@ -213,15 +232,21 @@ class GameCore:
             if item:
                 # no item to collect or the amount of item not enough
                 if item.num < item.harvest_num:
-                    logger.warning(f'No resource! Player {player.id} cannot collect {item} at {player.pos}')
+                    logger.warning(
+                        f"No resource! Player {player.id} cannot collect {item} at {player.pos}"
+                    )
                     return False
                 # bagpack volume not enough
                 least_volume = item.harvest_num * item.capacity
                 if player.backpack.remain_volume < least_volume:
-                    logger.warning(f'Bag full! Player {player.id} cannot collect {item} at {player.pos}')
+                    logger.warning(
+                        f"Bag full! Player {player.id} cannot collect {item} at {player.pos}"
+                    )
                     return False
             else:
-                logger.warning(f'No item exists! Player {player.id} cannot collect {player.pos}')
+                logger.warning(
+                    f"No item exists! Player {player.id} cannot collect {player.pos}"
+                )
                 return False
 
         # check consume
@@ -235,18 +260,23 @@ class GameCore:
             least_num = player.backpack[consume_item_name].consume_num
             if player.backpack[consume_item_name].num < least_num:
                 logger.warning(
-                    f'Player {player.id} cannot consume "{consume_item_name}" since num no more than {least_num}.')
+                    f'Player {player.id} cannot consume "{consume_item_name}" since num no more than {least_num}.'
+                )
                 return False
-        # check destroy
-        elif primary_action == Action.destroy:
+        # check wipeout
+        elif primary_action == Action.wipeout:
             if secondary_action is None:
                 return False
-            destroy_item_name = secondary_action
-            if player.backpack[destroy_item_name].num <= 0:
-                logger.debug(f"Player {player.id} do not have any {destroy_item_name}")
+            wipeout_item_name = secondary_action
+            if player.backpack[wipeout_item_name].num <= 0:
+                logger.debug(
+                    f"Failed to clear item {wipeout_item_name}! Player {player.id} has no such item left."
+                )
                 return False
         else:
-            logger.warning(f'Failed to parse primary action. Player {player.id}: {primary_action} ')
+            logger.warning(
+                f"Failed to parse primary action. Player {player.id}: {primary_action} "
+            )
             return False
 
         return True

@@ -17,14 +17,13 @@ class Tile:
 
 
 class EntityManager:
-
     def __init__(self, path: str = DataPath.map_json) -> None:
         with open(path) as fp:
             self.data = dict(json.load(fp))
-        self.width = self.data['width']
-        self.height = self.data['height']
-        assert self.width == MapConfig.width, 'Config not as same as generated'
-        assert self.height == MapConfig.height, 'Config not as same as generated'
+        self.width = self.data["width"]
+        self.height = self.data["height"]
+        assert self.width == MapConfig.width, "Config not as same as generated"
+        assert self.height == MapConfig.height, "Config not as same as generated"
         self.map: Dict[PosType, Tile] = {}
 
     @property
@@ -32,11 +31,11 @@ class EntityManager:
         array = {}
         for x in range(self.width):
             for y in range(self.height):
-                item_name = self.data['tiles'][x][y]
-                if item_name == 'empty':
+                item_name = self.data["tiles"][x][y]
+                if item_name == "empty":
                     pass
                 else:
-                    num = self.data['amount'][x][y]
+                    num = self.data["amount"][x][y]
                     item = load_item(item_name, num=num)
                     array[(x, y)] = item
         return array
@@ -76,7 +75,7 @@ class EntityManager:
             if tile.player is None:
                 tile.player = player
             else:
-                raise ValueError(f'Player already exists at {tile}.')
+                raise ValueError(f"Player already exists at {tile}.")
         else:
             self.map[player.pos] = Tile(item=None, player=player)
 
@@ -111,17 +110,18 @@ class EntityManager:
             player.collect(self.map[player.pos].item)
         elif primary_action == Action.consume:
             player.consume(secondary_action)
-        elif primary_action == Action.destroy:
-            player.destroy(secondary_action)
+        elif primary_action == Action.wipeout:
+            player.wipeout(secondary_action)
         else:
-            raise ValueError(f'Failed to parse primary action. Player {player.id}: {primary_action} ')
+            raise ValueError(
+                f"Failed to parse primary action. Player {player.id}: {primary_action} "
+            )
 
         # reset the remaining collection steps
         if primary_action != Action.collect:
             player.collect_remain = None
 
     def refresh_item(self):
-
         def _tile_check(tile: Tile) -> None:
             if tile is None or tile.item is None:
                 return

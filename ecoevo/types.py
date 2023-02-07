@@ -13,7 +13,7 @@ class Action:
     move = "move"
     collect = "collect"
     consume = "consume"
-    destroy = "destroy"
+    wipeout = "wipeout"
 
 
 class TradeResult:

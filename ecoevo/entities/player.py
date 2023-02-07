@@ -26,11 +26,11 @@ class Player(BaseModel):
 
     @property
     def preference(self) -> dict:
-        return dict(ALL_PERSONAE[self.persona]['preference'])
+        return dict(ALL_PERSONAE[self.persona]["preference"])
 
     @property
     def ability(self) -> dict:
-        return dict(ALL_PERSONAE[self.persona]['ability'])
+        return dict(ALL_PERSONAE[self.persona]["ability"])
 
     def collect(self, item: Item):
         if self.backpack.remain_volume >= item.harvest_num * item.capacity:
@@ -49,16 +49,18 @@ class Player(BaseModel):
                 self.collect_remain = None
 
         else:
-            logger.critical(f'''Player {self.id} cannot collect {item.name} (harvest_num: {item.harvest_num})
-            due to insuffient backpack remain {self.backpack.remain_volume}.''')
+            logger.critical(
+                f"""Player {self.id} cannot collect {item.name} (harvest_num: {item.harvest_num})
+            due to insuffient backpack remain {self.backpack.remain_volume}."""
+            )
 
     def consume(self, item_name: str):
         item_in_bag = self.backpack[item_name]
         item_in_stomach = self.stomach[item_name]
         if item_in_bag.disposable:
-            santity = (item_in_bag.num >= item_in_bag.consume_num)
+            santity = item_in_bag.num >= item_in_bag.consume_num
         else:
-            santity = (item_in_bag.num > 0)
+            santity = item_in_bag.num > 0
 
         if santity:
             if item_in_bag.disposable:
@@ -66,13 +68,17 @@ class Player(BaseModel):
                 item_in_stomach.num += item_in_bag.consume_num
             else:
                 item_in_stomach.num += item_in_bag.num
-            self.health = min(self.health + item_in_stomach.supply * item_in_stomach.num, PlayerConfig.max_health)
+            self.health = min(
+                self.health + item_in_stomach.supply * item_in_stomach.num,
+                PlayerConfig.max_health,
+            )
         else:
             logger.critical(
-                f'''Player {self.id} cannot consume {item_name} (num: {item_in_bag.num} disposable: {item_in_bag.disposable})
-                due to insuffient amount.''')
+                f"""Player {self.id} cannot consume {item_name} (num: {item_in_bag.num} disposable: {item_in_bag.disposable})
+                due to insuffient amount."""
+            )
 
-    def destroy(self, item_name: str):
+    def wipeout(self, item_name: str):
         self.backpack[item_name].num = 0
 
     def next_pos(
@@ -89,7 +95,9 @@ class Player(BaseModel):
         elif direction == Move.left:
             x = max(x - 1, 0)
         else:
-            raise ValueError(f'Failed to parse direction. Player {self.id}: {direction}')
+            raise ValueError(
+                f"Failed to parse direction. Player {self.id}: {direction}"
+            )
         return (x, y)
 
     def trade(self, sell_offer: OfferType, buy_offer: OfferType):
@@ -103,5 +111,7 @@ class Player(BaseModel):
                 if self.backpack.remain_volume >= 0:
                     break
                 self.backpack[buy_item_name].num -= 1
-            logger.critical(f'''Player lost num {lost_num} with trade {sell_offer}, {buy_offer}
-             due to insuffient backpack remain''')
+            logger.critical(
+                f"""Player lost num {lost_num} with trade {sell_offer}, {buy_offer}
+             due to insuffient backpack remain"""
+            )
