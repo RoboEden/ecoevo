@@ -1,0 +1,106 @@
+{
+  "aliasColors": {},
+  "bars": false,
+  "dashLength": 10,
+  "dashes": false,
+  "datasource": "$es_datasource",
+  "decimals": null,
+  "fill": 0,
+  "fillGradient": 0,
+  "gridPos": {
+    "h": 7,
+    "w": 6,
+    "x": 0,
+    "y": 1
+  },
+  "id": 103,
+  "legend": {
+    "alignAsTable": true,
+    "avg": false,
+    "current": true,
+    "max": true,
+    "min": false,
+    "rightSide": false,
+    "show": true,
+    "sideWidth": 300,
+    "total": false,
+    "values": true
+  },
+  "lines": true,
+  "linewidth": 3,
+  "links": [],
+  "nullPointMode": "connected",
+  "options": {
+    "dataLinks": []
+  },
+  "paceLength": 10,
+  "percentage": false,
+  "pointradius": 2,
+  "points": false,
+  "renderer": "flot",
+  "seriesOverrides": [],
+  "spaceLength": 10,
+  "stack": false,
+  "steppedLine": false,
+  "targets": [
+    {
+      "bucketAggs": [
+        {
+          "field": "@timestamp",
+          "id": "2",
+          "settings": {
+            "interval": "auto",
+            "min_doc_count": 0,
+            "trimEdges": 0
+          },
+          "type": "date_histogram"
+        }
+      ],
+      "metrics": [
+      ],
+      "query": "task.keyword:\"$task\" AND pod:\"runner*\"",
+      "refId": "A",
+      "timeField": "@timestamp"
+    }
+  ],
+  "thresholds": [],
+  "timeFrom": null,
+  "timeRegions": [],
+  "timeShift": null,
+  "title": "Untitled",
+  "tooltip": {
+    "shared": true,
+    "sort": 0,
+    "value_type": "individual"
+  },
+  "type": "graph",
+  "xaxis": {
+    "buckets": null,
+    "mode": "time",
+    "name": null,
+    "show": true,
+    "values": []
+  },
+  "yaxes": [
+    {
+      "format": "short",
+      "label": null,
+      "logBase": 1,
+      "max": null,
+      "min": null,
+      "show": true
+    },
+    {
+      "format": "short",
+      "label": null,
+      "logBase": 1,
+      "max": null,
+      "min": null,
+      "show": true
+    }
+  ],
+  "yaxis": {
+    "align": false,
+    "alignLevel": null
+  }
+}
