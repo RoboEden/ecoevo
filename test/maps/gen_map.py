@@ -7,7 +7,7 @@ from ecoevo.render.map_visualizer import MapVisualizer
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("Generate map json")
-    parser.add_argument("--type", type=str, default="food")
+    parser.add_argument("--type", type=str, default="food_durable_mix")
     parser.add_argument("--width", type=int, default=32)
     parser.add_argument("--height", type=int, default=32)
     parser.add_argument("--num_per_item_type", type=int, default=32)
@@ -37,6 +37,11 @@ if __name__ == "__main__":
     elif args.type == "food":
         save_path = dir / "food.json"
         data = MapGenerator.gen_food_map(size_area=10)
+        with open(save_path, "w") as fp:
+            json.dump(data, fp)
+    elif args.type == "food_durable_mix":
+        save_path = dir / "food_durable_mix.json"
+        data = MapGenerator.gen_food_durable_mix_map(size_area=10)
         with open(save_path, "w") as fp:
             json.dump(data, fp)
     elif args.type == "fixed":

@@ -179,6 +179,61 @@ class MapGenerator:
         return data
 
     @staticmethod
+    def gen_food_durable_mix_map(width: int = MapConfig.width,
+                                 height: int = MapConfig.height,
+                                 num_block_item: int = MapConfig.generate_num_block_resource,
+                                 size_area: int = 10) -> Dict:
+        """
+        generate map with only foods
+        
+        :param width:  map width
+        :param height:  map height
+        :param num_block_item:  number of blocks of each item
+        :param size_area:  size of each item area
+        
+        :return: data:  map tiles data
+        """
+
+        data = MapGenerator.init_data(width=width, height=height)
+
+        with open(DataPath.item_yaml) as fp:
+            dict_item_info = dict(yaml.load(fp, Loader=SafeLoader))
+            list_item = [['peanut', 'sand'], ['pineapple', 'coral'], ['pumpkin', 'stone'], ['hazelnut', 'gold']]
+
+            # check items and size
+            assert len(list_item) == 4
+            assert width == height
+            assert size_area <= int(width / 3)
+
+            # area range
+            range_top = ((0, size_area - 1), (int(width / 2 - size_area / 2),
+                                              int(width / 2 - size_area / 2) + size_area - 1))
+            range_left = ((int(height / 2 - size_area / 2), int(height / 2 - size_area / 2) + size_area - 1),
+                          (0, size_area - 1))
+            range_right = ((int(height / 2 - size_area / 2), int(height / 2 - size_area / 2) + size_area - 1),
+                           (width - size_area, width - 1))
+            range_down = ((height - size_area, height - 1), (int(width / 2 - size_area / 2),
+                                                             int(width / 2 - size_area / 2) + size_area - 1))
+            list_range = [range_top, range_left, range_right, range_down]
+
+            # get item tiles
+            np.random.seed(42)
+            for i in range(len(list_item)):
+                range_area = list_range[i]
+                num_block_area = (range_area[0][1] - range_area[0][0] + 1) * (range_area[1][1] - range_area[1][0] + 1)
+                list_choice = np.random.choice(a=num_block_area, size=num_block_item * 2, replace=False)
+                list_tile_item = [(range_area[0][0] + idx // size_area, range_area[1][0] + idx % size_area)
+                                  for idx in list_choice]
+
+                for j in range(len(list_tile_item)):
+                    pos = list_tile_item[j]
+                    item = list_item[i][0] if not j % 2 else list_item[i][1]
+                    data["tiles"][pos[0]][pos[1]] = item
+                    data["amount"][pos[0]][pos[1]] = dict_item_info[item]["reserve_num"]
+
+        return data
+
+    @staticmethod
     def fixed_map(width=32, height=32, block_size=10, outer=1, inner_gap=2, num_per_item_type=9) -> Dict:
         data = MapGenerator.init_data(width=width, height=height)
 
