@@ -1,5 +1,10 @@
 # Change log
 
+## version 0.1.7.dev3
+- MOD ignore item amount in map file, use config instead
+- ADD 8 item dense map
+- ADD xlsx map generate script
+
 ## version 0.1.7.dev2
 - MOD critical logging level to warning level
 - ADD tool.pytest.ini_options

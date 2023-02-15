@@ -35,8 +35,8 @@ class EntityManager:
                 if item_name == "empty":
                     pass
                 else:
-                    num = self.data["amount"][x][y]
-                    item = load_item(item_name, num=num)
+                    item = load_item(item_name, num=0)
+                    item.num = item.reserve_num
                     array[(x, y)] = item
         return array
 
