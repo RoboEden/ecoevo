@@ -41,7 +41,7 @@ class MoveSolver:
                     result.add(pid)
         # case 2: infeasible
         elif status == pywraplp.Solver.INFEASIBLE:
-            raise Exception("Ineasible!")
+            raise Exception("Infeasible!")
         # case 3: others
         else:
             raise Exception("Unexpected status: {}!".format(status))
