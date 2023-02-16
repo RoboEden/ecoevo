@@ -34,8 +34,8 @@ def get_random_distribution(mat_type_area: np.ndarray, num_block_resource: int, 
 # generate the distribution of blocks
 np.random.seed(42)
 map_size = 32
-area_size = 8
-empty_width = 4
+area_size = 10
+empty_width = 1
 num_block_resource = 32
 mat_type_all = np.zeros(shape=(map_size, map_size))
 for t in dict_type_idx.keys():
@@ -97,12 +97,12 @@ dict_type_colour = {
     'stone': 'black',
     'pumpkin': 'green'
 }
-for y in range(map_size):
-    for x in range(map_size):
-        rectangle = pch.Rectangle(xy=(x * len_block, (map_size - y - 1) * len_block),
+for x in range(map_size):
+    for y in range(map_size):
+        rectangle = pch.Rectangle(xy=(x * len_block, y * len_block),
                                   width=len_block,
                                   height=len_block,
-                                  color=dict_type_colour[dict_idx_type[mat_type_all[y][x]]])
+                                  color=dict_type_colour[dict_idx_type[mat_type_all[x][y]]])
         ax.add_patch(rectangle)
         # plt.text(x=x + len_block / 2, y=map_size - y - 1 + len_block / 2, s=str(mat_type_all[y][x]))
 

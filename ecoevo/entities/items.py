@@ -1,13 +1,9 @@
 from typing import Dict, Optional
 
-import yaml
 from pydantic import BaseModel
-from yaml.loader import SafeLoader
 
 from ecoevo.config import DataPath, PlayerConfig
-
-with open(DataPath.item_yaml) as file:
-    ALL_ITEM_DATA = dict(yaml.load(file, Loader=SafeLoader))
+from ecoevo.data.items import ALL_ITEM_DATA
 
 
 class Item(BaseModel):
