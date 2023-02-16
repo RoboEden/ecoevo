@@ -29,7 +29,7 @@ class MapConfig:
 
 
 class PlayerConfig:
-    bag_volume = 1e8
+    bag_volume = 1000
     max_health = 100
     comsumption_per_step = 2
 

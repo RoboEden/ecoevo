@@ -1,5 +1,9 @@
 # Change log
 
+## version 0.1.7.dev4
+- MOD parameters generation logic for items and players, from yaml to py
+- MOD consume num for disposable and divisible items
+
 ## version 0.1.7.dev3
 - MOD ignore item amount in map file, use config instead
 - ADD 8 item dense map

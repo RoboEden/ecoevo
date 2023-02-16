@@ -1,16 +1,12 @@
 from typing import Optional
 
-import yaml
 from loguru import logger
 from pydantic import BaseModel, Field
-from yaml.loader import SafeLoader
 
 from ecoevo.config import DataPath, MapConfig, PlayerConfig
+from ecoevo.data.player import ALL_PERSONAE
 from ecoevo.entities.items import Bag, Item
 from ecoevo.types import IdType, Move, OfferType, PosType, TradeResult, xAction
-
-with open(DataPath.player_yaml) as file:
-    ALL_PERSONAE = yaml.load(file, Loader=SafeLoader)
 
 
 class Player(BaseModel):
@@ -55,15 +51,13 @@ class Player(BaseModel):
     def consume(self, item_name: str):
         item_in_bag = self.backpack[item_name]
         item_in_stomach = self.stomach[item_name]
-        if item_in_bag.disposable:
-            santity = item_in_bag.num >= item_in_bag.consume_num
-        else:
-            santity = item_in_bag.num > 0
 
+        santity = item_in_bag.num > 0
         if santity:
             if item_in_bag.disposable:
-                item_in_bag.num -= item_in_bag.consume_num
-                item_in_stomach.num += item_in_bag.consume_num
+                consume_num = min(item_in_bag.num, item_in_bag.consume_num)
+                item_in_bag.num -= consume_num
+                item_in_stomach.num += consume_num
             else:
                 item_in_stomach.num += item_in_bag.num
             self.health = min(
