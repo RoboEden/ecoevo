@@ -1,20 +1,15 @@
 # Change log
 
-## version 0.1.7.dev4
+## version 0.1.7
+- ADD move solver
 - MOD parameters generation logic for items and players, from yaml to py
 - MOD consume num for disposable and divisible items
-
-## version 0.1.7.dev3
 - MOD ignore item amount in map file, use config instead
 - ADD 8 item dense map
-- ADD xlsx map generate script
-
-## version 0.1.7.dev2
 - MOD critical logging level to warning level
 - ADD tool.pytest.ini_options
+- ADD xlsx map generate script
 - ADD lambda panel generate script
-
-## version 0.1.7.dev1
 - FIX error in unit test
 
 ## version 0.1.6

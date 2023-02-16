@@ -17,7 +17,7 @@ class GameCore:
 
     def __init__(self, config=EnvConfig, logging_level="WARNING", logging_path="out.log"):
         self.cfg = config
-        self.entity_manager = EntityManager()
+        self.entity_manager = EntityManager(use_move_solver=EnvConfig.use_move_solver)
         self.trader = Trader(self.cfg.trade_radius)
         self.reward_parser = RewardParser()
         self.players: List[Player] = []
@@ -102,6 +102,7 @@ class GameCore:
                 success_trades[id] = (sell_offer, buy_offer)
 
         # validate and execute main action
+        self.entity_manager.move_reset()
         executed_main_actions = {}
         for id in self.shuffled_ids:
             player = self.players[id]
@@ -111,6 +112,7 @@ class GameCore:
             if self.is_main_action_valid(player, action):
                 self.entity_manager.execute_main_action(player, action)
                 executed_main_actions[id] = action[0]
+        self.entity_manager.move_execute(self.players)
 
         # health decrease
         for id in self.shuffled_ids:
@@ -206,6 +208,8 @@ class GameCore:
             if player.pos == next_pos:
                 logger.warning(f"Player {player.id} move towards map boarder")
                 return False
+            if self.cfg.use_move_solver:
+                return True
             tile = self.gettile(next_pos)
             if tile:
                 if tile.player is not None:

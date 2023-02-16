@@ -7,8 +7,8 @@ import tree
 
 from ecoevo.config import DataPath, MapConfig
 from ecoevo.entities import ALL_ITEM_DATA, Item, Player, load_item
-from ecoevo.types import Action, ActionType, PosType
-
+from ecoevo.entities.move_solver import MoveSolver
+from ecoevo.types import Action, ActionType, PosType, IdType
 
 @dataclass
 class Tile:
@@ -17,11 +17,12 @@ class Tile:
 
 
 class EntityManager:
-    def __init__(self, path: str = DataPath.map_json) -> None:
+    def __init__(self, path: str = DataPath.map_json, use_move_solver=True) -> None:
         with open(path) as fp:
             self.data = dict(json.load(fp))
         self.width = self.data["width"]
         self.height = self.data["height"]
+        self.use_move_solver = use_move_solver
         assert self.width == MapConfig.width, "Config not as same as generated"
         assert self.height == MapConfig.height, "Config not as same as generated"
         self.map: Dict[PosType, Tile] = {}
@@ -69,6 +70,10 @@ class EntityManager:
             points.append((x, y))
         return points
 
+    def get_player(self, pos: PosType) -> Optional[Player]:
+        tile = self.map.get(pos)
+        return tile.player if tile else None
+        
     def add_player(self, player: Player):
         if player.pos in self.map:
             tile = self.map[player.pos]
@@ -86,7 +91,23 @@ class EntityManager:
         else:
             del self.map[player.pos]
 
+    def move_reset(self):
+        self.player_dest: Dict[IdType, PosType] = {}
+
+    def move_execute(self, players: List[Player]):
+        if not self.use_move_solver:
+            return
+        va = MoveSolver.solve(players, self.player_dest)
+        for pid in va:
+            self.remove_player(players[pid])
+            players[pid].pos = self.player_dest[pid]
+        for pid in va:
+            self.add_player(players[pid])
+    
     def move_player(self, player: Player, secondary_action):
+        if self.use_move_solver:
+            self.player_dest[player.id] = player.next_pos(secondary_action)
+            return
         # If destination has agent, skip move action
         next_pos = player.next_pos(secondary_action)
         if next_pos in self.map:

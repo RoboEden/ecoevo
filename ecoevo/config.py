@@ -19,6 +19,8 @@ class EnvConfig:
     random_generate_map = False
 
     init_points = None
+    
+    use_move_solver = True
 
 
 class MapConfig:
