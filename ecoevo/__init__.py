@@ -1,3 +1,3 @@
-__version__ = "0.1.7.dev4"
+__version__ = "0.1.7"
 
 from ecoevo.env import EcoEvo
