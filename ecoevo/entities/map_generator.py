@@ -145,14 +145,14 @@ class MapGenerator:
         assert size_area <= int(width / 3)
 
         # area range
-        range_top = ((0, size_area - 1), (int(width / 2 - size_area / 2),
-                                          int(width / 2 - size_area / 2) + size_area - 1))
-        range_left = ((int(height / 2 - size_area / 2), int(height / 2 - size_area / 2) + size_area - 1),
-                      (0, size_area - 1))
-        range_right = ((int(height / 2 - size_area / 2), int(height / 2 - size_area / 2) + size_area - 1),
-                       (width - size_area, width - 1))
-        range_down = ((height - size_area, height - 1), (int(width / 2 - size_area / 2),
-                                                         int(width / 2 - size_area / 2) + size_area - 1))
+        range_top = ((int(width / 2 - size_area / 2), int(width / 2 - size_area / 2) + size_area - 1),
+                     (height - size_area, height - 1))
+        range_left = ((0, size_area - 1), (int(height / 2 - size_area / 2),
+                                           int(height / 2 - size_area / 2) + size_area - 1))
+        range_right = ((width - size_area, width - 1), (int(height / 2 - size_area / 2),
+                                                        int(height / 2 - size_area / 2) + size_area - 1))
+        range_down = ((int(width / 2 - size_area / 2), int(width / 2 - size_area / 2) + size_area - 1), (0,
+                                                                                                         size_area - 1))
         list_range = [range_top, range_right, range_down, range_left]
 
         # get item tiles
@@ -196,14 +196,14 @@ class MapGenerator:
         assert size_area <= int(width / 3)
 
         # area range
-        range_top = ((0, size_area - 1), (int(width / 2 - size_area / 2),
-                                          int(width / 2 - size_area / 2) + size_area - 1))
-        range_left = ((int(height / 2 - size_area / 2), int(height / 2 - size_area / 2) + size_area - 1),
-                      (0, size_area - 1))
-        range_right = ((int(height / 2 - size_area / 2), int(height / 2 - size_area / 2) + size_area - 1),
-                       (width - size_area, width - 1))
-        range_down = ((height - size_area, height - 1), (int(width / 2 - size_area / 2),
-                                                         int(width / 2 - size_area / 2) + size_area - 1))
+        range_top = ((int(width / 2 - size_area / 2), int(width / 2 - size_area / 2) + size_area - 1),
+                     (height - size_area, height - 1))
+        range_left = ((0, size_area - 1), (int(height / 2 - size_area / 2),
+                                           int(height / 2 - size_area / 2) + size_area - 1))
+        range_right = ((width - size_area, width - 1), (int(height / 2 - size_area / 2),
+                                                        int(height / 2 - size_area / 2) + size_area - 1))
+        range_down = ((int(width / 2 - size_area / 2), int(width / 2 - size_area / 2) + size_area - 1), (0,
+                                                                                                         size_area - 1))
         list_range = [range_top, range_right, range_down, range_left]
 
         # get item tiles

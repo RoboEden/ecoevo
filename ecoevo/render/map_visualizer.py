@@ -31,11 +31,11 @@ class MapVisualizer:
                 'stone': 'black',
                 'pumpkin': 'green'
             }
-            for y in range(height):
-                for x in range(width):
-                    item_type = map_data["tiles"][y][x]
+            for x in range(width):
+                for y in range(height):
+                    item_type = map_data["tiles"][x][y]
                     color = tile_colors[item_type]
-                    rectangle = pch.Rectangle(xy=(x * block_size, (height - y - 1) * block_size),
+                    rectangle = pch.Rectangle(xy=(x * block_size, y * block_size),
                                               width=block_size,
                                               height=block_size,
                                               color=color)
