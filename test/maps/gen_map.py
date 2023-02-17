@@ -26,6 +26,7 @@ if __name__ == "__main__":
                                   num_per_item_type=args.num_per_item_type,
                                   seed=args.seed,
                                   save_path=save_path)
+
     elif args.type == "regular":
         save_path = dir / "regular.json"
         MapGenerator.gen_regular_map(width=args.width,
@@ -34,16 +35,19 @@ if __name__ == "__main__":
                                      seed=args.seed,
                                      empty_width=args.empty_width,
                                      save_path=save_path)
+
     elif args.type == "food":
         save_path = dir / "food.json"
         data = MapGenerator.gen_food_map(size_area=10)
         with open(save_path, "w") as fp:
             json.dump(data, fp)
+
     elif args.type == "food_durable_mix":
         save_path = dir / "food_durable_mix.json"
         data = MapGenerator.gen_food_durable_mix_map(size_area=10)
         with open(save_path, "w") as fp:
             json.dump(data, fp)
+
     elif args.type == "fixed":
         save_path = dir / "fixed.json"
         data = MapGenerator.fixed_map()
