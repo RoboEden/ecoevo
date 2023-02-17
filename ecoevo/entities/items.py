@@ -12,6 +12,18 @@ class Item(BaseModel):
     refresh_remain: Optional[int] = None
 
     @property
+    def disposable(self) -> bool:
+        return bool(ALL_ITEM_DATA[self.name]['disposable'])
+
+    @property
+    def divisible(self) -> bool:
+        return bool(ALL_ITEM_DATA[self.name]['divisible'])
+
+    @property
+    def luxury(self) -> bool:
+        return bool(ALL_ITEM_DATA[self.name]['luxury'])
+
+    @property
     def supply(self) -> int:
         return int(ALL_ITEM_DATA[self.name]['supply'])
 
@@ -28,12 +40,12 @@ class Item(BaseModel):
         return int(ALL_ITEM_DATA[self.name]['capacity'])
 
     @property
-    def harvest_num(self) -> int:
-        return int(ALL_ITEM_DATA[self.name]['harvest_num'])
-
-    @property
     def reserve_num(self) -> int:
         return int(ALL_ITEM_DATA[self.name]['reserve_num'])
+
+    @property
+    def harvest_num(self) -> int:
+        return int(ALL_ITEM_DATA[self.name]['harvest_num'])
 
     @property
     def consume_num(self) -> int:
@@ -42,14 +54,6 @@ class Item(BaseModel):
     @property
     def expiry(self) -> int:
         return int(ALL_ITEM_DATA[self.name]['expiry'])
-
-    @property
-    def disposable(self) -> bool:
-        return bool(ALL_ITEM_DATA[self.name]['disposable'])
-
-    @property
-    def luxury(self) -> bool:
-        return bool(ALL_ITEM_DATA[self.name]['luxury'])
 
 
 def load_item(name: str, num=0) -> Item:

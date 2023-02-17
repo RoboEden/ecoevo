@@ -100,7 +100,6 @@ for x in range(map_size):
                                   height=len_block,
                                   color=dict_type_colour[dict_idx_type[mat_type_all[x][y]]])
         ax.add_patch(rectangle)
-        # plt.text(x=x + len_block / 2, y=map_size - y - 1 + len_block / 2, s=str(mat_type_all[y][x]))
 
 # let the length of an x axis unit be equal with y axis
 ax.set_aspect(1)
