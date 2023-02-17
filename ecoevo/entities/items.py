@@ -2,7 +2,7 @@ from typing import Dict, Optional
 
 from pydantic import BaseModel
 
-from ecoevo.config import DataPath, PlayerConfig
+from ecoevo.config import PlayerConfig
 from ecoevo.data.items import ALL_ITEM_DATA
 
 

@@ -3,7 +3,7 @@ from typing import Optional
 from loguru import logger
 from pydantic import BaseModel, Field
 
-from ecoevo.config import DataPath, MapConfig, PlayerConfig
+from ecoevo.config import MapConfig, PlayerConfig
 from ecoevo.data.player import ALL_PERSONAE
 from ecoevo.entities.items import Bag, Item
 from ecoevo.types import IdType, Move, OfferType, PosType, TradeResult, xAction

@@ -1,17 +1,13 @@
 import os
 import json
-import yaml
 
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as pch
 
-from ecoevo.config import DataPath
+from ecoevo.data.items import ALL_ITEM_DATA
 
-# item info for tile types
-with open(DataPath.item_yaml) as file:
-    dict_item = dict(yaml.load(file, Loader=yaml.loader.SafeLoader))
-dict_type_idx = {key: dict_item[key]['id'] for key in dict_item.keys()}
+dict_type_idx = {key: ALL_ITEM_DATA[key]['id'] for key in ALL_ITEM_DATA.keys()}
 dict_idx_type = {dict_type_idx[key]: key for key in dict_type_idx.keys()}
 dict_idx_type[0] = 'empty'
 
@@ -127,7 +123,7 @@ plt.savefig(path_picture)
 
 # get json
 mat_type_all_ = [[dict_idx_type[mat_type_all[i][j]] for j in range(map_size)] for i in range(map_size)]
-dict_reserve = {key: dict_item[key]['reserve_num'] for key in dict_item.keys()}
+dict_reserve = {key: ALL_ITEM_DATA[key]['reserve_num'] for key in ALL_ITEM_DATA.keys()}
 dict_json = {
     "width":
     map_size,
