@@ -34,15 +34,14 @@ class TestCollect:
         for _ in range(h.gamecore.players[0].ability[Item.gold]):
             assert h.get_tile_item((8, 8)) == (Item.gold, G)
             h.step({
-                0: ((Action.collect, None), None, None),
+                0: ((Action.collect, None), None, None, None),
             })
 
         assert h.get_tile_item((8, 8)) == (Item.gold, 1)
         assert h.get_error_log() == ''
-        assert h.gamecore.players[0].collect_remain is None
+        assert h.gamecore.players[0].collect_remain == 0
 
     def test_exceed_volumn_after_trade(self):
-        # 潜在风险：trade之后collect之前没有做背包容量检查
         h = Helper()
         h.init_pos({
             0: (0, 0),
@@ -56,8 +55,12 @@ class TestCollect:
         h.set_bag(1, {Item.gold: G})
 
         h.step({
-            0: ((Action.collect, None), (Item.stone, -1), (Item.gold, G)),
-            1: ((Action.idle, None), (Item.gold, -G), (Item.stone, 1)),
+            0: ((Action.idle, None), ((Item.stone, -1), (Item.gold, G)), None, None),
+            1: ((Action.idle, None), None, None, None),
+        })
+        h.step({
+            0: ((Action.collect, None), None, None, None),
+            1: ((Action.idle, None), None, (0, 0), None),
         })
 
         assert h.get_tile_item((0, 0)) == (Item.coral, 1)
@@ -77,11 +80,11 @@ class TestMove:
         h.reset()
 
         h.step({
-            0: ((Action.move, Move.down), None, None),
+            0: ((Action.move, Move.down), None, None, None),
         })
 
         assert h.gamecore.players[0].pos == (0, 0)
-        assert h.gamecore.gettile((0, 0)).player.id == 0
+        assert h.get_tile_player((0, 0)).id == 0
         assert h.get_error_log() == ''
         assert 'towards map boarder' in h.get_warning_log()
         assert 'hit player' not in h.get_warning_log()
@@ -95,12 +98,12 @@ class TestMove:
         h.reset()
 
         h.step({
-            0: ((Action.move, Move.up), None, None),
-            1: ((Action.move, Move.down), None, None),
+            0: ((Action.move, Move.up), None, None, None),
+            1: ((Action.move, Move.down), None, None, None),
         })
 
         assert h.get_error_log() == ''
-        assert h.gamecore.gettile((16, 14)).player.id in [0, 1]
+        assert h.get_tile_player((16, 14)).id in [0, 1]
         assert h.gamecore.players[0].pos in [(16, 13), (16, 14)]
         assert h.gamecore.players[1].pos in [(16, 14), (16, 15)]
 
@@ -121,8 +124,8 @@ class TestConsume:
         STEP = 4
         for i in range(1, STEP + 1):
             h.step({
-                0: ((Action.consume, Item.gold), None, None),
-                1: ((Action.consume, Item.peanut), None, None),
+                0: ((Action.consume, Item.gold), None, None, None),
+                1: ((Action.consume, Item.peanut), None, None, None),
             })
             assert h.get_stomach(0) == {Item.gold: i * G}
             assert h.get_stomach(1) == {Item.peanut: min(i, P) * PC}
@@ -143,8 +146,12 @@ class TestTrade:
         h.set_bag(0, {Item.gold: 5})
         h.set_bag(1, {Item.sand: 10})
         h.step({
-            0: ((Action.idle, None), (Item.gold, -5), (Item.sand, 10)),
-            1: ((Action.idle, None), (Item.sand, -10), (Item.gold, 5)),
+            0: ((Action.idle, None), ((Item.gold, -5), (Item.sand, 10)), None, None),
+            1: ((Action.idle, None), None, None, None),
+        })
+        h.step({
+            0: ((Action.idle, None), None, None, None),
+            1: ((Action.idle, None), None, (0, 0), None),
         })
 
         transaction_graph = h.info['transaction_graph']
@@ -153,25 +160,6 @@ class TestTrade:
         assert h.get_bag(0) == {Item.sand: 10}
         assert h.get_bag(1) == {Item.gold: 5}
         assert len(transaction_graph) == 2
-
-    def test_main_action_partial_fail(self):
-        # trader 和 gamecore 关于action的验证不一致，导致交易和step里面的action_valid不一致
-        h = Helper()
-        h.init_pos({
-            0: (8, 8),
-            1: (8, 9),
-        })
-        h.reset()
-        h.set_bag(0, {Item.gold: 10})
-        h.set_bag(1, {Item.sand: 10})
-        h.step({
-            0: ((Action.idle, None), (Item.gold, -10), (Item.sand, 10)),
-            1: ((Action.collect, None), (Item.sand, -10), (Item.gold, 10)),
-        })
-
-        assert h.get_bag(0) == {Item.sand: 10}
-        assert h.get_bag(1) == {Item.gold: 10}
-        assert h.get_error_log() == ''
 
     def test_illegal_sell_amount_0(self):
         h = Helper()
@@ -183,8 +171,8 @@ class TestTrade:
         h.set_bag(0, {Item.gold: 5})
         h.set_bag(1, {Item.sand: 10})
         h.step({
-            0: ((Action.idle, None), (Item.gold, 0), (Item.sand, 10)),
-            1: ((Action.idle, None), (Item.sand, -10), (Item.gold, 5)),
+            0: ((Action.idle, None), ((Item.gold, 0), (Item.sand, 10)), None, None),
+            1: ((Action.idle, None), ((Item.sand, -10), (Item.gold, 5)), None, None),
         })
 
         assert h.get_bag(0) == {Item.gold: 5}
@@ -200,8 +188,8 @@ class TestTrade:
         h.set_bag(0, {Item.gold: 5})
         h.set_bag(1, {Item.sand: 10})
         h.step({
-            0: ((Action.idle, None), (Item.gold, 1), (Item.sand, 10)),
-            1: ((Action.idle, None), (Item.sand, -10), (Item.gold, 5)),
+            0: ((Action.idle, None), ((Item.gold, 1), (Item.sand, 10)), None, None),
+            1: ((Action.idle, None), ((Item.sand, -10), (Item.gold, 5)), None, None),
         })
 
         assert h.get_bag(0) == {Item.gold: 5}
@@ -217,8 +205,8 @@ class TestTrade:
         h.set_bag(0, {Item.gold: 5})
         h.set_bag(1, {Item.sand: 10})
         h.step({
-            0: ((Action.idle, None), (Item.gold, -5), (Item.sand, 0)),
-            1: ((Action.idle, None), (Item.sand, -10), (Item.gold, 5)),
+            0: ((Action.idle, None), ((Item.gold, -5), (Item.sand, 0)), None, None),
+            1: ((Action.idle, None), ((Item.sand, -10), (Item.gold, 5)), None, None),
         })
 
         assert h.get_bag(0) == {Item.gold: 5}
@@ -234,14 +222,195 @@ class TestTrade:
         h.set_bag(0, {Item.gold: 5})
         h.set_bag(1, {Item.sand: 10})
         h.step({
-            0: ((Action.idle, None), (Item.gold, -5), (Item.sand, -1)),
-            1: ((Action.idle, None), (Item.sand, -10), (Item.gold, 5)),
+            0: ((Action.idle, None), ((Item.gold, -5), (Item.sand, -1)), None, None),
+            1: ((Action.idle, None), ((Item.sand, -10), (Item.gold, 5)), None, None),
         })
 
         assert h.get_bag(0) == {Item.gold: 5}
         assert h.get_bag(1) == {Item.sand: 10}
 
+class TestOffer:
+    def test_lock_and_unlock_item(self):
+        h = Helper()
+        h.reset()
+        h.set_bag(0, {Item.gold: 4})
+        h.set_bag(1, {Item.gold: 5})
+        h.set_bag(2, {Item.gold: 6})
+        h.step({
+            0: ((Action.idle, None), ((Item.gold, -5), (Item.sand, 1)), None, None),
+            1: ((Action.idle, None), ((Item.gold, -5), (Item.sand, 1)), None, None),
+            2: ((Action.idle, None), ((Item.gold, -5), (Item.sand, 1)), None, None),
+        })
+        
+        def num(id):
+            item = h.get_player(id).backpack.gold
+            return item.num, item.locked_num, item.free_num        
+        assert len(h.get_player_offers(0)) == 0 and num(0) == (4, 0, 4)
+        assert len(h.get_player_offers(1)) == 1 and num(1) == (5, 5, 0)
+        assert len(h.get_player_offers(2)) == 1 and num(2) == (6, 5, 1)
+        assert h.get_error_log() == ''
 
+        h.step({
+            1: ((Action.idle, None), None, None, 0),
+            2: ((Action.idle, None), None, None, 0),
+        })
+        assert len(h.get_player_offers(0)) == 0 and num(0) == (4, 0, 4)
+        assert len(h.get_player_offers(1)) == 0 and num(1) == (5, 0, 5)
+        assert len(h.get_player_offers(2)) == 0 and num(2) == (6, 0, 6)
+        assert h.get_error_log() == ''
+
+    def test_lock_and_unlock_volume(self):
+        h = Helper()
+        assert ITEMS.gold.capacity == 1
+        S = PlayerConfig.bag_volume
+        h.reset()
+        h.set_bag(0, {Item.gold: S-1})
+        h.set_bag(1, {Item.gold: S-1})
+        h.set_bag(2, {Item.gold: S-1})
+        h.set_bag(3, {Item.gold: S-1})
+        h.step({
+            0: ((Action.idle, None), ((Item.gold, -2), (Item.sand, 1)), None, None),
+            1: ((Action.idle, None), ((Item.gold, -2), (Item.sand, 2)), None, None),
+            2: ((Action.idle, None), ((Item.gold, -2), (Item.sand, 3)), None, None),
+            3: ((Action.idle, None), ((Item.gold, -2), (Item.sand, 4)), None, None),
+        })
+        
+        def volnum(id):
+            bag = h.get_player(id).backpack
+            return bag.used_volume, bag.locked_volume, bag.remain_volume
+        
+        assert len(h.get_player_offers(0)) == 1 and volnum(0) == (S-1, 0, 1)
+        assert len(h.get_player_offers(1)) == 1 and volnum(1) == (S-1, 0, 1)
+        assert len(h.get_player_offers(2)) == 1 and volnum(2) == (S-1, 1, 0)
+        assert len(h.get_player_offers(3)) == 0 and volnum(3) == (S-1, 0, 1)
+        assert h.get_error_log() == ''
+
+        h.step({
+            0: ((Action.idle, None), None, None, 0),
+            1: ((Action.idle, None), None, None, 0),
+            2: ((Action.idle, None), None, None, 0),
+        })
+        assert len(h.get_player_offers(0)) == 0 and volnum(0) == (S-1, 0, 1)
+        assert len(h.get_player_offers(1)) == 0 and volnum(1) == (S-1, 0, 1)
+        assert len(h.get_player_offers(2)) == 0 and volnum(1) == (S-1, 0, 1)
+        assert len(h.get_player_offers(3)) == 0 and volnum(1) == (S-1, 0, 1)
+        assert h.get_error_log() == ''  
+
+    def test_lock_item_consume(self):
+        h = Helper()
+        h.reset()
+        h.set_bag(0, {Item.gold: 8})
+        h.set_bag(1, {Item.peanut: 8})
+        h.step({
+            0: ((Action.consume, Item.gold), ((Item.gold, -5), (Item.sand, 1)), None, None),
+            1: ((Action.consume, Item.peanut), ((Item.peanut, -5), (Item.sand, 1)), None, None),
+        })
+        assert h.get_bag(0) == {Item.gold: 8}
+        assert h.get_player(0).stomach.gold.num == 3
+        assert h.get_bag(1) == {Item.peanut: 5}
+        assert h.get_player(1).stomach.peanut.num == 3
+        
+    def test_lock_item_submit(self):
+        h = Helper()
+        h.reset()
+        h.set_bag(0, {Item.gold: 8})
+        h.set_bag(1, {Item.gold: 10})
+        for i in range(2):
+            h.step({
+                0: ((Action.idle, None), ((Item.gold, -5), (Item.sand, 1)), None, None),
+                1: ((Action.idle, None), ((Item.gold, -5), (Item.sand, 1)), None, None),
+            })
+        assert h.get_player(0).backpack.gold.free_num == 3
+        assert h.get_player(1).backpack.gold.free_num == 0
+    
+    def test_lock_item_accept(self):
+        h = Helper()
+        h.init_pos({})
+        h.reset()
+        h.set_bag(0, {Item.gold: 8})
+        h.set_bag(1, {Item.sand: 8})
+        h.step({
+            0: ((Action.idle, None), ((Item.gold, -5), (Item.sand, 1)), None, None),
+            1: ((Action.idle, None), ((Item.sand, -1), (Item.gold, 5)), None, None),
+        })
+        h.step({
+            0: ((Action.idle, None), None, (1, 0), None),
+        })
+        assert h.get_bag(0) == {Item.gold: 8} and h.get_bag(1) == {Item.sand: 8}
+        h.step({
+            1: ((Action.idle, None), None, (0, 0), None),
+        })
+        assert h.get_bag(0) == {Item.gold: 3, Item.sand: 1} and h.get_bag(1) == {Item.sand: 7, Item.gold: 5}
+        
+    def test_lock_volume_collect(self):
+        h = Helper()
+        assert ITEMS.gold.capacity == 1
+        S = PlayerConfig.bag_volume
+        h.init_tiles({
+            (0, 0): (Item.sand, ITEMS.sand.harvest_num),
+            (0, 1): (Item.sand, ITEMS.sand.harvest_num),
+        })
+        h.init_pos({
+            0: (0, 0),
+            1: (0, 1),
+        })
+        h.reset()
+        h.set_bag(0, {Item.gold: 1})
+        h.set_bag(1, {Item.gold: 1})
+        h.step({
+            0: ((Action.collect, None), ((Item.gold, -1), (Item.sand, S)), None, None),
+            1: ((Action.collect, None), ((Item.gold, -1), (Item.sand, 2)), None, None),
+        })
+        assert h.get_bag(0) == {Item.gold: 1}
+        assert h.get_bag(1) == {Item.gold: 1, Item.sand: ITEMS.sand.harvest_num}
+        
+    def test_lock_volume_submit(self):
+        S = PlayerConfig.bag_volume
+        h = Helper()
+        h.reset()
+        h.set_bag(0, {Item.gold: 2})
+        h.set_bag(1, {Item.gold: 2})
+        h.step({
+            0: ((Action.idle, None), ((Item.gold, -1), (Item.sand, S)), None, None),
+            1: ((Action.idle, None), ((Item.gold, -1), (Item.sand, 2)), None, None),
+        })
+        h.step({
+            0: ((Action.idle, None), ((Item.gold, -1), (Item.sand, 1)), None, None),
+            1: ((Action.idle, None), ((Item.gold, -1), (Item.sand, 1)), None, None),
+        })
+        assert len(h.get_player_offers(0)) == 1
+        assert len(h.get_player_offers(1)) == 2
+            
+    def test_lock_volume_accept(self):
+        S = PlayerConfig.bag_volume
+        h = Helper()
+        h.init_pos({})
+        h.reset()
+        h.set_bag(0, {Item.gold: 2})
+        h.set_bag(1, {Item.gold: 2})
+        h.set_bag(2, {Item.sand: 2})
+        h.step({
+            0: ((Action.idle, None), ((Item.gold, -1), (Item.sand, S-1)), None, None),
+            1: ((Action.idle, None), ((Item.gold, -1), (Item.sand, 1)), None, None),
+            2: ((Action.idle, None), ((Item.sand, -2), (Item.gold, 1)), None, None),
+        })
+        assert len(h.get_player_offers(0)) == 1 and h.get_player(0).backpack.remain_volume == 0
+        assert len(h.get_player_offers(1)) == 1
+        assert len(h.get_player_offers(2)) == 1
+
+        # should fail
+        h.step({
+            0: ((Action.idle, None), None, (2, 0), None),
+        })
+        assert h.get_bag(0) == {Item.gold: 2} and h.get_bag(2) == {Item.sand: 2}
+
+        # should success
+        h.step({
+            1: ((Action.idle, None), None, (2, 0), None),
+        })
+        assert h.get_bag(1) == {Item.gold: 1, Item.sand: 2} and h.get_bag(2) == {Item.gold: 1}
+        
+    
 class TestHealth:
 
     def test_decrease(self):
@@ -254,7 +423,7 @@ class TestHealth:
             h.gamecore.players[i].health = init_health[i]
             h.gamecore.players[i + 3].health = init_health[i]
             h.gamecore.players[i + 3].backpack.pineapple.num = ITEMS.pineapple.consume_num
-            actions[i + 3] = ((Action.consume, Item.pineapple), None, None)
+            actions[i + 3] = ((Action.consume, Item.pineapple), None, None, None)
 
         h.step(actions)
 
@@ -266,37 +435,41 @@ class TestHealth:
                 RewardConfig.penalty == 0)
         assert h.get_error_log() == ''
 
-
 class TestItemRefresh:
 
     def test_refresh_collect_loop(self):
         h = Helper()
-        P = ITEMS.peanut.harvest_num
+        P = ITEMS.pineapple.harvest_num
         h.init_tiles({
-            (0, 0): (Item.peanut, P),
+            (0, 0): (Item.pineapple, P),
         })
         h.init_pos({
             0: (0, 0),
         })
         h.reset()
+        
+        def get_refresh_remain(pos):
+            return h.gamecore.entity_manager.map.get(pos).item.refresh_remain
+        
+        COLLECT_TIME = h.get_tile_player((0, 0)).ability['pineapple']
 
         LOOP = 3
         for loop in range(LOOP):
-            for i in range(ITEMS.peanut.collect_time):
-                assert h.get_tile_item((0, 0)) == (Item.peanut, P)
-                assert h.gamecore.gettile((0, 0)).item.refresh_remain is None
-                assert h.get_bag(0) == {Item.peanut: loop * P} or loop == 0 and h.get_bag(0) == {}
+            h.set_bag(0, {})
+            for i in range(COLLECT_TIME):
+                assert h.get_tile_item((0, 0)) == (Item.pineapple, P)
+                assert get_refresh_remain((0, 0)) == 0
+                assert h.get_bag(0) == {}
                 h.step({
-                    0: ((Action.collect, None), None, None),
+                    0: ((Action.collect, None), None, None, None),
                 })
-            for i in reversed(range(ITEMS.peanut.refresh_time)):
-                assert h.get_tile_item((0, 0)) == (Item.peanut, 0)
-                assert h.gamecore.gettile((0, 0)).item.refresh_remain == i
-                assert h.get_bag(0) == {Item.peanut: (loop + 1) * P}
+            for i in reversed(range(1, ITEMS.pineapple.refresh_time)):
+                assert h.get_tile_item((0, 0)) == (Item.pineapple, 0)
+                assert get_refresh_remain((0, 0)) == i
+                assert h.get_bag(0) == {Item.pineapple: P}
                 h.step({})
-        assert h.get_tile_item((0, 0)) == (Item.peanut, ITEMS.peanut.reserve_num)
-        assert h.gamecore.gettile((0, 0)).item.refresh_remain is None
-        assert h.get_bag(0) == {Item.peanut: LOOP * P}
+        assert h.get_tile_item((0, 0)) == (Item.pineapple, ITEMS.pineapple.reserve_num)
+        assert get_refresh_remain((0, 0)) == 0
 
 
 class TestMap:
@@ -369,8 +542,8 @@ class TestInfo:
 
     def test_trade_time_and_amount_per_item(self):
         LIST = list(ITEMS.dict().keys())
-        CYCLE = 5
-        STEP = len(LIST) * CYCLE
+        CYCLE = 3
+        STEP = len(LIST) * CYCLE * 2
         AMOUNT = [i + 1 for i in range(len(LIST))]
 
         h = Helper()
@@ -382,46 +555,29 @@ class TestInfo:
         h.reset()
 
         for step in range(STEP):
-            index = [step % len(LIST), (step + 1) % len(LIST)]
-            items = [LIST[i] for i in index]
-            nums = [AMOUNT[i] for i in index]
-            for i in range(2):
-                h.set_bag(i, {items[i]: nums[i]})
+            if  step % 2 == 0:
+                case = step // 2
+                index = [case % len(LIST), (case + 1) % len(LIST)]
+                items = [LIST[i] for i in index]
+                nums = [AMOUNT[i] for i in index]
+                for i in range(2):
+                    h.set_bag(i, {items[i]: nums[i]})
+                h.step({
+                    0: ((Action.idle, None), ((items[0], -nums[0]), (items[1], nums[1])), None, None),
+                    1: ((Action.idle, None), None, None, None),
+                })
+            else:
+                h.step({
+                    0: ((Action.idle, None), None, None, None),
+                    1: ((Action.idle, None), None, (0, 0), None),
+                })
+                
 
-            h.step({
-                0: ((Action.idle, None), (items[0], -nums[0]), (items[1], nums[1])),
-                1: ((Action.idle, None), (items[1], -nums[1]), (items[0], nums[0])),
-            })
-
-        assert h.info['trade_times'] == STEP / h.gamecore.num_player
+        assert h.info['trade_times'] == STEP // 2 / h.gamecore.num_player
         for item, amount in zip(LIST, AMOUNT):
             assert h.info[item + '_trade_times'] == CYCLE * 2 / h.gamecore.num_player
             assert h.info[item + '_trade_amount'] == CYCLE * 2 * amount / h.gamecore.num_player
-
-    def test_trade_time_and_amount_multiple_partner(self):
-        S1, S2 = 7, 3
-        M = 2
-
-        h = Helper()
-        h.cfg.total_step = 1
-        h.init_pos({})
-        h.reset()
-
-        h.set_bag(0, {Item.gold: (S1 + S2) * M})
-        h.set_bag(1, {Item.sand: S1})
-        h.set_bag(2, {Item.sand: S2})
-        h.step({
-            0: ((Action.idle, None), (Item.gold, -(S1 + S2) * M), (Item.sand, S1 + S2)),
-            1: ((Action.idle, None), (Item.sand, -S1), (Item.gold, S1 * M)),
-            2: ((Action.idle, None), (Item.sand, -S2), (Item.gold, S2 * M)),
-        })
-
-        assert h.info['trade_times'] == 2 / h.gamecore.num_player
-        assert h.info[Item.gold + '_trade_times'] == 2 / h.gamecore.num_player
-        assert h.info[Item.sand + '_trade_times'] == 2 / h.gamecore.num_player
-        assert h.info[Item.gold + '_trade_amount'] == (S1 + S2) * M / h.gamecore.num_player
-        assert h.info[Item.sand + '_trade_amount'] == (S1 + S2) / h.gamecore.num_player
-
+    
     def test_utility(self):
         import warnings
         warnings.warn('test_utility skipped')

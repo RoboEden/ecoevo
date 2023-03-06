@@ -25,12 +25,14 @@ class TradeResult:
 
 IdType = int
 PosType = Tuple[int, int]
-OfferType = Tuple[str, int]
+ItemNumType = Tuple[str, int]
 MainActionType = Tuple[str, Optional[str]]
+AcceptType = Tuple[IdType, int]
+CancelType = int
 
-DealType = Tuple[PosType, OfferType, OfferType]
+OfferType = Tuple[ItemNumType, ItemNumType]
 
-ActionType = Tuple[MainActionType, OfferType, OfferType]
+ActionType = Tuple[MainActionType, Optional[OfferType], Optional[AcceptType], Optional[CancelType]]
 
 from pydantic import BaseModel, Field
 

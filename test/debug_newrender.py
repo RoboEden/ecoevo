@@ -12,7 +12,7 @@ done = False
 obs, info = env.reset()
 num_player = len(obs)
 while not done:
-    actions1 = [(sample_main_action(), ('gold', -1), ('pineapple', 1)) for _ in range(num_player // 2)]
-    actions2 = [(sample_main_action(), ('pineapple', -1), ('gold', 1)) for _ in range(num_player - num_player // 2)]
+    actions1 = [(sample_main_action(), (('gold', -1), ('pineapple', 1)), None, None) for _ in range(num_player // 2)]
+    actions2 = [(sample_main_action(), (('pineapple', -1), ('gold', 1)), None, None) for _ in range(num_player - num_player // 2)]
     actions = [*actions1, *actions2]
     obs, reward, done, info = env.step(actions)

@@ -55,7 +55,6 @@ capacity_large = 100
 refresh_time_default = 20
 big_m = 1e6
 magnify_abundant = 10
-collect_time_default = 1
 avr_luxury_large = 1
 margin_reserve = 0.25
 reserve_luxury_large = round(num_player / num_block_resource * (1 + margin_reserve))
@@ -70,9 +69,6 @@ for name, item in ALL_ITEM_DATA.items():
 
     # refresh time
     item['refresh_time'] = refresh_time_default if item['disposable'] else round(big_m)
-
-    # collect time
-    item['collect_time'] = collect_time_default
 
     # capacity
     item['capacity'] = 1 if item['divisible'] else capacity_large

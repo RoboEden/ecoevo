@@ -37,7 +37,7 @@ def sample_action(max_sell_num: int = 100000, max_buy_num: int = 100000, seed=10
     sell_offer = sample_offer(max_sell_num)
     buy_offer = sample_offer(max_buy_num)
 
-    return (main_action, sell_offer, buy_offer)
+    return (main_action, (sell_offer, buy_offer), None, None)
 
 
 def test_random_actions():

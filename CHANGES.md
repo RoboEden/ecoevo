@@ -1,7 +1,14 @@
 # Change log
 
+## version 0.2.0
+- ADD offer accept mechanism
+- MOD rewrite player action execution
+- FIX render trade line
+- ADD more test
+
 ## version 0.1.8
 - ADD new webapp support stream play game scene
+
 ## version 0.1.7
 - ADD move solver
 - MOD parameters generation logic for items and players, from yaml to py

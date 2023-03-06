@@ -35,6 +35,8 @@ class PlayerConfig:
     max_health = 100
     comsumption_per_step = 2
 
+    max_offer = 3
+
 
 class RewardConfig:
     threshold = 0

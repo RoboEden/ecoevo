@@ -115,17 +115,19 @@ class WebApp:
                     msg = u'Game Over!'
                 else:
                     msg = u'Current Step {}'.format(info['curr_step'])
+                transaction_graph = info['transaction_graph']
             else:
                 obs, info = self._env.reset()
                 rewards = [0.0] * len(obs)
                 done = False
                 msg = u'Ready to play!'
+                transaction_graph = {}
 
             self.put_output(obs, rewards, done, info)
 
             self.gs_render.update(
                 self._env.entity_manager.map,
-                self._env.trader.dict_flow,
+                transaction_graph,
                 self._env.players,
             )
 

@@ -105,7 +105,9 @@ export class Animator {
             const [xcG, ycG] = this.prevPos[giveId].map(this.centerCoord)
             const [xcT, ycT] = this.prevPos[takeId].map(this.centerCoord)
             const newpath = document.createElementNS('http://www.w3.org/2000/svg', "path")
-            newpath.setAttributeNS(null, "d", `M ${xcG} ${ycG} L ${xcT} ${ycT}`)
+            const xcM = (xcG + xcT) / 2
+            const ycM = (ycG + ycT) / 2
+            newpath.setAttributeNS(null, "d", `M ${xcG} ${ycG} L ${xcM} ${ycM}`)
             newpath.setAttribute("class", `${giveItem}--trade-line`)
             newpath.setAttribute("stroke-width", 0.3)
             newpath.setAttribute("stroke-opacity", 0.3)
