@@ -1,9 +1,6 @@
-import logging
 from ecoevo import EcoEvo
 from test_random_actions import sample_main_action
 from ecoevo.config import EnvConfig
-
-log = logging.getLogger(__name__)
 
 
 class TestConfig(EnvConfig):

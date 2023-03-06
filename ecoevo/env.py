@@ -1,3 +1,5 @@
+import os
+import signal
 from typing import List
 from ecoevo.config import EnvConfig, MapConfig
 from ecoevo.gamecore import GameCore
@@ -33,8 +35,11 @@ class EcoEvo:
 
     def step(self, actions: List[ActionType]):
         if self.render_mode:
-            self.webapp.action_queue.put(actions)
-            obs, rewards, done, info = self.webapp.output_queue.get()
+            try:
+                self.webapp.action_queue.put(actions)
+                obs, rewards, done, info = self.webapp.output_queue.get()
+            except KeyboardInterrupt:
+                os.kill(os.getpid(), signal.SIGKILL)
         else:
             obs, rewards, done, info = self._env.step(actions)
         return obs, rewards, done, info

@@ -11,6 +11,24 @@ pip install --upgrade setuptools
 pip install --upgrade build
 pip install -e .
 ```
+## Custom Webapp
+Install nodejs
+```bash
+curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash - &&\
+sudo apt-get install -y nodejs
+```
+Install dependencies
+```bash
+npm install
+```
+Start dev 
+```bash
+npm run dev
+```
+Build 
+```bash
+npm run build
+```
 
 ## Packaging
 1. Data files should be included via the  `MANIFEST.in` file.
