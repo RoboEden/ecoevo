@@ -101,7 +101,7 @@ for x in range(map_size):
                                   color=dict_type_colour[dict_idx_type[mat_type_all[x][y]]])
         ax.add_patch(rectangle)
 
-# let the length of an x axis unit be equal with y axis
+# let the length of an x ax==unit be equal with y axis
 ax.set_aspect(1)
 
 # 8 blocks an area

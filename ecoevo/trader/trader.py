@@ -257,7 +257,7 @@ class Trader(object):
 
         dict_flow = {}
 
-        random.seed(42)
+        # random.seed(42) # WTF???
         list_deal_id = list(dict_deal.keys())
         list_remain_volume = [player.backpack.remain_volume for player in self.players]
         random.shuffle(list_deal_id)

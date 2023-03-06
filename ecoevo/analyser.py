@@ -157,25 +157,25 @@ class Analyser(object):
             # item final utility avg and std
             for item in ALL_ITEM_DATA:
                 item_final_utility = np.array([r['item_utility'][item] for r in reward_info.values()])
-                info[item_final_utility_avg_key.format(item)] = np.mean(item_final_utility)
-                info[item_final_utility_std_key.format(item)] = np.std(item_final_utility)
+                info[item_final_utility_avg_key.format(item)] = np.mean(item_final_utility).item()
+                info[item_final_utility_std_key.format(item)] = np.std(item_final_utility).item()
 
             # player final iustd(item utility std)
             player_final_iustd = np.array([np.std(list(r['item_utility'].values())) for r in reward_info.values()])
-            info[final_iustd_avg_key] = np.mean(player_final_iustd)
-            info[final_iustd_std_key] = np.std(player_final_iustd)
-            info[final_iustd_min_key] = np.amin(player_final_iustd)
-            info[final_iustd_max_key] = np.amax(player_final_iustd)
+            info[final_iustd_avg_key] = np.mean(player_final_iustd).item()
+            info[final_iustd_std_key] = np.std(player_final_iustd).item()
+            info[final_iustd_min_key] = np.amin(player_final_iustd).item()
+            info[final_iustd_max_key] = np.amax(player_final_iustd).item()
 
             # final utility
             player_final_utility = np.array([r['utility'] for r in reward_info.values()])
             player_final_cost = np.array([r['cost'] for r in reward_info.values()])
-            info['final_avr_utility'] = np.mean(player_final_utility)
-            info['final_max_utility'] = np.amax(player_final_utility)
-            info['final_min_utility'] = np.amin(player_final_utility)
-            info['final_avr_cost'] = np.mean(player_final_cost)
-            info['final_max_cost'] = np.amax(player_final_cost)
-            info['final_min_cost'] = np.amin(player_final_cost)
+            info['final_avr_utility'] = np.mean(player_final_utility).item()
+            info['final_max_utility'] = np.amax(player_final_utility).item()
+            info['final_min_utility'] = np.amin(player_final_utility).item()
+            info['final_avr_cost'] = np.mean(player_final_cost).item()
+            info['final_max_cost'] = np.amax(player_final_cost).item()
+            info['final_min_cost'] = np.amin(player_final_cost).item()
 
         return info
 

@@ -41,7 +41,7 @@ class MapVisualizer:
                                               color=color)
                     ax.add_patch(rectangle)
 
-            # let the length of an x axis unit be equal with y axis
+            # let the length of an x ax==unit be equal with y axis
             ax.set_aspect(1)
 
             # 8 blocks an area

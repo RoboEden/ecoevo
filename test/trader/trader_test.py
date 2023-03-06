@@ -82,7 +82,7 @@ if __name__ == '__main__':
             plt.arrow(x=pos_1[0], y=pos_1[1], dx=pos_2[0] - pos_1[0], dy=pos_2[1] - pos_1[1], linestyle='-')
             plt.text(x=(pos_2[0] + pos_1[0]) / 2, y=(pos_2[1] + pos_1[1]) / 2, s=str(mat_volume[i][j]), color='green')
 
-        # let the length of an x axis unit be equal with y axis
+        # let the length of an x ax==unit be equal with y axis
         ax.set_aspect(1)
 
         # 8 units an area
@@ -160,7 +160,7 @@ if __name__ == '__main__':
             set_couple_used.add((i, j))
             set_couple_used.add((j, i))
 
-        # let the length of an x axis unit be equal with y axis
+        # let the length of an x ax==unit be equal with y axis
         ax.set_aspect(1)
 
         # 8 units an area
