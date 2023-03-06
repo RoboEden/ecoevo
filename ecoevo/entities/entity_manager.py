@@ -4,11 +4,19 @@ from typing import Dict, List, Optional
 
 import numpy as np
 import tree
+from loguru import logger
 
 from ecoevo.config import DataPath, MapConfig
 from ecoevo.entities import ALL_ITEM_DATA, Item, Player, load_item
 from ecoevo.entities.move_solver import MoveSolver
-from ecoevo.types import Action, ActionType, PosType, IdType
+from ecoevo.types import Action, ActionType, PosType, IdType, Move
+
+MOVE_DIRECTIONS = {
+    Move.right: (1, 0),
+    Move.up: (0, 1),
+    Move.left: (-1, 0),
+    Move.down: (0, -1),
+}
 
 
 class Tile(BaseModel):
@@ -37,7 +45,7 @@ class EntityManager:
                 if item_name == "empty":
                     pass
                 else:
-                    item = load_item(item_name, num=0)
+                    item = load_item(item_name)
                     item.num = item.reserve_num
                     array[(x, y)] = item
         return array
@@ -70,6 +78,10 @@ class EntityManager:
             y = idx // self.width
             points.append((x, y))
         return points
+    
+    def get_item(self, pos: PosType) -> Optional[Item]:
+        tile = self.map.get(pos)
+        return tile.item if tile else None
 
     def get_player(self, pos: PosType) -> Optional[Player]:
         tile = self.map.get(pos)
@@ -106,57 +118,68 @@ class EntityManager:
             self.add_player(players[pid])
 
     def move_player(self, player: Player, secondary_action):
+        dx, dy = MOVE_DIRECTIONS[secondary_action]
+        x, y = (player.pos[0] + dx, player.pos[1] + dy)
+        if x < 0 or x >= MapConfig.width or y < 0 or y >= MapConfig.height:
+            logger.warning(f"Player {player.id} move towards map boarder")
+            return False
+        next_pos = (x, y)
+        
         if self.use_move_solver:
-            self.player_dest[player.id] = player.next_pos(secondary_action)
-            return
+            self.player_dest[player.id] = next_pos
+            return True
         # If destination has agent, skip move action
-        next_pos = player.next_pos(secondary_action)
         if next_pos in self.map:
             tile = self.map[next_pos]
             if tile.player:
-                return
+                return False
 
         self.remove_player(player)
-        player.pos = player.next_pos(secondary_action)
+        player.pos = next_pos
         self.add_player(player)
-        player.collect_remain = None
 
     def execute_main_action(self, player: Player, action: ActionType):
-        main_action, _, _ = action
-        primary_action, secondary_action = main_action
-        if primary_action == Action.idle:
-            pass
-        elif primary_action == Action.move:
-            self.move_player(player, secondary_action)
-        elif primary_action == Action.collect:
-            player.collect(self.map[player.pos].item)
-        elif primary_action == Action.consume:
-            player.consume(secondary_action)
-        elif primary_action == Action.wipeout:
-            player.wipeout(secondary_action)
-        else:
-            raise ValueError(f"Failed to parse primary action. Player {player.id}: {primary_action} ")
-
-        # reset the remaining collection steps
+        (primary_action, secondary_action), *_ = action
+        
         if primary_action != Action.collect:
-            player.collect_remain = None
+            player.collect_remain = 0
+        
+        if primary_action == Action.idle:
+            return True
+        
+        if primary_action == Action.move:
+            if secondary_action is None:
+                logger.error(f"Player {player.id} {primary_action} secondary action is None")
+                return False
+            return self.move_player(player, secondary_action)
+        
+        if primary_action == Action.collect:
+            item = self.get_item(player.pos)
+            if not item:
+                logger.warning(f"Player {player.id} collect at {player.pos} but no item exists")
+                return False
+            return player.collect(item)
+        
+        if primary_action == Action.consume:
+            if secondary_action is None:
+                logger.error(f"Player {player.id} {primary_action} secondary action is None")
+                return False
+            return player.consume(secondary_action)
+        
+        if primary_action == Action.wipeout:
+            if secondary_action is None:
+                logger.error(f"Player {player.id} {primary_action} secondary action is None")
+                return False
+            return player.wipeout(secondary_action)
+
+        logger.error(f"Player {player.id} primary action is invalid: '{primary_action}'")
+        return False
 
     def refresh_item(self):
-
-        def _tile_check(tile: Tile) -> None:
-            if tile is None or tile.item is None:
-                return
-            item = tile.item
-            assert item.num >= 0
-            if item.num == 0:
-                if item.refresh_remain is None:
-                    item.refresh_remain = item.refresh_time - 1
-                elif item.refresh_remain > 0:
-                    item.refresh_remain -= 1
-                else:
-                    item.num = item.reserve_num
-                    item.refresh_remain = None
-            else:
-                item.refresh_remain = None
-
-        tree.map_structure(_tile_check, self.map)
+        for pos in self.map:
+            item = self.get_item(pos)
+            if not item or item.num > 0:
+                continue
+            item.refresh_remain = (item.refresh_remain or item.refresh_time) - 1
+            if not item.refresh_remain:
+                item.num = item.reserve_num

@@ -3,7 +3,7 @@ from typing import Dict, List, Tuple
 import numpy as np
 
 from ecoevo.entities import ALL_ITEM_DATA, ALL_PERSONAE, EntityManager, Player
-from ecoevo.types import Action, DealType, IdType, OfferType
+from ecoevo.types import Action, IdType, ItemNumType
 
 persona_collect_cnt_key = "{}_collect_cnt"
 persona_collect_match_cnt_key = "{}_collect_match_cnt"
@@ -48,13 +48,13 @@ class Analyser(object):
 
     info_keys += different_item_pair_key('{}_{}_price')
     info_keys += different_item_pair_key('{}_{}_cnt')
+    info_keys += different_item_pair_key('{}_{}_amount')
     info_keys += persona_key(persona_collect_cnt_key)
     info_keys += persona_key(persona_collect_match_cnt_key)
     info_keys += persona_key(persona_collect_match_ratio_key)
 
     def get_info(self, step: int, done: bool, info: Dict[str, int or float], players: List[Player],
-                 entity_manager: EntityManager, matched_deals: Dict[IdType, DealType],
-                 transaction_graph: Dict[Tuple[IdType, IdType], OfferType],
+                 entity_manager: EntityManager, transaction_graph: Dict[Tuple[IdType, IdType], ItemNumType],
                  executed_main_actions: Dict[int, Tuple[str, str]], reward_info: Dict[int,
                                                                                       Dict]) -> Dict[str, int or float]:
         """
@@ -64,8 +64,9 @@ class Analyser(object):
         :param done:  if episode done
         :param info:  info of last step
         :param players:  list of all players
+        :param entity_manager:  entity manager
         :param transaction_graph:  trade item flows
-        :param actions_valid:  validated actions dictionary, player id to action tuple
+        :param executed_main_actions:  validated actions dictionary, player id to action tuple
         :param reward_info:  reward info dictionary: rewards, utilities and costs
 
         :return: info:  info of current step
@@ -93,17 +94,17 @@ class Analyser(object):
             info[info_key] += 1
 
         # price info
-        for id, deal in matched_deals.items():
-            _, sell_offer, buy_offer = deal
-            sell_name, sell_num = sell_offer
-            buy_name, buy_num = buy_offer
-
-            price = abs(buy_num) / abs(sell_num)
-            price_key = f"{buy_name}_{sell_name}_price"
+        for i, j in transaction_graph.keys():
+            (sell_item, sell_num), (buy_item, buy_num) = transaction_graph[i, j], transaction_graph[j, i]
+            price = buy_num / sell_num
+            price_key = f"{buy_item}_{sell_item}_price"
             info[price_key] += price
 
-            cnt_key = f"{buy_name}_{sell_name}_cnt"
+            cnt_key = f"{buy_item}_{sell_item}_cnt"
             info[cnt_key] += 1
+
+            amount_key = f"{buy_item}_{sell_item}_amount"
+            info[amount_key] += sell_num
 
         if done:
             for key in self.trade_result_keys:
@@ -127,7 +128,7 @@ class Analyser(object):
 
             # persona collect info
             player = players[pid]
-            if action_type == Action.collect and player.collect_remain is None:
+            if action_type == Action.collect and player.collect_remain == 0:
                 cnt_key = persona_collect_cnt_key.format(player.persona)
                 info[cnt_key] += 1
 
@@ -181,7 +182,7 @@ class Analyser(object):
 
     @staticmethod
     def get_trade_data(
-            transaction_graph: Dict[Tuple[IdType, IdType], OfferType]) -> Tuple[int, Dict[str, int], Dict[str, int]]:
+            transaction_graph: Dict[Tuple[IdType, IdType], ItemNumType]) -> Tuple[int, Dict[str, int], Dict[str, int]]:
         """
         tarder parser
 

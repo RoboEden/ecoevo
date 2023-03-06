@@ -1,12 +1,12 @@
-from typing import Optional
+from typing import Optional, List
 
 from loguru import logger
 from pydantic import BaseModel, Field
 
-from ecoevo.config import MapConfig, PlayerConfig
+from ecoevo.config import MapConfig, PlayerConfig, EnvConfig
 from ecoevo.data.player import ALL_PERSONAE
 from ecoevo.entities.items import Bag, Item
-from ecoevo.types import IdType, Move, OfferType, PosType, TradeResult, xAction
+from ecoevo.types import IdType, Move, ActionType, OfferType, PosType, TradeResult, xAction
 
 
 class Player(BaseModel):
@@ -16,7 +16,8 @@ class Player(BaseModel):
     backpack: Bag = Field(default_factory=Bag)
     stomach: Bag = Field(default_factory=Bag)
     health: int = Field(default=PlayerConfig.max_health)
-    collect_remain: Optional[str]
+    offers: List[OfferType] = Field(default_factory=lambda: [None] * PlayerConfig.max_offer)
+    collect_remain: int = 0
     last_action: xAction = Field(default_factory=xAction)
     trade_result: str = Field(default=TradeResult.absent)
 
@@ -28,77 +29,116 @@ class Player(BaseModel):
     def ability(self) -> dict:
         return dict(ALL_PERSONAE[self.persona]["ability"])
 
-    def collect(self, item: Item):
-        if self.backpack.remain_volume >= item.harvest_num * item.capacity:
-            # Init
-            if self.collect_remain is None:
-                collect_time = self.ability[item.name]
-                self.collect_remain = collect_time - 1
-            # Process collect
-            elif self.collect_remain > 0:
-                self.collect_remain -= 1
+    def collect(self, item: Item) -> bool:
+        if item.num < item.harvest_num:
+            logger.warning(f"Player {self.id} collect {item} at {self.pos} but no enough resource")
+            return False
 
-            # Succeed collect
-            if self.collect_remain == 0:
-                item.num -= item.harvest_num
-                self.backpack[item.name].num += item.harvest_num
-                self.collect_remain = None
+        if item.harvest_num * item.capacity > self.backpack.remain_volume:
+            logger.warning(f"Player {self.id} collect {item} at {self.pos} but bag full")
+            return False
 
+        self.collect_remain = (self.collect_remain or self.ability[item.name]) - 1
+        if not self.collect_remain:
+            item.num -= item.harvest_num
+            self.backpack[item.name].num += item.harvest_num
+
+        return True
+
+    def consume(self, item_name: str) -> bool:
+        item = self.backpack[item_name]
+
+        if item.disposable:
+            consumed_num = min(item.free_num, item.consume_num)
+            item.num -= consumed_num
         else:
-            logger.critical(f"""Player {self.id} cannot collect {item.name} (harvest_num: {item.harvest_num})
-            due to insuffient backpack remain {self.backpack.remain_volume}.""")
+            consumed_num = item.free_num
 
-    def consume(self, item_name: str):
-        item_in_bag = self.backpack[item_name]
-        item_in_stomach = self.stomach[item_name]
+        self.stomach[item_name].num += consumed_num
+        self.health += consumed_num * item.supply
+        self.health = min(self.health, PlayerConfig.max_health)
+        return True
 
-        santity = item_in_bag.num > 0
-        if santity:
-            if item_in_bag.disposable:
-                consume_num = min(item_in_bag.num, item_in_bag.consume_num)
-                item_in_bag.num -= consume_num
-                item_in_stomach.num += consume_num
-            else:
-                item_in_stomach.num += item_in_bag.num
-            self.health = min(
-                self.health + item_in_stomach.supply * item_in_stomach.num,
-                PlayerConfig.max_health,
-            )
-        else:
-            logger.critical(
-                f"""Player {self.id} cannot consume {item_name} (num: {item_in_bag.num} disposable: {item_in_bag.disposable})
-                due to insuffient amount.""")
+    def wipeout(self, item_name: str) -> bool:
+        item = self.backpack[item_name]
+        item.num -= item.free_num
+        return True
 
-    def wipeout(self, item_name: str):
-        self.backpack[item_name].num = 0
+    def try_accept_offer(self, opponent_offer: OfferType) -> bool:
+        (sell_name, sell_num), (buy_name, buy_num) = opponent_offer
+        # convert to offer relative to player
+        (sell_name, sell_num), (buy_name, buy_num) = (buy_name, -buy_num), (sell_name, -sell_num)
+        sell_item, buy_item = self.backpack[sell_name], self.backpack[buy_name]
 
-    def next_pos(
-        self,
-        direction: str,
-    ) -> PosType:
-        x, y = self.pos
-        if direction == Move.up:
-            y = min(y + 1, MapConfig.height - 1)
-        elif direction == Move.down:
-            y = max(y - 1, 0)
-        elif direction == Move.right:
-            x = min(x + 1, MapConfig.width - 1)
-        elif direction == Move.left:
-            x = max(x - 1, 0)
-        else:
-            raise ValueError(f"Failed to parse direction. Player {self.id}: {direction}")
-        return (x, y)
+        if sell_item.free_num < abs(sell_num):
+            logger.warning(f'Item {sell_name} free num not enough {sell_item.free_num}/{abs(sell_num)}')
+            return False
 
-    def trade(self, sell_offer: OfferType, buy_offer: OfferType):
-        sell_item_name, sell_num = sell_offer
-        buy_item_name, buy_num = buy_offer
-        sell_num, buy_num = abs(sell_num), abs(buy_num)
-        self.backpack[sell_item_name].num -= sell_num
-        self.backpack[buy_item_name].num += buy_num
-        if self.backpack.remain_volume < 0:
-            for lost_num in range(self.backpack[buy_item_name].num):
-                if self.backpack.remain_volume >= 0:
-                    break
-                self.backpack[buy_item_name].num -= 1
-            logger.critical(f"""Player lost num {lost_num} with trade {sell_offer}, {buy_offer}
-             due to insuffient backpack remain""")
+        delta_volume = sell_item.capacity * sell_num + buy_item.capacity * buy_num
+        if delta_volume > 0 and delta_volume > self.backpack.remain_volume:
+            logger.warning(f'Player remain volume not enough {self.backpack.remain_volume}/{delta_volume}')
+            return False
+
+        sell_item.num -= abs(sell_num)
+        buy_item.num += buy_num
+        return True
+
+    def offer_accepted(self, index: int):
+        (sell_name, sell_num), (buy_name, buy_num) = self.offers[index]
+        sell_item, buy_item = self.backpack[sell_name], self.backpack[buy_name]
+
+        self.offer_cancel(index)
+
+        sell_item.num -= abs(sell_num)
+        buy_item.num += buy_num
+
+    def offer_try_add(self, offer: OfferType) -> bool:
+        (sell_name, sell_num), (buy_name, buy_num) = offer
+        if not (sell_name != buy_num and sell_num < 0 and buy_num > 0):
+            return False
+        sell_item, buy_item = self.backpack[sell_name], self.backpack[buy_name]
+
+        if sell_item.free_num < abs(sell_num):
+            return False
+
+        delta_volume = sell_item.capacity * sell_num + buy_item.capacity * buy_num
+        if delta_volume > 0 and delta_volume > self.backpack.remain_volume:
+            return False
+
+        try:
+            index = self.offers.index(None)
+        except ValueError:
+            logger.warning(f'Player {self.id} try add offer but exceed max offer')
+            return False
+
+        sell_item.locked_num += abs(sell_num)
+        if delta_volume > 0:
+            self.backpack.locked_volume += delta_volume
+
+        self.offers[index] = offer
+        return True
+
+    def offer_cancel(self, index: int):
+        offer = self.offers[index]
+        if not offer:
+            logger.info(f'Player {self.id} try cancel empty offer')
+            return
+        (sell_name, sell_num), (buy_name, buy_num) = offer
+        sell_item, buy_item = self.backpack[sell_name], self.backpack[buy_name]
+
+        sell_item.locked_num -= abs(sell_num)
+
+        delta_volume = sell_item.capacity * sell_num + buy_item.capacity * buy_num
+        if delta_volume > 0:
+            self.backpack.locked_volume -= delta_volume
+
+        self.offers[index] = None
+
+    def memorize_action(self, action: ActionType):
+        main_action, offer, _, _ = action
+        self.last_action.main_action.primary = main_action[0]
+        self.last_action.main_action.secondary = main_action[1]
+        self.last_action.sell_offer.sell_item = offer[0][0] if offer else None
+        self.last_action.sell_offer.sell_num = offer[0][1] if offer else None
+        self.last_action.buy_offer.buy_item = offer[1][0] if offer else None
+        self.last_action.buy_offer.buy_num = offer[1][1] if offer else None

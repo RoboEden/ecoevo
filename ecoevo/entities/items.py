@@ -8,8 +8,9 @@ from ecoevo.data.items import ALL_ITEM_DATA
 
 class Item(BaseModel):
     name: str
-    num: int
-    refresh_remain: Optional[int] = None
+    num: int = 0
+    locked_num: int = 0
+    refresh_remain: int = 0
 
     @property
     def disposable(self) -> bool:
@@ -32,10 +33,6 @@ class Item(BaseModel):
         return int(ALL_ITEM_DATA[self.name]['refresh_time'])
 
     @property
-    def collect_time(self) -> int:
-        return int(ALL_ITEM_DATA[self.name]['collect_time'])
-
-    @property
     def capacity(self) -> int:
         return int(ALL_ITEM_DATA[self.name]['capacity'])
 
@@ -54,24 +51,26 @@ class Item(BaseModel):
     @property
     def expiry(self) -> int:
         return int(ALL_ITEM_DATA[self.name]['expiry'])
+    
+    @property
+    def free_num(self) -> int:
+        return self.num - self.locked_num
 
 
-def load_item(name: str, num=0) -> Item:
-    return Item(**{
-        'name': name,
-        'num': num,
-    })
+def load_item(name: str) -> Item:
+    return Item(name=name)
 
 
 class Bag(BaseModel):
-    gold: Item = load_item('gold', num=0)
-    hazelnut: Item = load_item('hazelnut', num=0)
-    coral: Item = load_item('coral', num=0)
-    sand: Item = load_item('sand', num=0)
-    pineapple: Item = load_item('pineapple', num=0)
-    peanut: Item = load_item('peanut', num=0)
-    stone: Item = load_item('stone', num=0)
-    pumpkin: Item = load_item('pumpkin', num=0)
+    gold: Item = load_item('gold')
+    hazelnut: Item = load_item('hazelnut')
+    coral: Item = load_item('coral')
+    sand: Item = load_item('sand')
+    pineapple: Item = load_item('pineapple')
+    peanut: Item = load_item('peanut')
+    stone: Item = load_item('stone')
+    pumpkin: Item = load_item('pumpkin')
+    locked_volume: int = 0
 
     def __getitem__(self, name: str) -> Item:
         if name in self.__dict__:
@@ -100,4 +99,4 @@ class Bag(BaseModel):
 
     @property
     def remain_volume(self) -> float:
-        return PlayerConfig.bag_volume - self.used_volume
+        return PlayerConfig.bag_volume - self.used_volume - self.locked_volume
