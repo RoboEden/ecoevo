@@ -1,7 +1,7 @@
-import ecoevo.types as et
 from typing import List
+from ecoevo.config import EnvConfig, MapConfig
 from ecoevo.gamecore import GameCore
-from ecoevo.config import EnvConfig
+from ecoevo.types import ActionType
 
 
 class EcoEvo:
@@ -13,10 +13,12 @@ class EcoEvo:
                  logging_path="out.log") -> None:
         self._env = GameCore(config=config, logging_level=logging_level, logging_path=logging_path)
         self.render_mode = render_mode
+
         if self.render_mode:
-            from ecoevo.render import WebApp
-            self.app = WebApp(self._env)
-            self.app.run_server(debug=False)
+            from ecoevo.webapp.app import WebApp
+            init_message = {'totalStep': config.total_step, 'mapSize': MapConfig.width}
+            self.webapp = WebApp(self._env, init_message)
+            self.webapp.run()
 
     @property
     def players(self):
@@ -24,15 +26,15 @@ class EcoEvo:
 
     def reset(self):
         if self.render_mode:
-            obs, _, _, info = self.app.get_output()
+            obs, info = self.webapp.output_queue.get()
         else:
             obs, info = self._env.reset()
         return obs, info
 
-    def step(self, actions: List[et.ActionType]):
+    def step(self, actions: List[ActionType]):
         if self.render_mode:
-            self.app.put_action(actions)
-            obs, rewards, done, info = self.app.get_output()
+            self.webapp.action_queue.put(actions)
+            obs, rewards, done, info = self.webapp.output_queue.get()
         else:
             obs, rewards, done, info = self._env.step(actions)
         return obs, rewards, done, info

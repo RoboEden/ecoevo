@@ -41,7 +41,7 @@ class RewardConfig:
     weight_coef = 0
     penalty = 0
 
-    # dis for disposable, dur for durable; nec for necessity, lux for luxury
+    # d==for disposable, dur for durable; nec for necessity, lux for luxury
     alpha_nec, alpha_lux = 0.21, 0.21
     rho_nec, rho_lux = -0.21, -0.15
     eta_dis_nec, eta_dis_lux = 0.98, 1

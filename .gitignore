@@ -168,3 +168,14 @@ tests/**/*.csv
 tests/**/*.json
 tests/**/*.jpg
 tests/**/*.png
+
+# EcoEvo client
+*.pyc
+.DS_Store
+/nenv
+.vscode/
+node_modules
+package-lock.json
+yarn.lock
+
+dist

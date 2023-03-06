@@ -1,5 +1,5 @@
 import json
-from dataclasses import dataclass
+from pydantic import BaseModel
 from typing import Dict, List, Optional
 
 import numpy as np
@@ -10,13 +10,14 @@ from ecoevo.entities import ALL_ITEM_DATA, Item, Player, load_item
 from ecoevo.entities.move_solver import MoveSolver
 from ecoevo.types import Action, ActionType, PosType, IdType
 
-@dataclass
-class Tile:
+
+class Tile(BaseModel):
     item: Optional[Item]
     player: Optional[Player]
 
 
 class EntityManager:
+
     def __init__(self, path: str = DataPath.map_json, use_move_solver=True) -> None:
         with open(path) as fp:
             self.data = dict(json.load(fp))
@@ -73,7 +74,7 @@ class EntityManager:
     def get_player(self, pos: PosType) -> Optional[Player]:
         tile = self.map.get(pos)
         return tile.player if tile else None
-        
+
     def add_player(self, player: Player):
         if player.pos in self.map:
             tile = self.map[player.pos]
@@ -103,7 +104,7 @@ class EntityManager:
             players[pid].pos = self.player_dest[pid]
         for pid in va:
             self.add_player(players[pid])
-    
+
     def move_player(self, player: Player, secondary_action):
         if self.use_move_solver:
             self.player_dest[player.id] = player.next_pos(secondary_action)
@@ -134,15 +135,14 @@ class EntityManager:
         elif primary_action == Action.wipeout:
             player.wipeout(secondary_action)
         else:
-            raise ValueError(
-                f"Failed to parse primary action. Player {player.id}: {primary_action} "
-            )
+            raise ValueError(f"Failed to parse primary action. Player {player.id}: {primary_action} ")
 
         # reset the remaining collection steps
         if primary_action != Action.collect:
             player.collect_remain = None
 
     def refresh_item(self):
+
         def _tile_check(tile: Tile) -> None:
             if tile is None or tile.item is None:
                 return

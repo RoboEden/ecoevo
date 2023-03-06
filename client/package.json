@@ -1,0 +1,31 @@
+{
+    "private": true,
+    "name": "ecoevo-client",
+    "description": "An ecoevo application, powered by WebSocket",
+    "version": "0.0.0",
+    "scripts": {
+        "dev": "vite --open",
+        "build": "vite build",
+        "serve": "vite preview"
+    },
+    "dependencies": {
+        "@emotion/react": "^11.10.6",
+        "@emotion/styled": "^11.10.6",
+        "@mui/icons-material": "^5.11.9",
+        "@mui/material": "^5.11.10",
+        "bootstrap": "^5.2.3",
+        "gsap": "^3.11.4",
+        "history": "^5.0.0",
+        "localforage": "^1.10.0",
+        "react": "^18.1.0",
+        "react-bootstrap": "^2.7.2",
+        "react-dom": "^18.1.0",
+        "react-router-dom": "^6.0.0-beta.0",
+        "react-tooltip": "^5.8.3"
+    },
+    "devDependencies": {
+        "@vitejs/plugin-react": "^3.0.0",
+        "sass": "^1.35.1",
+        "vite": "^4.1.1"
+    }
+}

@@ -79,7 +79,7 @@ class GameCore:
                 player.trade_result = TradeResult.absent
             else:
                 if self.is_trade_valid(player, action):
-                    player.trade_result = (TradeResult.failed)  # may changed to success later if the deal is matched
+                    player.trade_result = (TradeResult.failed)  # may changed to success later if the deal ==matched
                 else:
                     actions[id] = (main_action, None, None)
                     player.trade_result = TradeResult.illegal
@@ -245,7 +245,7 @@ class GameCore:
 
             # handle consume and sell same item
             least_num = player.backpack[consume_item_name].consume_num
-            if player.backpack[consume_item_name].num < least_num:
+            if player.backpack[consume_item_name].num < least_num or player.backpack[consume_item_name].num == 0:
                 logger.warning(
                     f'Player {player.id} cannot consume "{consume_item_name}" since num no more than {least_num}.')
                 return False

@@ -32,7 +32,7 @@ def sample_offer(max_num: int = 100000) -> OfferType:
     return (item_name, num)
 
 
-def sample_action(max_sell_num: int = 100000, max_buy_num: int = 100000) -> ActionType:
+def sample_action(max_sell_num: int = 100000, max_buy_num: int = 100000, seed=1000) -> ActionType:
     main_action = sample_main_action()
     sell_offer = sample_offer(max_sell_num)
     buy_offer = sample_offer(max_buy_num)

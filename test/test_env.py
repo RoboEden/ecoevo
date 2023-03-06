@@ -262,7 +262,8 @@ class TestHealth:
         for i in range(3):
             assert h.gamecore.players[i].health == max(init_health[i] - D, 0)
             assert h.gamecore.players[i + 3].health == min(init_health[i] + E, PlayerConfig.max_health) - D
-            assert h.gamecore.reward_parser.last_costs[i] > h.gamecore.reward_parser.last_costs[i + 3] or (i == 2) or (RewardConfig.penalty == 0)
+            assert h.gamecore.reward_parser.last_costs[i] > h.gamecore.reward_parser.last_costs[i + 3] or (i == 2) or (
+                RewardConfig.penalty == 0)
         assert h.get_error_log() == ''
 
 
@@ -425,7 +426,7 @@ class TestInfo:
         import warnings
         warnings.warn('test_utility skipped')
         return
-        
+
         import math
         STEP = 2
         CONSUME = {
