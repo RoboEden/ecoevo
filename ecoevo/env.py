@@ -1,7 +1,7 @@
 import os
 import signal
 from typing import List
-from ecoevo.config import EnvConfig, MapConfig
+from ecoevo.config import EnvConfig, MapConfig, PlayerConfig
 from ecoevo.gamecore import GameCore
 from ecoevo.types import ActionType
 
@@ -18,7 +18,11 @@ class EcoEvo:
 
         if self.render_mode:
             from ecoevo.webapp.app import WebApp
-            init_message = {'totalStep': config.total_step, 'mapSize': MapConfig.width}
+            init_message = {
+                'totalStep': config.total_step,
+                'mapSize': MapConfig.width,
+                'bagVolume': PlayerConfig.bag_volume,
+                }
             self.webapp = WebApp(self._env, init_message)
             self.webapp.run()
 

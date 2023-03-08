@@ -42,7 +42,8 @@ export const useEcoEvo = (load, render, trader) => {
                 dispatch({
                     type: 'INIT',
                     mapSize: msg.mapSize,
-                    totalStep: msg.totalStep
+                    totalStep: msg.totalStep,
+                    bagVolume: msg.bagVolume,
                 })
                 return
             }
