@@ -9,13 +9,16 @@ import TableContainer from '@mui/material/TableContainer'
 import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
 import { styled } from '@mui/material/styles'
+import { useSelector } from 'react-redux'
 
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
     color: '#ffffff',
 }))
 
-export const InfoPanel = ({ info, player }) => {
+export const InfoPanel = ({ player }) => {
+    const info = useSelector((state)=>state.data.info)
+
     const _renderObject = (obj) => {
         if (obj) {
             return (<ul style={{ listStyle: 'none' }}>
@@ -52,11 +55,11 @@ export const InfoPanel = ({ info, player }) => {
                     <Typography variant="overline">
                         Backpack
                     </Typography>
-                    <BagProgressBar label='Backpack' bag={player?.backpack} />
+                    <BagProgressBar label='Backpack' bag={player?.backpack} limit={true} />
                     <Typography variant="overline">
                         Stomach
                     </Typography>
-                    <BagProgressBar label='Stomach' bag={player?.stomach} />
+                    <BagProgressBar label='Stomach' bag={player?.stomach} limit={false} />
                 </Grid>
                 <TableContainer component={Grid}>
                     <Table aria-label="simple table">

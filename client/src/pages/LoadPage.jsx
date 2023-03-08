@@ -1,7 +1,9 @@
 import { useEffect } from "react"
+import { useSelector } from "react-redux"
 
-export const LoadPage = ({ isLoading, log }) => {
-
+export const LoadPage = () => {
+	const isLoading = useSelector((state)=>state.isLoading)
+	const log = useSelector((state)=>state.log)
 
 	const showMainPage = () => {
 		const loadEl = document.getElementById('load-page')

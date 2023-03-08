@@ -13,10 +13,14 @@ export const funcInitialState = () => {
         mapSize: undefined,
         totalStep: undefined,
         clickedId: undefined,
+        bagVolume: undefined,
     }
 }
 
 export function appReducer(state, action) {
+    if (!state) {
+        return funcInitialState()
+    }
     switch (action.type) {
         /**
          *  Load related
@@ -32,7 +36,8 @@ export function appReducer(state, action) {
             return {
                 ...state,
                 mapSize: action.mapSize,
-                totalStep: action.totalStep
+                totalStep: action.totalStep,
+                bagVolume: action.bagVolume,
             }
         }
         case 'LOADED': {

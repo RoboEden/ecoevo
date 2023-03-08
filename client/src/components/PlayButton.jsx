@@ -1,12 +1,16 @@
 import { useEffect, useRef } from 'react'
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded'
 import PauseIcon from '@mui/icons-material/Pause'
+import { useDispatch, useSelector } from 'react-redux'
 
-export const PlayButton = ({ state, dispatch }) => {
+export const PlayButton = () => {
+    const isPlaying = useSelector((state)=>(state.isPlaying))
+    const dispatch = useDispatch()
+
     // Playing effect
     const playInterval = useRef()
     useEffect(() => {
-        if (state.isPlaying) {
+        if (isPlaying) {
             playInterval.current = setInterval(() => {
                 dispatch({ type: 'PLAY' })
             }, 300)
@@ -14,10 +18,10 @@ export const PlayButton = ({ state, dispatch }) => {
         else {
             clearInterval(playInterval.current)
         }
-    }, [state.isPlaying])
+    }, [isPlaying])
     // Play / Pause
     const playPause = () => {
-        dispatch({ type: state.isPlaying ? 'PAUSE' : 'PLAY' })
+        dispatch({ type: isPlaying ? 'PAUSE' : 'PLAY' })
     }
 
     return (
@@ -27,7 +31,7 @@ export const PlayButton = ({ state, dispatch }) => {
             onClick={playPause}
             onKeyDown={(e) => { if (e.key === 'Space') playPause() }}
         >
-            {state.isPlaying ?
+            {isPlaying ?
                 <PauseIcon
                     sx={{
                         color: "black",

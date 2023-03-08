@@ -1,7 +1,12 @@
 import { useEffect, useRef } from "react"
 import localforage from "localforage"
+import { useDispatch, useSelector } from "react-redux"
 
-export const useEcoEvo = (load, render, trader, state, dispatch) => {
+export const useEcoEvo = (load, render, trader) => {
+    const isLoading = useSelector((state)=>state.isLoading)
+    const renderStep = useSelector((state)=>state.renderStep)
+    const dispatch = useDispatch()
+
     const setLog = (str) => { dispatch({ type: 'LOG', log: str }) }
     const reset = () => {
         localforage.clear().then(() => {
@@ -37,13 +42,14 @@ export const useEcoEvo = (load, render, trader, state, dispatch) => {
                 dispatch({
                     type: 'INIT',
                     mapSize: msg.mapSize,
-                    totalStep: msg.totalStep
+                    totalStep: msg.totalStep,
+                    bagVolume: msg.bagVolume,
                 })
                 return
             }
             msg.forEach((data, index) => {
                 // Load
-                if (state.isLoading) {
+                if (isLoading) {
                     if (data.info.curr_step === 0) {
                         setLog('Loading...')
                         load(data.map)
@@ -78,16 +84,16 @@ export const useEcoEvo = (load, render, trader, state, dispatch) => {
 
     // Render
     useEffect(() => {
-        localforage.getItem('step-' + state.renderStep).then((data) => {
-            if (data && !(state.isLoading)) {
+        localforage.getItem('step-' + renderStep).then((data) => {
+            if (data && !(isLoading)) {
                 dispatch({ type: 'DATA', data: data })
                 render(data.map)
                 trader(data.info.transaction_graph)
             }
         }).catch((err) => {
-            console.error('step-' + state.renderStep, err)
+            console.error('step-' + renderStep, err)
         })
-    }, [state.renderStep])
+    }, [renderStep])
 
 
     return [reset, resume, shutdown]

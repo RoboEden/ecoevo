@@ -3,8 +3,13 @@ import { InfoPanel } from '../components/InfoPanel'
 import Grid from '@mui/material/Grid'
 import { useEffect } from "react"
 import { Tooltip } from 'react-tooltip'
+import { useDispatch, useSelector } from "react-redux"
 
-export const MainPage = ({ shutdown, state, dispatch }) => {
+export const MainPage = () => {
+    const data = useSelector((state)=>state.data)
+    const clickedId = useSelector((state)=>state.clickedId)
+    const dispatch = useDispatch()
+
     function getPlayers(map) {
         let players = {}
         if (map) {
@@ -25,12 +30,12 @@ export const MainPage = ({ shutdown, state, dispatch }) => {
         //     playerSvg.style.filter = 'brightness(1)'
         // }
     }
-    const players = getPlayers(state.data?.map)
+    const players = getPlayers(data?.map)
     useEffect(() => {
         for (const player of Object.values(players)) {
             addSvgEventListener(player)
         }
-    }, [state.data])
+    }, [data])
 
     return (
         <main className='main-wrapper'>
@@ -38,15 +43,15 @@ export const MainPage = ({ shutdown, state, dispatch }) => {
                 <h1>EcoEvo</h1>
             </header>
             <Grid className='view-container' container spacing={1} justifyContent="center" alignItems="baseline">
-                <GridWorld state={state} />
+                <GridWorld />
             </Grid>
             <div className='main-info-panel' >
-                <InfoPanel info={state.data.info} player={players[state.clickedId]} />
+                <InfoPanel player={players[clickedId]} />
             </div>
             <footer className='main-footer'>
-                <StepInput state={state} dispatch={dispatch} />
-                <PlayButton state={state} dispatch={dispatch} />
-                <StepSlider state={state} dispatch={dispatch} />
+                <StepInput/>
+                <PlayButton/>
+                <StepSlider/>
             </footer>
             <Tooltip id={`tooltip`} />
         </main >
