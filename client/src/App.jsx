@@ -1,11 +1,10 @@
-
-import { useReducer } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
 import { useEcoEvo, useAnimator } from './hooks'
-import { appReducer, funcInitialState } from "./reducers"
 import { LoadPage, MainPage } from './pages'
 
 export const App = () => {
-	const [state, dispatch] = useReducer(appReducer, null, funcInitialState)
+	const state = useSelector((state)=>state)
+	const dispatch = useDispatch()
 
 	const [load, render, trade] = useAnimator(state, dispatch)
 

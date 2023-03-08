@@ -17,6 +17,9 @@ export const funcInitialState = () => {
 }
 
 export function appReducer(state, action) {
+    if (!state) {
+        return funcInitialState()
+    }
     switch (action.type) {
         /**
          *  Load related
