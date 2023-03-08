@@ -1,6 +1,10 @@
-export const GridWorld = ({ state }) => {
-    const mapWidth = state.mapSize
-    const mapHeight = state.mapSize
+import { useSelector } from "react-redux"
+
+export const GridWorld = () => {
+    const mapSize = useSelector((state)=>state.mapSize)
+
+    const mapWidth = mapSize
+    const mapHeight = mapSize
     const xyArray = []
     for (let i = 0; i < mapWidth * mapHeight; i++) {
         xyArray.push([Math.floor(i / mapWidth), i % mapWidth])

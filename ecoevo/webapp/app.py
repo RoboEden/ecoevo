@@ -73,7 +73,7 @@ class Websocket(WebSocketHandler):
     def on_close(self):
         """ we're done """
         logger.info('WebSocket closed')
-        os.kill(os.getpid(), signal.SIGKILL)
+        # os.kill(os.getpid(), signal.SIGKILL)
 
     def on_message(self, message: str):
         """ we've said something, tell everyone """

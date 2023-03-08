@@ -119,7 +119,7 @@ export class Animator {
     }
 }
 
-export const useAnimator = (state, dispatch) => {
+export const useAnimator = () => {
     const rd = useRef()
     useEffect(() => {
         rd.current = new Animator(document.getElementById('svg-root'))
