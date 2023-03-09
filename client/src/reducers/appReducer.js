@@ -14,6 +14,7 @@ export const funcInitialState = () => {
         totalStep: undefined,
         clickedId: undefined,
         bagVolume: undefined,
+        allItemData: undefined,
     }
 }
 
@@ -38,6 +39,7 @@ export function appReducer(state, action) {
                 mapSize: action.mapSize,
                 totalStep: action.totalStep,
                 bagVolume: action.bagVolume,
+                allItemData: action.allItemData,
             }
         }
         case 'LOADED': {
