@@ -10,10 +10,6 @@ from tornado.websocket import WebSocketHandler
 
 from loguru import logger
 
-logger.remove()
-logger.add(sys.stderr, level='DEBUG')
-
-
 class DataQueue:
 
     def __init__(self):
