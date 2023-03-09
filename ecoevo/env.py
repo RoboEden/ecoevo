@@ -4,6 +4,7 @@ from typing import List
 from ecoevo.config import EnvConfig, MapConfig, PlayerConfig
 from ecoevo.gamecore import GameCore
 from ecoevo.types import ActionType
+from ecoevo.data.items import ALL_ITEM_DATA
 
 
 class EcoEvo:
@@ -22,6 +23,7 @@ class EcoEvo:
                 'totalStep': config.total_step,
                 'mapSize': MapConfig.width,
                 'bagVolume': PlayerConfig.bag_volume,
+                'allItemData': ALL_ITEM_DATA,
                 }
             self.webapp = WebApp(self._env, init_message)
             self.webapp.run()

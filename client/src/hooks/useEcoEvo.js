@@ -44,6 +44,7 @@ export const useEcoEvo = (load, render, trader) => {
                     mapSize: msg.mapSize,
                     totalStep: msg.totalStep,
                     bagVolume: msg.bagVolume,
+                    allItemData: msg.allItemData,
                 })
                 return
             }

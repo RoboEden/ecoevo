@@ -2,7 +2,8 @@
 
 ## version 0.2.1
 - MOD render to use redux
-- ADD bag volume limit in render
+- ADD bag volume limit in ui
+- FIX bag volume display in ui
 
 ## version 0.2.0
 - ADD offer accept mechanism

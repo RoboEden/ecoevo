@@ -55,11 +55,11 @@ export const InfoPanel = ({ player }) => {
                     <Typography variant="overline">
                         Backpack
                     </Typography>
-                    <BagProgressBar label='Backpack' bag={player?.backpack} limit={true} />
+                    <BagProgressBar label='Backpack' bag={player?.backpack} hasLimit={true} />
                     <Typography variant="overline">
                         Stomach
                     </Typography>
-                    <BagProgressBar label='Stomach' bag={player?.stomach} limit={false} />
+                    <BagProgressBar label='Stomach' bag={player?.stomach} hasLimit={false} />
                 </Grid>
                 <TableContainer component={Grid}>
                     <Table aria-label="simple table">
