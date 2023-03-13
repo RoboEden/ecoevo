@@ -216,10 +216,16 @@ button {
 	border-radius: 18px 18px 18px 18px;
 	background: rgba(10, 10, 10, 0.7);
 	backdrop-filter: blur(10px);
+
+	font-size: 0.8rem;
+}
+
+.main-info-panel ul {
+	list-style: none;
+	padding-left: 0;
 }
 
 .main-info-panel .MuiGrid-item {
-	font-size: 0.8em;
 	white-space: nowrap;
 	overflow: hidden;
 }
