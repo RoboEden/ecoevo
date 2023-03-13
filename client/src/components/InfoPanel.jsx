@@ -23,76 +23,50 @@ export const InfoPanel = ({ player }) => {
         if (obj) {
             return (<ul style={{ listStyle: 'none' }}>
                 {Object.entries(obj).map(([key, value], i) =>
-                    (<li key={i}>{String(key)}:{String(value)}</li>)
+                    (<li key={i}>{String(key)}={String(value)}</li>)
                 )}
             </ul>)
         }
     }
-    return (
-        <Grid container spacing={2}>
-            <Grid item >
-                <TableContainer component={Grid}>
-                    <Table aria-label="simple table">
-                        <TableHead>
-                            <TableRow>
-                                <StyledTableCell>Persona</StyledTableCell>
-                                <StyledTableCell align="center">Id</StyledTableCell>
-                                <StyledTableCell align="center">Pos</StyledTableCell>
-                                <StyledTableCell align="center">Health</StyledTableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            <TableRow>
-                                <StyledTableCell component="th" scope="row">{player?.persona}</StyledTableCell>
-                                <StyledTableCell align="center">{player?.id}</StyledTableCell>
-                                <StyledTableCell align="center">{player?.pos ? `[${player?.pos[0]}, ${player?.pos[1]}]` : ''}</StyledTableCell>
-                                <StyledTableCell align="center">{player?.health}</StyledTableCell>
-                            </TableRow>
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-                <Grid item>
-                    <Typography variant="overline">
-                        Backpack
-                    </Typography>
-                    <BagProgressBar label='Backpack' bag={player?.backpack} hasLimit={true} />
-                    <Typography variant="overline">
-                        Stomach
-                    </Typography>
-                    <BagProgressBar label='Stomach' bag={player?.stomach} hasLimit={false} />
-                </Grid>
-                <TableContainer component={Grid}>
-                    <Table aria-label="simple table">
-                        <TableHead>
-                            <TableRow>
-                                <StyledTableCell>Collect remain</StyledTableCell>
-                                <StyledTableCell align="center" >Last action</StyledTableCell>
-                                <StyledTableCell align="center">Trade result</StyledTableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            <TableRow>
-                                <StyledTableCell component="th" scope="row">{player?.collect_remain ?? 'None'}</StyledTableCell>
-                                <StyledTableCell align="left">
-                                    {_renderObject(player?.last_action.main_action)}
-                                    {_renderObject(player?.last_action.sell_offer)}
-                                    {_renderObject(player?.last_action.buy_offer)}
-                                </StyledTableCell>
-                                <StyledTableCell align="center">{player?.trade_result}
-                                </StyledTableCell>
-                            </TableRow>
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-            </Grid>
-            <Grid item xs={12} sm container>
-                <Grid item xs container direction="column" spacing={2}>
-                    <Typography variant="caption">
-                        {_renderObject(info)}
-                    </Typography>
-                </Grid>
 
+    return (<div>
+        <Grid container spacing={1}>
+            <Grid item container xs={2} direction='column'> 
+                <Grid item>Id</Grid>
+                <Grid item>{player?.id ?? '-'}</Grid>
+            </Grid>
+            <Grid item container xs={4} direction='column'>
+                <Grid item>Persona</Grid>
+                <Grid item>{player?.persona ?? '-'}</Grid>
+            </Grid>
+            <Grid item container xs={4} direction='column'>
+                <Grid item>Pos</Grid>
+                <Grid item>{player?.pos ? `${player?.pos[0]}, ${player?.pos[1]}` : '-'}</Grid>
+            </Grid>
+            <Grid item container xs={2} direction='column'>
+                <Grid item>Health</Grid>
+                <Grid item>{player?.health ?? '-'}</Grid>
             </Grid>
         </Grid>
-    )
+        <hr/>
+        <Typography variant="overline">Backpack</Typography>
+        <BagProgressBar label='Backpack' bag={player?.backpack} hasLimit={true} />
+        <Typography variant="overline">Stomach</Typography>
+        <BagProgressBar label='Stomach' bag={player?.stomach} hasLimit={false} />
+        <hr/>
+        <Grid container spacing={1}>
+            <Grid item xs={5}>Collect remain</Grid>
+            <Grid item xs={7}>{player?.collect_remain??0}</Grid>
+            <Grid item xs={5}>Last action</Grid>
+            <Grid item xs={7}>{player?.last_action.main_action.primary} {player?.last_action.main_action.secondary}</Grid>
+            {/* <Grid item xs={5}>Trade result</Grid>
+            <Grid item xs={7}>{player?.trade_result}</Grid> */}
+        </Grid>
+        <hr/>
+        <ul style={{ listStyle: 'none', paddingLeft: '0', fontSize: '0.5em' }}>
+            {Object.entries(info??{}).map(([key, value], i) =>
+                <li key={i}>{String(key)}={String(value)}</li>
+            )}
+        </ul>
+    </div>)
 }

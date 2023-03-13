@@ -68,16 +68,6 @@ button {
 
 	transition: filter 100ms linear;
 
-	&.icon-button {
-		display: inline-flex;
-
-		padding: 0;
-		width: 3.4rem;
-
-		justify-content: center;
-		align-items: center;
-	}
-
 	&:hover,
 	&:focus {
 		filter: brightness(0.9);
@@ -87,6 +77,16 @@ button {
 		filter: brightness(0.8);
 	}
 }
+
+.icon-button {
+	display: inline-flex;
+	background: transparent;
+	color: transparent;
+	height: 2rem;
+	padding: 0;
+	align-items: center;
+}
+
 
 // -----------------------------------------------------
 //  Styles for the load page and kicked page
@@ -191,9 +191,9 @@ button {
 
 .main-footer {
 	position: fixed;
-	top: 84dvh;
+	bottom: 0;
 	left: 0;
-	height: 16dvh;
+	height: 6rem;
 	// display: flex;
 	padding: 20px;
 	width: 100dvw;
@@ -208,14 +208,20 @@ button {
 	position: fixed;
 	top: 90px;
 	left: 0;
-	height: 75dvh;
+	height: calc(100dvh - 6rem - 90px);
 	padding: 20px;
-	width: 20dvw;
+	width: 20rem;
 
 	flex-direction: row;
 	border-radius: 18px 18px 18px 18px;
 	background: rgba(10, 10, 10, 0.7);
 	backdrop-filter: blur(10px);
+}
+
+.main-info-panel .MuiGrid-item {
+	font-size: 0.8em;
+	white-space: nowrap;
+	overflow: hidden;
 }
 
 
@@ -237,6 +243,7 @@ button {
 	width: 64rem;
 	height: 64rem;
 	margin-bottom: 250px;
+	zoom: 0.67;
 }
 
 image {

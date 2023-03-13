@@ -49,9 +49,11 @@ export const MainPage = () => {
                 <InfoPanel player={players[clickedId]} />
             </div>
             <footer className='main-footer'>
-                <StepInput/>
-                <PlayButton/>
                 <StepSlider/>
+                <Grid container direction='row' spacing={3}>
+                    <Grid item><PlayButton/></Grid>
+                    <Grid item><StepInput/></Grid>
+                </Grid>
             </footer>
             <Tooltip id={`tooltip`} />
         </main >
