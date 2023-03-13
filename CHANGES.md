@@ -5,6 +5,8 @@
 - ADD bag volume limit in ui
 - FIX bag volume display in ui
 - FIX ui show debug log
+- MOD adjust ui layout
+- ADD offer display in ui
 
 ## version 0.2.0
 - ADD offer accept mechanism
