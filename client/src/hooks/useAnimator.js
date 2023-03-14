@@ -1,13 +1,15 @@
 import { useEffect, useRef } from "react"
 import { gsap } from 'gsap'
+import { useDispatch } from "react-redux"
 
 export class Animator {
-    constructor(root) {
+    constructor(root, dispatch) {
         this.root = root
         this.secondPerStep = 0.2
         this.playerSize = '1.6rem'
         this.itmeSize = '1.8rem'
         this.prevPos = {}
+        this.dispatch = dispatch
     }
     itemCoord(n) { return 2 * n + 0.1 + 'rem' }
     playerCoord(n) { return 2 * n + 0.2 + 'rem' }
@@ -48,6 +50,9 @@ export class Animator {
                     &nbsp;&nbsp;id : ${tile.player.id}<br/>
                     &nbsp;&nbsp;pos: ${x}, ${y}<br/>
                     </div>`)
+                playerSvg.onmousedown = () => {
+                    this.dispatch({ type: 'CLICKED_ID', clickedId: tile.player.id })
+                }
                 this.prevPos[tile.player.id] = [x, y]
 
                 this.root.append(playerSvg)
@@ -121,8 +126,9 @@ export class Animator {
 
 export const useAnimator = () => {
     const rd = useRef()
+    const dispatch = useDispatch()
     useEffect(() => {
-        rd.current = new Animator(document.getElementById('svg-root'))
+        rd.current = new Animator(document.getElementById('svg-root'), dispatch)
     }, [])
     const load = (map) => { rd.current.load(map) }
     const render = (map) => { rd.current.render(map) }

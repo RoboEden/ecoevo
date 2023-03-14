@@ -141,28 +141,25 @@ button {
 // --------------------------
 
 .main-wrapper {
-	display: flex;
+	position: fixed;
+	top: 0;
 
-	height: 100vh;
-	max-width: 100rem;
+	width: 100dvw;
+	height: 100dvh;
 	margin: auto;
-
-	flex-direction: column;
 }
 
 .main-header {
-	position: fixed;
-	padding: 36px 24px 18px 24px;
-	height: 90px;
+	position: absolute;
+	padding-left: 1rem;
+	height: 3rem;
 	width: 100vw;
-	background: rgba(black, 0.7);
+	background: rgba(black, 0.5);
 	backdrop-filter: saturate(180%) blur(10px);
 }
 
 .view-container {
-	flex: 1;
-	padding-top: 100px;
-
+	overflow-x: hidden;
 	overflow-y: auto;
 
 	// Custom scrollbar styles
@@ -192,27 +189,23 @@ button {
 .main-footer {
 	position: fixed;
 	bottom: 0;
-	left: 0;
 	height: 6rem;
-	// display: flex;
 	padding: 20px;
 	width: 100dvw;
-	flex-direction: column;
 	border-radius: 18px 18px 0px 0px;
-	background: rgba(10, 10, 10, 0.7);
+	background: rgba(10, 10, 10, 0.5);
 	backdrop-filter: blur(10px);
 }
 
 .main-info-panel {
 	@extend.view-container;
 	position: fixed;
-	top: 90px;
+	top: 3rem;
 	left: 0;
-	height: calc(100dvh - 6rem - 90px);
-	padding: 20px;
-	width: 20rem;
+	height: calc(100dvh - 9rem);
+	padding: 0.5rem;
+	width: 19rem;
 
-	flex-direction: row;
 	border-radius: 18px 18px 18px 18px;
 	background: rgba(10, 10, 10, 0.7);
 	backdrop-filter: blur(10px);
@@ -231,6 +224,15 @@ button {
 }
 
 
+.main-grid {
+	@extend.view-container;
+	overflow-y: scroll;
+	padding-top: 3rem;
+	padding-bottom: 6rem;
+	height: calc(100dvh);
+	margin: 0;
+}
+
 .grid {
 	width: 2rem;
 	height: 2rem;
@@ -246,10 +248,12 @@ button {
 }
 
 .grid-world {
+	display: block;
+	padding: 0.1rem;
 	width: 64rem;
 	height: 64rem;
-	margin-bottom: 250px;
 	zoom: 0.67;
+	margin: 0 auto;
 }
 
 image {
