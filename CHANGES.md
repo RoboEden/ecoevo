@@ -7,6 +7,7 @@
 - FIX ui show debug log
 - MOD adjust ui layout
 - ADD offer display in ui
+- MOD optimize ui performance
 
 ## version 0.2.0
 - ADD offer accept mechanism
