@@ -7,22 +7,22 @@ export const MainPage = () => {
     return (
         <main className='main-wrapper'>
             <header className='main-header'>
-                <h1>EcoEvo</h1>
+                <h3>EcoEvo</h3>
             </header>
-            <div className='main-grid'>
+            <div className='main-canvas'>
                 <GridWorld />
             </div>
             <div className='main-info-panel' >
                 <InfoPanel />
             </div>
             <footer className='main-footer'>
-                <StepSlider/>
+                <StepSlider />
                 <Grid container direction='row' spacing={3}>
-                    <Grid item><PlayButton/></Grid>
-                    <Grid item><StepInput/></Grid>
+                    <Grid item><PlayButton /></Grid>
+                    <Grid item><StepInput /></Grid>
                 </Grid>
             </footer>
-            <Tooltip id={`tooltip`} />
+            <Tooltip id='tooltip' />
         </main >
     )
 }

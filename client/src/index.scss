@@ -150,11 +150,11 @@ button {
 }
 
 .main-header {
-	position: absolute;
-	padding-left: 1rem;
-	height: 3rem;
+	position: fixed;
+	padding: 12px 24px 0px 32px;
+	height: 60px;
 	width: 100vw;
-	background: rgba(black, 0.5);
+	background: rgba(black, 0.7);
 	backdrop-filter: saturate(180%) blur(10px);
 }
 
@@ -186,6 +186,15 @@ button {
 	}
 }
 
+.main-canvas {
+	@extend.view-container;
+	overflow-y: scroll;
+	padding-top: 7dvh;
+	padding-bottom: 6rem;
+	height: calc(100dvh);
+	margin: 0;
+}
+
 .main-footer {
 	position: fixed;
 	bottom: 0;
@@ -211,52 +220,29 @@ button {
 	backdrop-filter: blur(10px);
 
 	font-size: 0.8rem;
-}
 
-.main-info-panel ul {
-	list-style: none;
-	padding-left: 0;
-}
-
-.main-info-panel .MuiGrid-item {
-	white-space: nowrap;
-	overflow: hidden;
-}
-
-
-.main-grid {
-	@extend.view-container;
-	overflow-y: scroll;
-	padding-top: 3rem;
-	padding-bottom: 6rem;
-	height: calc(100dvh);
-	margin: 0;
-}
-
-.grid {
-	width: 2rem;
-	height: 2rem;
-	fill: #141414;
-	stroke: #333333;
-	stroke-width: 1px;
-
-	&:hover,
-	&:focus {
-		filter: brightness(1.5);
+	& ul {
+		list-style: none;
+		padding-left: 0;
 	}
 
+	& .MuiGrid-item {
+		white-space: nowrap;
+		overflow: hidden;
+	}
 }
 
-.grid-world {
-	display: block;
-	padding: 0.1rem;
-	width: 64rem;
-	height: 64rem;
-	zoom: 0.67;
-	margin: 0 auto;
-}
+// .main-info-panel ul {
+// 	list-style: none;
+// 	padding-left: 0;
+// }
 
-image {
+// .main-info-panel .MuiGrid-item {
+// 	white-space: nowrap;
+// 	overflow: hidden;
+// }
+
+.highlight {
 
 	&:hover,
 	&:focus {
@@ -264,124 +250,129 @@ image {
 	}
 }
 
-
-
 .progress {
 	height: 12px;
 	background-color: #333333;
 	filter: brightness(0.8);
 }
 
-.gold {
-	background-color: #f9c23c;
-	//@extend image;
+.color {
+	@extend .highlight;
+	stroke-width: 0;
 
-	&--trade-line {
-		stroke: #f9c23c;
+	&-gold {
+		background-color: #f9c23c;
 
-		&:hover,
-		&:focus {
-			stroke-opacity: 1;
+		&--trade-line {
+			// stroke: #f9c23c;
+			fill: #f9c23c;
+
+			&:hover,
+			&:focus {
+				stroke-opacity: 1;
+			}
+		}
+
+	}
+
+	&-hazelnut {
+		background-color: #6d4534;
+
+		&--trade-line {
+			stroke: #6d4534;
+			fill: #6d4534;
+
+			&:hover,
+			&:focus {
+				stroke-opacity: 1;
+			}
+		}
+
+	}
+
+	&-coral {
+		background-color: #029ee1;
+
+		&--trade-line {
+			stroke: #029ee1;
+			fill: #029ee1;
+
+			&:hover,
+			&:focus {
+				stroke-opacity: 1;
+			}
 		}
 	}
 
-}
+	&-sand {
+		background-color: #f14f4c;
 
-.hazelnut {
-	background-color: #6d4534;
-	//@extend image;
+		&--trade-line {
+			stroke: #f14f4c;
+			fill: #f14f4c;
 
-	&--trade-line {
-		stroke: #6d4534;
-
-		&:hover,
-		&:focus {
-			stroke-opacity: 1;
+			&:hover,
+			&:focus {
+				stroke-opacity: 1;
+			}
 		}
 	}
 
-}
+	&-pineapple {
+		background-color: #86d72f;
 
-.coral {
-	background-color: #029ee1;
-	//@extend image;
+		&--trade-line {
+			// stroke: #86d72f;
+			fill: #86d72f;
 
-	&--trade-line {
-		stroke: #029ee1;
-
-		&:hover,
-		&:focus {
-			stroke-opacity: 1;
+			&:hover,
+			&:focus {
+				stroke-opacity: 1;
+			}
 		}
 	}
-}
 
-.sand {
-	background-color: #f14f4c;
-	//@extend image;
+	&-peanut {
+		background-color: #f3ad61;
 
-	&--trade-line {
-		stroke: #f14f4c;
+		&--trade-line {
+			stroke: #f3ad61;
+			fill: #f3ad61;
 
-		&:hover,
-		&:focus {
-			stroke-opacity: 1;
+			&:hover,
+			&:focus {
+				stroke-opacity: 1;
+			}
 		}
 	}
-}
 
-.pineapple {
-	background-color: #86d72f;
-	//@extend image;
+	&-stone {
+		background-color: #9b9b9b;
+		@extend .highlight;
 
-	&--trade-line {
-		stroke: #86d72f;
+		&--trade-line {
+			stroke: #9b9b9b;
+			fill: #9b9b9b;
 
-		&:hover,
-		&:focus {
-			stroke-opacity: 1;
+			&:hover,
+			&:focus {
+				stroke-opacity: 1;
+			}
 		}
 	}
-}
 
-.peanut {
-	background-color: #f3ad61;
-	//@extend image;
+	&-pumpkin {
+		background-color: #ff8257;
+		@extend .highlight;
 
-	&--trade-line {
-		stroke: #f3ad61;
+		&--trade-line {
+			stroke: #ff8257;
+			fill: #ff8257;
 
-		&:hover,
-		&:focus {
-			stroke-opacity: 1;
-		}
-	}
-}
-
-.stone {
-	background-color: #9b9b9b;
-	//@extend image;
-
-	&--trade-line {
-		stroke: #9b9b9b;
-
-		&:hover,
-		&:focus {
-			stroke-opacity: 1;
-		}
-	}
-}
-
-.pumpkin {
-	background-color: #ff8257;
-	//@extend image;
-
-	&--trade-line {
-		stroke: #ff8257;
-
-		&:hover,
-		&:focus {
-			stroke-opacity: 1;
+			&:hover,
+			&:focus {
+				stroke-opacity: 1;
+			}
 		}
 	}
 }

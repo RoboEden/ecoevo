@@ -8,6 +8,8 @@
 - MOD adjust ui layout
 - ADD offer display in ui
 - MOD optimize ui performance
+- FIX tooltip bug
+- MOD scss for dynamic grid size
 
 ## version 0.2.0
 - ADD offer accept mechanism

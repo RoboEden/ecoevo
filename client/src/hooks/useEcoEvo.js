@@ -1,10 +1,10 @@
-import { useEffect, useRef } from "react"
 import localforage from "localforage"
+import { useEffect, useRef } from "react"
 import { useDispatch, useSelector } from "react-redux"
 
-export const useEcoEvo = (load, render, trader) => {
-    const isLoading = useSelector((state)=>state.isLoading)
-    const renderStep = useSelector((state)=>state.renderStep)
+export const useEcoEvo = () => {
+    const isLoading = useSelector((state) => state.isLoading)
+    const renderStep = useSelector((state) => state.renderStep)
     const dispatch = useDispatch()
 
     const setLog = (str) => { dispatch({ type: 'LOG', log: str }) }
@@ -53,7 +53,7 @@ export const useEcoEvo = (load, render, trader) => {
                 if (isLoading) {
                     if (data.info.curr_step === 0) {
                         setLog('Loading...')
-                        load(data.map)
+                        dispatch({ type: 'DATA', data: data })
                     }
                     if (data.info.curr_step > 0) {
                         dispatch({ type: 'LOADED' })
@@ -88,8 +88,6 @@ export const useEcoEvo = (load, render, trader) => {
         localforage.getItem('step-' + renderStep).then((data) => {
             if (data && !(isLoading)) {
                 dispatch({ type: 'DATA', data: data })
-                render(data.map)
-                trader(data.info.transaction_graph)
             }
         }).catch((err) => {
             console.error('step-' + renderStep, err)
