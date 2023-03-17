@@ -1,12 +1,9 @@
-import { useDispatch, useSelector } from 'react-redux'
-import { useEcoEvo, useAnimator } from './hooks'
+import { useEcoEvo } from './hooks'
 import { LoadPage, MainPage } from './pages'
 
 export const AppDynamic = () => {
-	const [load, render, trade] = useAnimator()
-	const [reset, resume, shutdown] = useEcoEvo(load, render, trade) // start serverside gamecore and cache all history
+	const [reset, resume, shutdown] = useEcoEvo() // start serverside gamecore and cache all history
 }
-
 export const App = () => {
 	return <div>
 		<AppDynamic />

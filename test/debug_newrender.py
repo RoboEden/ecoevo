@@ -5,14 +5,16 @@ from ecoevo.config import EnvConfig
 
 class TestConfig(EnvConfig):
     total_step = 100
+    num_person_type = 2
 
 
-env = EcoEvo(render_mode=True, config=TestConfig)
+env = EcoEvo(render_mode=True, config=TestConfig, logging_level='CRITICAL')
 done = False
 obs, info = env.reset()
 num_player = len(obs)
 while not done:
     actions1 = [(sample_main_action(), (('gold', -1), ('pineapple', 1)), None, None) for _ in range(num_player // 2)]
-    actions2 = [(sample_main_action(), (('pineapple', -1), ('gold', 1)), None, None) for _ in range(num_player - num_player // 2)]
+    actions2 = [(sample_main_action(), (('pineapple', -1), ('gold', 1)), None, None)
+                for _ in range(num_player - num_player // 2)]
     actions = [*actions1, *actions2]
     obs, reward, done, info = env.step(actions)
