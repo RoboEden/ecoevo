@@ -1,6 +1,7 @@
 # Change log
 
 ## version 0.2.1
+- FIX offer accept same agent check
 - MOD render to use redux
 - ADD bag volume limit in ui
 - FIX bag volume display in ui
@@ -10,6 +11,7 @@
 - MOD optimize ui performance
 - FIX tooltip bug
 - MOD scss for dynamic grid size
+- ADD new trade line
 
 ## version 0.2.0
 - ADD offer accept mechanism

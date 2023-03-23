@@ -6,7 +6,6 @@ import { Provider } from 'react-redux'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import 'react-tooltip/dist/react-tooltip.css'
 import './index.scss'
-import './grid.scss'
 
 export const store = configureStore({
     reducer: appReducer,

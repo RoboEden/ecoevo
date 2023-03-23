@@ -1,20 +1,20 @@
 import ReactDOMServer from 'react-dom/server'
 import { useTransition, animated } from '@react-spring/web'
 import { useSelector, useDispatch } from 'react-redux'
-import gridScssVar from '../grid.scss?inline'
-
-const gridSize = Number(gridScssVar.match(/grid\W+width:.+rem/g)[0].match(/[\d\.]/g).join(''))
-const playerSize = Number(gridScssVar.match(/player-svg\W+width:.+rem/g)[0].match(/[\d\.]/g).join(''))
-const itemSize = Number(gridScssVar.match(/item-svg\W+width:.+rem/g)[0].match(/[\d\.]/g).join(''))
+import { LineSvg } from "./LineSvg"
 
 export const GridWorld = () => {
     const mapSize = useSelector((state) => state.mapSize)
-    const dataMap = useSelector((state) => state.data.map)
+    const dataMap = useSelector((state) => state.data.map)??{}
+    const transactionGraph = useSelector((state) => state.data.info?.transaction_graph)??{}
     const dispatch = useDispatch()
 
-    const itemRem = (n) => { return gridSize * n + (gridSize - itemSize) * 0.5 + 'rem' }
-    const playerRem = (n) => { return gridSize * n + (gridSize - playerSize) * 0.5 + 'rem' }
-    const centerRem = (n) => { return gridSize * (n + 0.5) }
+    const players = {}
+    for ( const tile of Object.values(dataMap) ) {
+        if (tile.player) {
+            players[tile.player.id] = tile.player
+        }
+    }
 
     const mapArray = Object.entries(dataMap ?? {})
         .map(([rawPos, tile]) => {
@@ -22,34 +22,42 @@ export const GridWorld = () => {
             return { ...tile, x: x, y: y }
         })
 
+    const gridY = (y) => mapSize-1-y
+    const gridPos = ([x, y]) => [x, gridY(y)]
+    
     const transitions = useTransition(
         mapArray,
         {
             key: (tile) => tile.player?.id,
-            from: ({ x, y }) => ({ x: playerRem(x), y: playerRem(y) }),
-            enter: ({ x, y }) => ({ x: playerRem(x), y: playerRem(y) }),
-            update: ({ x, y }) => ({ x: playerRem(x), y: playerRem(y) }),
+            from: ({ x, y }) => ({ x: x, y: gridY(y) }),
+            enter: ({ x, y }) => ({ x: x, y: gridY(y) }),
+            update: ({ x, y }) => ({ x: x, y: gridY(y) }),
             config: {
                 duration: 130
             },
         })
 
-    return (<svg className='grid-world' id='svg-root' xmlns="http://www.w3.org/2000/svg">
+    return (<svg className='grid-world' id='svg-root' xmlns="http://www.w3.org/2000/svg" viewBox='0 0 32 32'>
         {/* Grid world */}
-        {(mapSize === undefined) ? null :
-            Array.from(Array(Math.pow(mapSize, 2)))
-                .map((_, i) => [Math.floor(i / mapSize), i % mapSize])
-                .map(([x, y], i) =>
-                    <rect className='grid' key={i}
-                        id={`g-x${x}-y${y}`}
-                        x={gridSize * x + 'rem'} y={gridSize * y + 'rem'} />)}
+        <svg className='grid-board'>
+            {(mapSize === undefined) ? null :
+                Array.from(Array(Math.pow(mapSize, 2)))
+                    .map((_, i) => [Math.floor(i / mapSize), i % mapSize])
+                    .map(([x, y], i) =>
+                        <rect key={i} className="grid-cell"
+                            id={`g-x${x}-y${y}`}
+                            x={x} y={gridY(y)}
+                            width={1} height={1}
+                        />
+            )}
+        </svg>
         {/* Item */}
         {mapArray.map((tile, i) =>
             (tile.item === null) ? null :
-                <image key={i}
+                <image key={i} width={1} height={1}
                     href={`/svg/${tile.item.name}.svg`}
-                    x={itemRem(tile.x)}
-                    y={itemRem(tile.y)}
+                    x={tile.x}
+                    y={gridY(tile.y)}
                     className='item-svg highlight'
                     id={`item-x${tile.x}-y${tile.y}`}
                     opacity={(tile.item.num === 0) ? '0.2' : ((tile.player) ? '0.6' : '0.8')}
@@ -65,6 +73,8 @@ export const GridWorld = () => {
         {transitions((style, tile) =>
             (tile.player === null) ? undefined :
                 <animated.image
+                    width={1}
+                    height={1}
                     style={style}
                     href={`/svg/${tile.player.persona}.svg`}
                     className='player-svg highlight'
@@ -78,8 +88,18 @@ export const GridWorld = () => {
                                 &nbsp;&nbsp;pos: {tile.x}, {tile.y}<br />
                             </div>)}
                     onMouseDown={() => { dispatch({ type: 'CLICKED_ID', clickedId: tile.player.id }) }}
-                >
-                </animated.image>
+                />
         )}
+        {/* Trade */}
+        {Object.entries(transactionGraph).map(([ids, [item, num]]) => {
+            const [id0, id1] = ids.slice(1, -1).split(',').map(Number)
+            return <g
+                key={ids}
+                data-tooltip-id='tooltip'
+                data-tooltip-content={`${num} ${item} (${id0}->${id1})`}
+                className={`color-${item}--trade-line`} >
+                    <LineSvg from={gridPos(players[id0].pos)} to={gridPos(players[id1].pos)} />
+            </g>
+        })}
     </svg >)
 }

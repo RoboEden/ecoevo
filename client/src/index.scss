@@ -195,6 +195,29 @@ button {
 	margin: 0;
 }
 
+.grid-world {
+    display: block;
+    padding: 0;
+    width: 41rem;
+    height: 41rem;
+    margin: 0 auto;
+    :focus {
+        outline: 0;
+    }
+}
+
+.grid-board {
+    fill: #141414;
+    stroke: #333333;
+    stroke-width: 0.05;
+}
+
+.grid-cell {
+    &:hover, &:focus {
+        filter: brightness(1.5);
+    }
+}
+
 .main-footer {
 	position: fixed;
 	bottom: 0;
@@ -243,9 +266,7 @@ button {
 // }
 
 .highlight {
-
-	&:hover,
-	&:focus {
+	&:hover, &:focus {
 		filter: brightness(1.2);
 	}
 }
@@ -256,123 +277,26 @@ button {
 	filter: brightness(0.8);
 }
 
+@mixin item-color ($item, $color) {
+	&-#{$item} {
+		@extend .highlight;
+		background-color: $color;
+		&--trade-line {
+			@extend .highlight;
+			stroke-width: 0;
+			fill: $color;
+			opacity: 0.5;
+		}
+	}
+}
+
 .color {
-	@extend .highlight;
-	stroke-width: 0;
-
-	&-gold {
-		background-color: #f9c23c;
-
-		&--trade-line {
-			// stroke: #f9c23c;
-			fill: #f9c23c;
-
-			&:hover,
-			&:focus {
-				stroke-opacity: 1;
-			}
-		}
-
-	}
-
-	&-hazelnut {
-		background-color: #6d4534;
-
-		&--trade-line {
-			stroke: #6d4534;
-			fill: #6d4534;
-
-			&:hover,
-			&:focus {
-				stroke-opacity: 1;
-			}
-		}
-
-	}
-
-	&-coral {
-		background-color: #029ee1;
-
-		&--trade-line {
-			stroke: #029ee1;
-			fill: #029ee1;
-
-			&:hover,
-			&:focus {
-				stroke-opacity: 1;
-			}
-		}
-	}
-
-	&-sand {
-		background-color: #f14f4c;
-
-		&--trade-line {
-			stroke: #f14f4c;
-			fill: #f14f4c;
-
-			&:hover,
-			&:focus {
-				stroke-opacity: 1;
-			}
-		}
-	}
-
-	&-pineapple {
-		background-color: #86d72f;
-
-		&--trade-line {
-			// stroke: #86d72f;
-			fill: #86d72f;
-
-			&:hover,
-			&:focus {
-				stroke-opacity: 1;
-			}
-		}
-	}
-
-	&-peanut {
-		background-color: #f3ad61;
-
-		&--trade-line {
-			stroke: #f3ad61;
-			fill: #f3ad61;
-
-			&:hover,
-			&:focus {
-				stroke-opacity: 1;
-			}
-		}
-	}
-
-	&-stone {
-		background-color: #9b9b9b;
-		@extend .highlight;
-
-		&--trade-line {
-			stroke: #9b9b9b;
-			fill: #9b9b9b;
-
-			&:hover,
-			&:focus {
-				stroke-opacity: 1;
-			}
-		}
-	}
-
-	&-pumpkin {
-		background-color: #ff8257;
-		@extend .highlight;
-
-		&--trade-line {
-			stroke: #ff8257;
-			fill: #ff8257;
-
-			&:hover,
-			&:focus {
-				stroke-opacity: 1;
-			}
-		}
-	}
+	@include item-color("gold", #f9c23c);
+	@include item-color("hazelnut", #6d4534);
+	@include item-color("coral", #029ee1);
+	@include item-color("sand", #f14f4c);
+	@include item-color("pineapple", #86d72f);
+	@include item-color("peanut", #f3ad61);
+	@include item-color("stone", #9b9b9b);
+	@include item-color("pumpkin", #ff8257);
 }
