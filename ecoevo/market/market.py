@@ -61,6 +61,9 @@ class Market(object):
                 continue
 
             pid_offer, offer_idx = accept_action
+            if pid_offer == pid:
+                logger.warning(f"player {pid} must accept offer of other's")
+                continue
             player_offer: Player = self.players[pid_offer]
             offer = player_offer.offers[offer_idx]
 
