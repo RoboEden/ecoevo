@@ -4,9 +4,23 @@ import { useSelector, useDispatch } from 'react-redux'
 import { LineSvg } from "./LineSvg"
 
 export const GridWorld = () => {
+    // const mapSize = 32
+    // const dataMap = {
+    //     "(14,14)": {item: null, player: {id: 5, persona: 'gold_digger', pos: [14, 14]}},
+    //     "(14,18)": {item: null, player: {id: 8, persona: 'gold_digger', pos: [14, 18]}},
+    //     "(20,18)": {item: {name: 'gold', num: 100, refresh_remain: 0}, player: null},
+    // }
+    // const clickedId = 5
+    // const transactionGraph = {
+    //     "(5,8)": ['gold', 100],
+    //     "(8,5)": ['sand', 100],
+    // }
+    // const dispatch = (x) => null
+
     const mapSize = useSelector((state) => state.mapSize)
     const dataMap = useSelector((state) => state.data.map)??{}
     const transactionGraph = useSelector((state) => state.data.info?.transaction_graph)??{}
+    const clickedId = useSelector((state) => state.clickedId)
     const dispatch = useDispatch()
 
     const players = {}
@@ -22,22 +36,24 @@ export const GridWorld = () => {
             return { ...tile, x: x, y: y }
         })
 
-    const gridY = (y) => mapSize-1-y
-    const gridPos = ([x, y]) => [x, gridY(y)]
+    const gridSize = 20
+    const gridX = (x) => x * gridSize
+    const gridY = (y) => (mapSize-1-y) * gridSize
+    const gridPos = ([x, y]) => [gridX(x), gridY(y)]
     
     const transitions = useTransition(
         mapArray,
         {
             key: (tile) => tile.player?.id,
-            from: ({ x, y }) => ({ x: x, y: gridY(y) }),
-            enter: ({ x, y }) => ({ x: x, y: gridY(y) }),
-            update: ({ x, y }) => ({ x: x, y: gridY(y) }),
+            from: ({ x, y }) => ({ x: gridX(x), y: gridY(y) }),
+            enter: ({ x, y }) => ({ x: gridX(x), y: gridY(y) }),
+            update: ({ x, y }) => ({ x: gridX(x), y: gridY(y) }),
             config: {
                 duration: 130
             },
         })
 
-    return (<svg className='grid-world' id='svg-root' xmlns="http://www.w3.org/2000/svg" viewBox='0 0 32 32'>
+    return (<svg className='grid-world' id='svg-root' xmlns="http://www.w3.org/2000/svg" viewBox={`0 0 ${gridSize * mapSize} ${gridSize * mapSize}`}>
         {/* Grid world */}
         <svg className='grid-board'>
             {(mapSize === undefined) ? null :
@@ -46,17 +62,17 @@ export const GridWorld = () => {
                     .map(([x, y], i) =>
                         <rect key={i} className="grid-cell"
                             id={`g-x${x}-y${y}`}
-                            x={x} y={gridY(y)}
-                            width={1} height={1}
+                            x={gridX(x)} y={gridY(y)}
+                            width={gridSize} height={gridSize}
                         />
             )}
         </svg>
         {/* Item */}
         {mapArray.map((tile, i) =>
             (tile.item === null) ? null :
-                <image key={i} width={1} height={1}
+                <image key={i} width={gridSize} height={gridSize}
                     href={`/svg/${tile.item.name}.svg`}
-                    x={tile.x}
+                    x={gridX(tile.x)}
                     y={gridY(tile.y)}
                     className='item-svg highlight'
                     id={`item-x${tile.x}-y${tile.y}`}
@@ -73,11 +89,11 @@ export const GridWorld = () => {
         {transitions((style, tile) =>
             (tile.player === null) ? undefined :
                 <animated.image
-                    width={1}
-                    height={1}
+                    width={gridSize}
+                    height={gridSize}
                     style={style}
                     href={`/svg/${tile.player.persona}.svg`}
-                    className='player-svg highlight'
+                    className={'player-svg highlight' + (tile.player.id == clickedId ? ' grid-focus' : '')}
                     id={`player-${tile.player.id}`}
                     opacity={(tile.item) ? 0.8 : 1}
                     data-tooltip-id='tooltip'
@@ -98,7 +114,7 @@ export const GridWorld = () => {
                 data-tooltip-id='tooltip'
                 data-tooltip-content={`${num} ${item} (${id0}->${id1})`}
                 className={`color-${item}--trade-line`} >
-                    <LineSvg from={gridPos(players[id0].pos)} to={gridPos(players[id1].pos)} />
+                    <LineSvg from={gridPos(players[id0].pos)} to={gridPos(players[id1].pos)} gridSize={gridSize} />
             </g>
         })}
     </svg >)
