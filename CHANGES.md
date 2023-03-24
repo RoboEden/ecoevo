@@ -12,6 +12,7 @@
 - FIX tooltip bug
 - MOD scss for dynamic grid size
 - ADD new trade line
+- ADD player focus effect
 
 ## version 0.2.0
 - ADD offer accept mechanism
