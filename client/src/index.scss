@@ -206,6 +206,14 @@ button {
     }
 }
 
+.grid-harvested {
+	opacity: 0.3;
+}
+
+.grid-overlap {
+	scale: 0.85;
+}
+
 .grid-focus {
 	outline: solid white 1px;
 }
@@ -213,7 +221,7 @@ button {
 .grid-board {
     fill: #141414;
     stroke: #333333;
-    stroke-width: 0.5;
+    stroke-width: 0.05;
 }
 
 .grid-cell {
