@@ -1,136 +1,72 @@
-from typing import Dict, Tuple
-
-import numpy as np
+from collections import defaultdict
 
 from ecoevo.config import RewardConfig as rc
+from ecoevo.config import PlayerConfig
 from ecoevo.entities import ALL_ITEM_DATA, ALL_PERSONAE, Player
-from ecoevo.types import TradeResult
+from ecoevo.types import MainActionType
+import numpy as np
 
 
-def cal_utility(volumes: Dict[str, int]) -> Tuple[float, Dict[str, float]]:
-    """
-    calculate total utility, baseline
-
-    :param volumes:  count dict based on item names
-
-    :return: utility:  total utility
-    """
-
-    # lists of different type of items
-    list_dis_nec = [
-        item for item in ALL_ITEM_DATA if ALL_ITEM_DATA[item]['disposable'] and not ALL_ITEM_DATA[item]['luxury']
-    ]
-    list_dis_lux = [
-        item for item in ALL_ITEM_DATA if ALL_ITEM_DATA[item]['disposable'] and ALL_ITEM_DATA[item]['luxury']
-    ]
-    list_dur_nec = [
-        item for item in ALL_ITEM_DATA if not ALL_ITEM_DATA[item]['disposable'] and not ALL_ITEM_DATA[item]['luxury']
-    ]
-    list_dur_lux = [
-        item for item in ALL_ITEM_DATA if not ALL_ITEM_DATA[item]['disposable'] and ALL_ITEM_DATA[item]['luxury']
-    ]
-
-    utility_dis_nec = (sum(
-        (volumes[item] + 100)**rc.rho_nec * rc.alpha_nec
-        for item in list_dis_nec) + rc.c_dis_nec)**(rc.eta_dis_nec / rc.rho_nec) - (sum(
-            (100)**rc.rho_nec * rc.alpha_nec for item in list_dis_nec) + rc.c_dis_nec)**(rc.eta_dis_nec / rc.rho_nec)
-    utility_dis_lux = (sum(
-        (volumes[item] + 100)**rc.rho_lux * rc.alpha_lux
-        for item in list_dis_lux) + rc.c_dis_lux)**(rc.eta_dis_lux / rc.rho_lux) - (sum(
-            (100)**rc.rho_lux * rc.alpha_lux for item in list_dis_lux) + rc.c_dis_lux)**(rc.eta_dis_lux / rc.rho_lux)
-    utility_dur_nec = (sum(volumes[item] for item in list_dur_nec) +
-                       rc.c_dur_nec)**rc.eta_dur_nec * rc.lambda_nec - (rc.c_dur_nec)**rc.eta_dur_nec * rc.lambda_nec
-    utility_dur_lux = (sum(volumes[item] for item in list_dur_lux) +
-                       rc.c_dur_lux)**rc.eta_dur_lux * rc.lambda_lux - (rc.c_dur_nec)**rc.eta_dur_nec * rc.lambda_nec
-
-    item_utility = {}
-    for item in list_dis_nec:
-        item_utility[item] = utility_dis_nec / len(list_dis_nec)
-    for item in list_dis_lux:
-        item_utility[item] = utility_dis_lux / len(list_dis_lux)
-    for item in list_dur_nec:
-        item_utility[item] = utility_dur_nec / len(list_dur_nec)
-    for item in list_dur_lux:
-        item_utility[item] = utility_dur_lux / len(list_dur_lux)
-
-    return sum(item_utility.values()), item_utility
-
-
-def cal_utility_log(volumes: Dict[str, int],
-                    den: int = 10,
-                    coef_disposable: int = 2,
-                    coef_luxury: int = 1) -> Tuple[float, Dict[str, float]]:
-    """
-    calculate total utility, log method
-
-    :param volumes:  count dict based on item names
-    :param den:  denominator of volumes
-    :param coef_disposable:  magnification times of disposable items
-    :param coef_luxury:  magnification times of luxury item volumes
-
-    :return: utility:  total utility
-    """
-
-    item_utility = {}
-    for item, vol in volumes.items():
-        vol /= den
-        vol *= coef_luxury if ALL_ITEM_DATA[item]['luxury'] else 1
-        u = np.log(vol + 1) * coef_disposable if ALL_ITEM_DATA[item]['disposable'] else np.log(vol + 1)
-        item_utility[item] = u
-
-    return sum(item_utility.values()), item_utility
+def cal_utility(x: np.ndarray, p: float = -5.0, mask=None) -> float:
+    if mask is None:
+        mask = np.ones_like(x)
+    u = x[mask == 1]
+    u += 1
+    u = np.mean(np.power(u, p))
+    u = np.power(u, 1 / p)
+    return u
 
 
 class RewardParser:
 
     def __init__(self) -> None:
         self.player_types = list(ALL_PERSONAE.keys())
-        self.item_names = list(ALL_ITEM_DATA.keys())
+        self.item_names = list(sorted(ALL_ITEM_DATA.keys()))
+        self.reset()
 
-        self.last_utilities = {}
+    def reset(self):
+        dummy = np.zeros(len(self.item_names), )
+        self.last_utilities = defaultdict(lambda: cal_utility(dummy))
+        self.last_item_utilities = defaultdict(lambda: {k: 0 for k in self.item_names})
         self.last_costs = {}
         self.total_costs = {}
 
-        # utility calculation method
-        self.ultility_mode = 'base'
-        # self.ultility_mode = 'log'
+    def utility(
+        self,
+        player: Player,
+        coef_volume: float = 0.01,
+        coef_luxury: float = 1.0,
+    ) -> float:
+        if player.last_action.main_action.primary != "consume":
+            return self.last_utilities[player.id]
 
-    def reset(self) -> None:
-        self.last_utilities = {}
-        self.last_item_utilities = {}
-        self.last_costs = {}
-        self.total_costs = {}
+        volume = np.zeros(len(self.item_names))
+        for i, item_name in enumerate(self.item_names):
+            item = player.x_stomach[item_name]
+            volume[i] = coef_volume * item.num * item.capacity
+            if item.luxury:
+                volume[i] *= coef_luxury
 
-    def utility(self, player: Player) -> Tuple[float, Dict[str, float]]:
-        volumes = {}
-        for _, item_name in enumerate(self.item_names):
-            volumes[item_name] = player.stomach[item_name].num * player.stomach[item_name].capacity
-
-        utility, item_utility = cal_utility_log(volumes=volumes, coef_disposable=3,
-                                                coef_luxury=3) if self.ultility_mode == 'log' else cal_utility(
-                                                    volumes=volumes)
-
-        return utility, item_utility
+        utility = cal_utility(volume, mask=None)
+        return utility
 
     def cost(self, player: Player) -> float:
-        penalty_flag = player.health <= rc.threshold
-        cost = rc.weight_coef * player.backpack.used_volume + penalty_flag * rc.penalty
-        return cost
+        c = 0
+        if player.last_action.main_action.primary == "consume":
+            c += rc.consume_penalty
+        return c
 
     def parse(self, player: Player) -> float:
-        # utility
-        u, item_u = self.utility(player)
-        last_u = self.last_utilities[player.id] if player.id in self.last_utilities else u
-        du = u - last_u
-        self.last_utilities[player.id] = u
-        self.last_item_utilities[player.id] = item_u
+        # reward
+        utility = self.utility(player)
+        reward = utility - self.last_utilities[player.id]
+        self.last_utilities[player.id] = utility
 
         # cost
         cost = self.cost(player)
         self.last_costs[player.id] = cost
         self.total_costs[player.id] = self.total_costs[player.id] + cost if player.id in self.total_costs else cost
 
-        # reward
-        reward = du - cost
+        reward = reward + cost
 
         return reward

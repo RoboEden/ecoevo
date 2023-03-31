@@ -50,6 +50,7 @@ render = [
 
 [tool.setuptools]
 include-package-data = true
+packages = ["ecoevo"]
 
 [tool.yapf]
     column_limit = 120

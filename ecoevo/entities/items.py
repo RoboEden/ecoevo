@@ -11,6 +11,7 @@ class Item(BaseModel):
     num: int = 0
     locked_num: int = 0
     refresh_remain: int = 0
+    last_consume_step: int = -PlayerConfig.consume_cooldown
 
     @property
     def disposable(self) -> bool:
@@ -51,10 +52,14 @@ class Item(BaseModel):
     @property
     def expiry(self) -> int:
         return int(ALL_ITEM_DATA[self.name]['expiry'])
-    
+
     @property
     def free_num(self) -> int:
         return self.num - self.locked_num
+    
+    @property
+    def volume(self) -> int:
+        return self.num * self.capacity
 
 
 def load_item(name: str) -> Item:

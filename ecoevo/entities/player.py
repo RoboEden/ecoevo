@@ -15,6 +15,9 @@ class Player(BaseModel):
     pos: PosType
     backpack: Bag = Field(default_factory=Bag)
     stomach: Bag = Field(default_factory=Bag)
+    collect_cnt: Bag = Field(default_factory=Bag)
+    buy_cnt: Bag = Field(default_factory=Bag)
+    x_stomach: Bag = Field(default_factory=Bag)
     health: int = Field(default=PlayerConfig.max_health)
     offers: List[OfferType] = Field(default_factory=lambda: [None] * PlayerConfig.max_offer)
     collect_remain: int = 0
@@ -42,21 +45,29 @@ class Player(BaseModel):
         if not self.collect_remain:
             item.num -= item.harvest_num
             self.backpack[item.name].num += item.harvest_num
+            self.collect_cnt[item.name].num += item.harvest_num
 
         return True
 
-    def consume(self, item_name: str) -> bool:
+    def consume(self, item_name: str, curr_step: int) -> bool:
         item = self.backpack[item_name]
 
         if item.disposable:
             consumed_num = min(item.free_num, item.consume_num)
             item.num -= consumed_num
         else:
-            consumed_num = item.free_num
+            assert 100 % item.capacity == 0
+            consumed_num = min(item.free_num, 100 // item.capacity)
 
         self.stomach[item_name].num += consumed_num
         self.health += consumed_num * item.supply
         self.health = min(self.health, PlayerConfig.max_health)
+
+        x_item = self.x_stomach[item_name]
+        if (curr_step - x_item.last_consume_step) >= PlayerConfig.consume_cooldown:
+            self.x_stomach[item_name].num += consumed_num
+            x_item.last_consume_step = curr_step
+
         return True
 
     def wipeout(self, item_name: str) -> bool:
@@ -81,6 +92,7 @@ class Player(BaseModel):
 
         sell_item.num -= abs(sell_num)
         buy_item.num += buy_num
+        self.buy_cnt[buy_item.name].num += buy_num
         return True
 
     def offer_accepted(self, index: int):
@@ -91,6 +103,7 @@ class Player(BaseModel):
 
         sell_item.num -= abs(sell_num)
         buy_item.num += buy_num
+        self.buy_cnt[buy_item.name].num += buy_num
 
     def offer_try_add(self, offer: OfferType) -> bool:
         (sell_name, sell_num), (buy_name, buy_num) = offer
