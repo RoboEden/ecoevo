@@ -10,6 +10,11 @@ persona_collect_match_cnt_key = "{}_collect_match_cnt"
 persona_collect_match_ratio_key = "{}_collect_match_ratio"
 item_final_utility_avg_key = "{}_final_utility_avg"
 item_final_utility_std_key = "{}_final_utility_std"
+item_collect_volume_key = "{}_collect_volume"
+item_consume_volume_key = "{}_consume_volume"
+item_consume_xvolume_key = "{}_consume_xvolume"
+item_collect_consume_diff_volume_key = "{}_collect_consume_volume_diff"
+item_buy_consume_idv_rate_key = "{}_buy_consume_idv_rate"
 final_iustd_avg_key = "final_iustd_avg"
 final_iustd_std_key = "final_iustd_std"
 final_iustd_min_key = "final_iustd_min"
@@ -41,7 +46,10 @@ class Analyser(object):
                 item_key('{}_trade_times') + item_key('{}_trade_amount') + \
                 item_key('{}_consume_times') + item_key('{}_final_consume_amount') + \
                 item_key(item_final_utility_avg_key) + item_key(item_final_utility_std_key) + \
-                [final_iustd_avg_key, final_iustd_std_key, final_iustd_min_key, final_iustd_max_key]
+                [final_iustd_avg_key, final_iustd_std_key, final_iustd_min_key, final_iustd_max_key] + \
+                item_key(item_collect_volume_key) + item_key(item_consume_volume_key) + \
+                item_key(item_collect_consume_diff_volume_key) + \
+                item_key(item_buy_consume_idv_rate_key)
 
     trade_result_keys = [f"avr_{trade_result}_per_step" for trade_result in ['absent', 'illegal', 'failed', 'success']]
     info_keys += trade_result_keys
@@ -52,6 +60,8 @@ class Analyser(object):
     info_keys += persona_key(persona_collect_cnt_key)
     info_keys += persona_key(persona_collect_match_cnt_key)
     info_keys += persona_key(persona_collect_match_ratio_key)
+
+    info_keys += item_key(item_consume_xvolume_key)
 
     def get_info(self, step: int, done: bool, info: Dict[str, int or float], players: List[Player],
                  entity_manager: EntityManager, transaction_graph: Dict[Tuple[IdType, IdType], ItemNumType],
@@ -142,6 +152,25 @@ class Analyser(object):
                     info[match_cnt_key] += 1
 
         if done:
+            # item collect volume, consume volume and collect consume diff, buy consume rate
+            for player in players:
+                for item in ALL_ITEM_DATA.keys():
+                    vc = player.collect_cnt[item].volume
+                    vs = player.stomach[item].volume
+                    xvs = player.x_stomach[item].volume
+                    vb = player.buy_cnt[item].volume
+                    info[item_collect_volume_key.format(item)] += vc
+                    info[item_consume_volume_key.format(item)] += vs
+                    info[item_consume_xvolume_key.format(item)] += xvs
+                    info[item_collect_consume_diff_volume_key.format(item)] += abs(vc - vs)
+                    info[item_buy_consume_idv_rate_key.format(item)] += vb / (vs + 100)
+            for item in ALL_ITEM_DATA.keys():
+                info[item_collect_volume_key.format(item)] /= num_player
+                info[item_consume_volume_key.format(item)] /= num_player
+                info[item_consume_xvolume_key.format(item)] /= num_player
+                info[item_collect_consume_diff_volume_key.format(item)] /= num_player
+                info[item_buy_consume_idv_rate_key.format(item)] /= num_player
+
             # final consume amount
             for player in players:
                 for item in ALL_ITEM_DATA.keys():

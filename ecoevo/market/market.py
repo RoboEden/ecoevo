@@ -69,7 +69,7 @@ class Market(object):
 
             # offer does not exist
             if not offer:
-                logger.error(f"Offer does not exist")
+                logger.info(f"Offer does not exist")
                 continue
 
             # distance out of limit

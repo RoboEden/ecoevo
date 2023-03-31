@@ -1,6 +1,12 @@
 # Change log
 
 ## version 0.2.1
+- FIX should ignore client while installing packages
+- MOD reward based on CES utility
+- MOD config: num person type; bag volume; max offer; consume penalty
+- MOD cooldown implement manner
+- ADD volume property of item
+- ADD info: collect, consume, x_stomach consume, collect consume diff volumes; buy consume rate
 - FIX offer accept same agent check
 - MOD render to use redux
 - ADD bag volume limit in ui

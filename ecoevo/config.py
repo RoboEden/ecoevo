@@ -5,7 +5,7 @@ class EnvConfig:
     total_step = 1000
     trade_radius = 7
     visual_radius = 7
-    num_person_type = 16
+    num_person_type = 8
     personae = [
         *(['gold_digger'] * num_person_type),
         *(['hazelnut_farmer'] * num_person_type),
@@ -31,17 +31,20 @@ class MapConfig:
 
 
 class PlayerConfig:
-    bag_volume = 1000
+    bag_volume = 350
     max_health = 100
-    comsumption_per_step = 2
+    comsumption_per_step = 0
 
-    max_offer = 3
+    max_offer = 2
+
+    consume_cooldown = 40
 
 
 class RewardConfig:
     threshold = 0
     weight_coef = 0
     penalty = 0
+    consume_penalty = -0.01
 
     # d==for disposable, dur for durable; nec for necessity, lux for luxury
     alpha_nec, alpha_lux = 0.21, 0.21
@@ -53,4 +56,4 @@ class RewardConfig:
 
 
 class DataPath:
-    map_json = pathlib.Path(__file__).parent / "data" / "dense8.json"
+    map_json = pathlib.Path(__file__).parent / "data" / "standard.json"

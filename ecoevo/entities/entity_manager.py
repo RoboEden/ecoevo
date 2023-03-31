@@ -78,7 +78,7 @@ class EntityManager:
             y = idx // self.width
             points.append((x, y))
         return points
-    
+
     def get_item(self, pos: PosType) -> Optional[Item]:
         tile = self.map.get(pos)
         return tile.item if tile else None
@@ -124,7 +124,7 @@ class EntityManager:
             logger.warning(f"Player {player.id} move towards map boarder")
             return False
         next_pos = (x, y)
-        
+
         if self.use_move_solver:
             self.player_dest[player.id] = next_pos
             return True
@@ -138,34 +138,34 @@ class EntityManager:
         player.pos = next_pos
         self.add_player(player)
 
-    def execute_main_action(self, player: Player, action: ActionType):
+    def execute_main_action(self, player: Player, action: ActionType, curr_step: int):
         (primary_action, secondary_action), *_ = action
-        
+
         if primary_action != Action.collect:
             player.collect_remain = 0
-        
+
         if primary_action == Action.idle:
             return True
-        
+
         if primary_action == Action.move:
             if secondary_action is None:
                 logger.error(f"Player {player.id} {primary_action} secondary action is None")
                 return False
             return self.move_player(player, secondary_action)
-        
+
         if primary_action == Action.collect:
             item = self.get_item(player.pos)
             if not item:
                 logger.warning(f"Player {player.id} collect at {player.pos} but no item exists")
                 return False
             return player.collect(item)
-        
+
         if primary_action == Action.consume:
             if secondary_action is None:
                 logger.error(f"Player {player.id} {primary_action} secondary action is None")
                 return False
-            return player.consume(secondary_action)
-        
+            return player.consume(secondary_action, curr_step)
+
         if primary_action == Action.wipeout:
             if secondary_action is None:
                 logger.error(f"Player {player.id} {primary_action} secondary action is None")

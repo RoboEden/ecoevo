@@ -61,10 +61,10 @@ class GameCore:
     ) -> Tuple[Dict[IdType, Dict[PosType, Tile]], Dict[IdType, float], bool, Dict[IdType, dict]]:
         random.shuffle(self.shuffled_ids)
         self.curr_step += 1
-        
+
         for id in self.shuffled_ids:
             self.players[id].memorize_action(actions[id])
-        
+
         # match and execute trade
         transaction_graph = self.market.trade(self.players, actions)
 
@@ -74,7 +74,7 @@ class GameCore:
         for id in self.shuffled_ids:
             player = self.players[id]
             action = actions[id]
-            if self.entity_manager.execute_main_action(player, action):
+            if self.entity_manager.execute_main_action(player, action, self.curr_step):
                 executed_main_actions[id] = action[0]
         self.entity_manager.move_execute(self.players)
 
