@@ -1,17 +1,19 @@
-import { useEcoEvo } from './hooks'
+import { useKeyControl } from './hooks'
 import { LoadPage, MainPage } from './pages'
+import { useSelector } from 'react-redux'
+import { WebSocketClient } from './components'
 
-export const AppDynamic = () => {
-	const [reset, resume, shutdown] = useEcoEvo() // start serverside gamecore and cache all history
+export const Pages = () => {
+	const isLoading = useSelector(state => state.cache.length <= 0)
+	return isLoading
+		? <div id='load-page'><LoadPage /></div>
+		: <div id='main-page'><MainPage /></div>
 }
+
 export const App = () => {
+	useKeyControl()
 	return <div>
-		<AppDynamic />
-		<div id='load-page'>
-			<LoadPage />
-		</div>
-		<div id='main-page' style={{ visibility: "hidden" }}>
-			<MainPage />
-		</div>
+		<WebSocketClient />
+		<Pages />
 	</div>
 }

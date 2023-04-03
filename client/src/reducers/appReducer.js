@@ -1,130 +1,120 @@
 export const funcInitialState = () => {
     return {
+        mode: undefined,
+        step: 0,
         sliderStep: 0,
-        cacheStep: 0,
-        renderStep: 0,
-        currTime: performance.now(),
-        needLoad: true,
-        isLoading: true,
-        isPlaying: false,
-        actions: null,
-        log: '',
-        data: {},
-        mapSize: undefined,
-        totalStep: undefined,
-        clickedId: undefined,
-        bagVolume: undefined,
-        allItemData: undefined,
+        nextRenderTime: 0,
+        isPlaying: true,
+        isSliding: false,
+        cache: [],
+        initMessage: {
+            mapSize: undefined,
+            totalStep: undefined,
+            bagVolume: undefined,
+            allItemData: undefined,
+        },
+        focusPlayerId: undefined,
     }
 }
+
+const clipStep = (state, step) => {return Math.max(Math.min(step, state.cache.length - 1), 0)}
 
 export function appReducer(state, action) {
     if (!state) {
         return funcInitialState()
     }
     switch (action.type) {
-        /**
-         *  Load related
-         */
-
-        case 'LOG': {
+        case 'CONNECT_SERVER_BUTTON':
+            return {...state, mode: state.mode ?? 'websocket'}
+        case 'REPLAY_LOAD_BUTTON':
+            return {...state, mode: state.mode ?? 'replay'}
+        case 'UPDATE_REPLAY_DATA':
             return {
                 ...state,
-                log: action.log
+                initMessage: action.value.initMessage,
+                cache: action.value.cache,
+                nextRenderTime: Math.max(state.nextRenderTime, performance.now()),
             }
-        }
-        case 'INIT': {
+        case 'SLIDER_CHANGE':
             return {
                 ...state,
-                mapSize: action.mapSize,
-                totalStep: action.totalStep,
-                bagVolume: action.bagVolume,
-                allItemData: action.allItemData,
+                isSliding: true,
+                sliderStep: clipStep(state, action.value),
+                nextRenderTime: performance.now() + (state.isSliding ? 0 : 100),
             }
-        }
-        case 'LOADED': {
+        case 'SLIDER_COMMIT':
             return {
                 ...state,
-                isLoading: false
+                isSliding: false,
+                sliderStep: clipStep(state, action.value),
+                nextRenderTime: Math.max(state.nextRenderTime, performance.now()),
             }
-        }
-        case 'LOADING': {
-            return {
-                ...state,
-                isLoading: true
-            }
-        }
-        /**
-         *  Step related
-         */
-        case 'SLIDER_STEP': {
-            return {
-                ...state,
-                sliderStep: action.sliderStep,
-            }
-        }
-        case 'RENDER_STEP': {
-            return {
-                ...state,
-                renderStep: action.renderStep,
-                currTime: performance.now()
-            }
-        }
-        case 'CACHE_STEP': {
-            return {
-                ...state,
-                cacheStep: action.cacheStep,
-            }
-        }
-        /**
-        *  Play related
-        */
-        case 'PAUSE': {
+        case 'STEP_INPUT':
             return {
                 ...state,
                 isPlaying: false,
+                sliderStep: clipStep(state, action.value),
+                nextRenderTime: Math.max(state.nextRenderTime, performance.now()),
             }
-        }
-        case 'PLAY': {
-            const newValue = Math.min(state.renderStep + 1, state.cacheStep)
+        case 'STEP_PREVIOUS':
             return {
                 ...state,
-                isPlaying: true,
-                sliderStep: newValue,
-                renderStep: newValue,
-                // currTime: performance.now()
+                isPlaying: false,
+                sliderStep: clipStep(state, state.sliderStep - 1),
+                nextRenderTime: Math.max(state.nextRenderTime, performance.now()),
             }
-        }
-        /**
-        *  Data related
-        */
-        case 'DATA': {
+        case 'STEP_NEXT':
             return {
                 ...state,
-                data: action.data
+                isPlaying: false,
+                sliderStep: clipStep(state, state.sliderStep + 1),
+                nextRenderTime: Math.max(state.nextRenderTime, performance.now()),
             }
-        }
-        case 'CLICKED_ID': {
+        case 'STEP_FIRST':
             return {
                 ...state,
-                clickedId: action.clickedId
+                isPlaying: false,
+                sliderStep: clipStep(state, 0),
+                nextRenderTime: Math.max(state.nextRenderTime, performance.now()),
             }
-        }
-        /**
-        *  Unused
-        */
-        case 'RESET': {
+        case 'STEP_LAST':
             return {
                 ...state,
+                isPlaying: false,
+                sliderStep: clipStep(state, Infinity),
+                nextRenderTime: Math.max(state.nextRenderTime, performance.now()),
             }
-        }
-        case 'CTRL_ACTION': {
+        case 'SWITCH_PLAYING':
+            const isPlaying = !state.isPlaying
             return {
                 ...state,
-                actions: action.actions,
-                step: action.step
+                isPlaying: isPlaying,
+                nextRenderTime: Math.max(state.nextRenderTime, isPlaying ? performance.now() : -1)
             }
-        }
+        case 'RECV_INIT_MESSAGE':
+            return {
+                ...state,
+                initMessage: action.value,
+            }    
+        case 'RECV_DATA':
+            return {
+                ...state,
+                cache: [...state.cache, action.value],
+                nextRenderTime: Math.max(state.nextRenderTime, performance.now()),
+            }
+        case 'RENDER':
+            const newStep = clipStep(state, state.step == state.sliderStep
+                ? state.step + (state.isPlaying && !state.isSliding)
+                : state.sliderStep)
+            const nextRenderTime = state.step != newStep ? performance.now() + (state.isSliding ? 200 : 300) : -1
+            return {
+                ...state,
+                step: newStep,
+                sliderStep: newStep,
+                nextRenderTime: Math.max(state.nextRenderTime, nextRenderTime)
+            }
+        case 'CLICK_PLAYER':
+            return {...state, focusPlayerId: action.value}
     }
     throw Error('Unknown action: ' + action.type);
 }

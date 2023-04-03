@@ -1,24 +1,28 @@
 # Change log
 
 ## version 0.2.1
-- FIX should ignore client while installing packages
+gamecore:
 - MOD reward based on CES utility
 - MOD config: num person type; bag volume; max offer; consume penalty
 - MOD cooldown implement manner
 - ADD volume property of item
 - ADD info: collect, consume, x_stomach consume, collect consume diff volumes; buy consume rate
+- FIX should ignore client while installing packages
 - FIX offer accept same agent check
-- MOD render to use redux
-- ADD bag volume limit in ui
-- FIX bag volume display in ui
-- FIX ui show debug log
-- MOD adjust ui layout
-- ADD offer display in ui
-- MOD optimize ui performance
-- FIX tooltip bug
-- MOD scss for dynamic grid size
+ui:
+- ADD keyboard control
+- ADD replay save & load
+- ADD offer display
+- ADD bag volume limit display
 - ADD new trade line
 - ADD player focus effect
+- MOD adjust layout
+- MOD render to use redux
+- MOD refactor reducer
+- MOD scss for dynamic grid size
+- FIX tooltip bug
+- MOD optimize performance
+- FIX show debug log
 
 ## version 0.2.0
 - ADD offer accept mechanism
