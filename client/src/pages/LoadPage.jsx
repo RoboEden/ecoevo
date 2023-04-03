@@ -1,18 +1,16 @@
-import { useEffect } from "react"
 import { useSelector } from "react-redux"
+import { ReplayLoadButton } from "../components"
+import { ConnectServerButton } from "../components/ConnectServerButton"
 
 export const LoadPage = () => {
-	const isLoading = useSelector((state)=>state.isLoading)
-	const log = useSelector((state)=>state.log)
+	const mode = useSelector((state)=>state.mode)
 
-	const showMainPage = () => {
-		const loadEl = document.getElementById('load-page')
-		const mainEl = document.getElementById('main-page')
-		if (loadEl && mainEl) {
-			loadEl.remove()
-			mainEl.style.visibility = "visible"
-		}
+	const hint = {
+		default: 'Please select:',
+		websocket: 'Connecting...',
+		replay: 'Uploading...',
 	}
+	
 	return (
 		<main className='simple-wrapper'>
 			<p className='simple-heading'>EcoEvo</p>
@@ -20,14 +18,10 @@ export const LoadPage = () => {
 			<p id='name-label' className='simple-subhead'>
 				AI Economic Evolution
 			</p>
-			<p className='simple-section'>{log}</p>
+			<p className='simple-section'>{hint[mode ?? 'default']}</p>
 			<div className='simple-section'>
-				{isLoading ? null :
-					<button
-						onClick={showMainPage}
-						onKeyDown={(e) => { if (e.key === 'Enter') showMainPage() }}>
-						Start</button>
-				}
+				<ConnectServerButton />
+				<ReplayLoadButton/>
 			</div>
 		</main>
 	)

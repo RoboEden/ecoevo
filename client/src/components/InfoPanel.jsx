@@ -1,14 +1,14 @@
-import { BagProgressBar } from '../components/BagProgressBar'
+import { BagProgressBar } from './BagProgressBar'
 import Grid from '@mui/material/Grid'
 import Typography from '@mui/material/Typography'
 import { useSelector } from 'react-redux'
 
 const playerSelector = (state) => {
-    const map = state?.data?.map
+    const map = state.cache[state.step]?.map
     if (!map) return null
-    if (!state.clickedId) return null
+    if (!state.focusPlayerId) return null
     for (const [pos, tile] of Object.entries(map)) {
-        if (tile.player && tile.player.id == state.clickedId) {
+        if (tile.player && tile.player.id == state.focusPlayerId) {
             return tile.player
         }
     }
@@ -27,7 +27,7 @@ const OfferList = () => {
 }
 
 const InfoList = () => {
-    const info = useSelector((state) => state.data.info)
+    const info = useSelector((state) => state.cache[state.step]?.info)
     const data = Object.entries(info ?? {}).map(
         ([key, value]) => `${key}=${value}`
     )

@@ -9,6 +9,12 @@ import './index.scss'
 
 export const store = configureStore({
     reducer: appReducer,
+    middleware: (getDefaultMiddleware) =>
+        getDefaultMiddleware({
+            thunk: true,
+            immutableCheck: false,
+            serializableCheck: false,
+    }),
 })
 
 const root = createRoot(document.getElementById('app-root'))

@@ -1,4 +1,3 @@
-import ReactDOMServer from 'react-dom/server'
 import { useTransition, animated } from '@react-spring/web'
 import { useSelector, useDispatch } from 'react-redux'
 import { LineSvg } from "./LineSvg"
@@ -17,10 +16,10 @@ export const GridWorld = () => {
     // }
     // const dispatch = (x) => null
 
-    const mapSize = useSelector((state) => state.mapSize) ?? 0
-    const dataMap = useSelector((state) => state.data.map) ?? {}
-    const transactionGraph = useSelector((state) => state.data.info?.transaction_graph) ?? {}
-    const clickedId = useSelector((state) => state.clickedId)
+    const mapSize = useSelector((state) => state.initMessage.mapSize) ?? 0
+    const dataMap = useSelector((state) => state.cache[state.step]?.map) ?? {}
+    const transactionGraph = useSelector((state) => state.cache[state.step]?.info?.transaction_graph) ?? {}
+    const focusPlayerId = useSelector((state) => state.focusPlayerId)
     const dispatch = useDispatch()
 
     const flip = (y) => mapSize - 1 - y
@@ -54,7 +53,6 @@ export const GridWorld = () => {
     const tradeArray = []
     for ( const [idsStr, [item, num]] of Object.entries(transactionGraph)) {
         const [id0, id1] = idsStr.slice(1, -1).split(',').map(Number)
-        console.log(idsStr, id0, id1)
         const [x0, y0] = playerPos[id0]
         const [x1, y1] = playerPos[id1]
         tradeArray.push({
@@ -116,10 +114,10 @@ export const GridWorld = () => {
                     `&nbsp;&nbsp;id : ${id}<br />` +
                     `&nbsp;&nbsp;pos: ${pos}<br />` +
                     `</div>`}
-                onMouseDown={() => { dispatch({ type: 'CLICKED_ID', clickedId: id }) }}
+                onMouseDown={() => { dispatch({ type: 'CLICK_PLAYER', value: id }) }}
             >
                 <image
-                    className={(id == clickedId ? 'grid-focus' : '') + (overlap ? ' grid-overlap' : '')}
+                    className={(id == focusPlayerId ? 'grid-focus' : '') + (overlap ? ' grid-overlap' : '')}
                     href={`/svg/${persona}.svg`}
                     width={16}
                     height={16}

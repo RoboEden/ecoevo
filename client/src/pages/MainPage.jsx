@@ -1,7 +1,6 @@
-import { GridWorld, StepSlider, StepInput, PlayButton } from "../components"
-import { InfoPanel } from '../components/InfoPanel'
-import Grid from '@mui/material/Grid'
+import { GridWorld, InfoPanel, StepSlider, StepInput, PlayButton, ReplaySaveButton } from "../components"
 import { Tooltip } from 'react-tooltip'
+import { RenderTimer } from "../components/RenderTimer"
 
 export const MainPage = () => {
     return (
@@ -17,12 +16,14 @@ export const MainPage = () => {
             </div>
             <footer className='main-footer'>
                 <StepSlider />
-                <Grid container direction='row' spacing={3}>
-                    <Grid item><PlayButton /></Grid>
-                    <Grid item><StepInput /></Grid>
-                </Grid>
+                <div className='play-control'>
+                    <PlayButton />
+                    <StepInput />
+                    <ReplaySaveButton />
+                </div>
             </footer>
             <Tooltip id='tooltip' />
+            <RenderTimer/>
         </main >
     )
 }

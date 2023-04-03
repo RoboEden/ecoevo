@@ -4,8 +4,8 @@ import { useSelector } from "react-redux"
 export const BagProgressBar = ({ bagName, playerSelector }) => {
     const KEYS = ['gold', 'hazelnut', 'coral', 'sand', 'pineapple', 'peanut', 'stone', 'pumpkin']
 
-    const limit = bagName == 'backpack' ? useSelector((state) => state.bagVolume) : 1
-    const allItemData = useSelector((state) => state.allItemData)
+    const limit = bagName == 'backpack' ? useSelector((state) => state.initMessage.bagVolume) : 1
+    const allItemData = useSelector((state) => state.initMessage.allItemData)
     const player = useSelector(playerSelector)
     const bag = player?.[bagName]
 
