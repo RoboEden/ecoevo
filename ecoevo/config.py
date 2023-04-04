@@ -35,7 +35,7 @@ class PlayerConfig:
     max_health = 100
     comsumption_per_step = 0
 
-    max_offer = 2
+    max_offer = 1
 
     consume_cooldown = 40
 
