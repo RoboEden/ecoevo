@@ -44,7 +44,7 @@ class RewardConfig:
     threshold = 0
     weight_coef = 0
     penalty = 0
-    consume_penalty = -0.01
+    consume_penalty = -5e-3
 
     # d==for disposable, dur for durable; nec for necessity, lux for luxury
     alpha_nec, alpha_lux = 0.21, 0.21
